@@ -49,7 +49,10 @@ func (c *Conn) serverHandshake() error {
 	hs := serverHandshakeState{
 		c: c,
 	}
-	isResume, err := hs.readClientHello()
+	if err := hs.readClientHello(); err != nil {
+		return err
+	}
+	isResume, err := hs.processClientHello()
 	if err != nil {
 		return err
 	}
@@ -119,27 +122,27 @@ func (c *Conn) serverHandshake() error {
 	return nil
 }
 
-// readClientHello reads a ClientHello message from the client and decides
-// whether we will perform session resumption.
-func (hs *serverHandshakeState) readClientHello() (isResume bool, err error) {
+// readClientHello reads a ClientHello message from the client and determines
+// the protocol version.
+func (hs *serverHandshakeState) readClientHello() error {
 	config := hs.c.config
 	c := hs.c
 
 	if err := c.simulatePacketLoss(nil); err != nil {
-		return false, err
+		return err
 	}
 	msg, err := c.readHandshake()
 	if err != nil {
-		return false, err
+		return err
 	}
 	var ok bool
 	hs.clientHello, ok = msg.(*clientHelloMsg)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)
-		return false, unexpectedMessageError(hs.clientHello, msg)
+		return unexpectedMessageError(hs.clientHello, msg)
 	}
 	if size := config.Bugs.RequireClientHelloSize; size != 0 && len(hs.clientHello.raw) != size {
-		return false, fmt.Errorf("tls: ClientHello record size is %d, but expected %d", len(hs.clientHello.raw), size)
+		return fmt.Errorf("tls: ClientHello record size is %d, but expected %d", len(hs.clientHello.raw), size)
 	}
 
 	if c.isDTLS && !config.Bugs.SkipHelloVerifyRequest {
@@ -151,25 +154,25 @@ func (hs *serverHandshakeState) readClientHello() (isResume bool, err error) {
 		}
 		if _, err := io.ReadFull(c.config.rand(), helloVerifyRequest.cookie); err != nil {
 			c.sendAlert(alertInternalError)
-			return false, errors.New("dtls: short read from Rand: " + err.Error())
+			return errors.New("dtls: short read from Rand: " + err.Error())
 		}
 		c.writeRecord(recordTypeHandshake, helloVerifyRequest.marshal())
 		c.flushHandshake()
 
 		if err := c.simulatePacketLoss(nil); err != nil {
-			return false, err
+			return err
 		}
 		msg, err := c.readHandshake()
 		if err != nil {
-			return false, err
+			return err
 		}
 		newClientHello, ok := msg.(*clientHelloMsg)
 		if !ok {
 			c.sendAlert(alertUnexpectedMessage)
-			return false, unexpectedMessageError(hs.clientHello, msg)
+			return unexpectedMessageError(hs.clientHello, msg)
 		}
 		if !bytes.Equal(newClientHello.cookie, helloVerifyRequest.cookie) {
-			return false, errors.New("dtls: invalid cookie")
+			return errors.New("dtls: invalid cookie")
 		}
 
 		// Apart from the cookie, the two ClientHellos must
@@ -182,31 +185,28 @@ func (hs *serverHandshakeState) readClientHello() (isResume bool, err error) {
 		newClientHelloCopy.raw = nil
 		newClientHelloCopy.cookie = nil
 		if !oldClientHelloCopy.equal(&newClientHelloCopy) {
-			return false, errors.New("dtls: retransmitted ClientHello does not match")
+			return errors.New("dtls: retransmitted ClientHello does not match")
 		}
 		hs.clientHello = newClientHello
 	}
 
 	if config.Bugs.RequireSameRenegoClientVersion && c.clientVersion != 0 {
 		if c.clientVersion != hs.clientHello.vers {
-			return false, fmt.Errorf("tls: client offered different version on renego")
+			return fmt.Errorf("tls: client offered different version on renego")
 		}
 	}
 	c.clientVersion = hs.clientHello.vers
 
 	// Reject < 1.2 ClientHellos with signature_algorithms.
 	if c.clientVersion < VersionTLS12 && len(hs.clientHello.signatureAlgorithms) > 0 {
-		return false, fmt.Errorf("tls: client included signature_algorithms before TLS 1.2")
-	}
-	if config.Bugs.IgnorePeerSignatureAlgorithmPreferences {
-		hs.clientHello.signatureAlgorithms = config.signatureAlgorithmsForServer()
+		return fmt.Errorf("tls: client included signature_algorithms before TLS 1.2")
 	}
 
 	// Check the client cipher list is consistent with the version.
 	if hs.clientHello.vers < VersionTLS12 {
 		for _, id := range hs.clientHello.cipherSuites {
 			if isTLS12Cipher(id) {
-				return false, fmt.Errorf("tls: client offered TLS 1.2 cipher before TLS 1.2")
+				return fmt.Errorf("tls: client offered TLS 1.2 cipher before TLS 1.2")
 			}
 		}
 	}
@@ -214,23 +214,83 @@ func (hs *serverHandshakeState) readClientHello() (isResume bool, err error) {
 	c.vers, ok = config.mutualVersion(hs.clientHello.vers, c.isDTLS)
 	if !ok {
 		c.sendAlert(alertProtocolVersion)
-		return false, fmt.Errorf("tls: client offered an unsupported, maximum protocol version of %x", hs.clientHello.vers)
+		return fmt.Errorf("tls: client offered an unsupported, maximum protocol version of %x", hs.clientHello.vers)
 	}
 	c.haveVers = true
 
+	var scsvFound bool
+	for _, cipherSuite := range hs.clientHello.cipherSuites {
+		if cipherSuite == fallbackSCSV {
+			scsvFound = true
+			break
+		}
+	}
+
+	if !scsvFound && config.Bugs.FailIfNotFallbackSCSV {
+		return errors.New("tls: no fallback SCSV found when expected")
+	} else if scsvFound && !config.Bugs.FailIfNotFallbackSCSV {
+		return errors.New("tls: fallback SCSV found when not expected")
+	}
+
+	if config.Bugs.IgnorePeerSignatureAlgorithmPreferences {
+		hs.clientHello.signatureAlgorithms = config.signatureAlgorithmsForServer()
+	}
+	if config.Bugs.IgnorePeerCurvePreferences {
+		hs.clientHello.supportedCurves = config.curvePreferences()
+	}
+	if config.Bugs.IgnorePeerCipherPreferences {
+		hs.clientHello.cipherSuites = config.cipherSuites()
+	}
+
+	return nil
+}
+
+// processClientHello processes the ClientHello message from the client and
+// decides whether we will perform session resumption.
+func (hs *serverHandshakeState) processClientHello() (isResume bool, err error) {
+	config := hs.c.config
+	c := hs.c
+
 	hs.hello = &serverHelloMsg{
-		isDTLS: c.isDTLS,
-		extensions: serverExtensions{
-			customExtension: config.Bugs.CustomExtension,
-			npnLast:         config.Bugs.SwapNPNAndALPN,
-		},
+		isDTLS:            c.isDTLS,
+		vers:              c.vers,
+		compressionMethod: compressionNone,
+	}
+
+	hs.hello.random = make([]byte, 32)
+	_, err = io.ReadFull(config.rand(), hs.hello.random)
+	if err != nil {
+		c.sendAlert(alertInternalError)
+		return false, err
+	}
+	// Signal downgrades in the server random, per draft-ietf-tls-tls13-13, section 6.3.1.2.
+	if c.vers <= VersionTLS12 && config.maxVersion(c.isDTLS) >= VersionTLS13 {
+		copy(hs.hello.random[:8], downgradeTLS13)
+	}
+	if c.vers <= VersionTLS11 && config.maxVersion(c.isDTLS) == VersionTLS12 {
+		copy(hs.hello.random[:8], downgradeTLS12)
+	}
+
+	foundCompression := false
+	// We only support null compression, so check that the client offered it.
+	for _, compression := range hs.clientHello.compressionMethods {
+		if compression == compressionNone {
+			foundCompression = true
+			break
+		}
+	}
+
+	if !foundCompression {
+		c.sendAlert(alertHandshakeFailure)
+		return false, errors.New("tls: client does not support uncompressed connections")
+	}
+
+	if err := hs.processClientExtensions(&hs.hello.extensions); err != nil {
+		return false, err
 	}
 
 	supportedCurve := false
 	preferredCurves := config.curvePreferences()
-	if config.Bugs.IgnorePeerCurvePreferences {
-		hs.clientHello.supportedCurves = preferredCurves
-	}
 Curves:
 	for _, curve := range hs.clientHello.supportedCurves {
 		for _, supported := range preferredCurves {
@@ -250,116 +310,6 @@ Curves:
 	}
 	hs.ellipticOk = supportedCurve && supportedPointFormat
 
-	foundCompression := false
-	// We only support null compression, so check that the client offered it.
-	for _, compression := range hs.clientHello.compressionMethods {
-		if compression == compressionNone {
-			foundCompression = true
-			break
-		}
-	}
-
-	if !foundCompression {
-		c.sendAlert(alertHandshakeFailure)
-		return false, errors.New("tls: client does not support uncompressed connections")
-	}
-
-	hs.hello.vers = c.vers
-	hs.hello.random = make([]byte, 32)
-	_, err = io.ReadFull(config.rand(), hs.hello.random)
-	if err != nil {
-		c.sendAlert(alertInternalError)
-		return false, err
-	}
-
-	if !bytes.Equal(c.clientVerify, hs.clientHello.secureRenegotiation) {
-		c.sendAlert(alertHandshakeFailure)
-		return false, errors.New("tls: renegotiation mismatch")
-	}
-
-	if len(c.clientVerify) > 0 && !c.config.Bugs.EmptyRenegotiationInfo {
-		hs.hello.extensions.secureRenegotiation = append(hs.hello.extensions.secureRenegotiation, c.clientVerify...)
-		hs.hello.extensions.secureRenegotiation = append(hs.hello.extensions.secureRenegotiation, c.serverVerify...)
-		if c.config.Bugs.BadRenegotiationInfo {
-			hs.hello.extensions.secureRenegotiation[0] ^= 0x80
-		}
-	} else {
-		hs.hello.extensions.secureRenegotiation = hs.clientHello.secureRenegotiation
-	}
-
-	if c.noRenegotiationInfo() {
-		hs.hello.extensions.secureRenegotiation = nil
-	}
-
-	hs.hello.compressionMethod = compressionNone
-	hs.hello.extensions.duplicateExtension = c.config.Bugs.DuplicateExtension
-	if len(hs.clientHello.serverName) > 0 {
-		c.serverName = hs.clientHello.serverName
-	}
-
-	if len(hs.clientHello.alpnProtocols) > 0 {
-		if proto := c.config.Bugs.ALPNProtocol; proto != nil {
-			hs.hello.extensions.alpnProtocol = *proto
-			hs.hello.extensions.alpnProtocolEmpty = len(*proto) == 0
-			c.clientProtocol = *proto
-			c.usedALPN = true
-		} else if selectedProto, fallback := mutualProtocol(hs.clientHello.alpnProtocols, c.config.NextProtos); !fallback {
-			hs.hello.extensions.alpnProtocol = selectedProto
-			c.clientProtocol = selectedProto
-			c.usedALPN = true
-		}
-	}
-	if len(hs.clientHello.alpnProtocols) == 0 || c.config.Bugs.NegotiateALPNAndNPN {
-		// Although sending an empty NPN extension is reasonable, Firefox has
-		// had a bug around this. Best to send nothing at all if
-		// config.NextProtos is empty. See
-		// https://code.google.com/p/go/issues/detail?id=5445.
-		if hs.clientHello.nextProtoNeg && len(config.NextProtos) > 0 {
-			hs.hello.extensions.nextProtoNeg = true
-			hs.hello.extensions.nextProtos = config.NextProtos
-		}
-	}
-	hs.hello.extensions.extendedMasterSecret = c.vers >= VersionTLS10 && hs.clientHello.extendedMasterSecret && !c.config.Bugs.NoExtendedMasterSecret
-
-	if len(config.Certificates) == 0 {
-		c.sendAlert(alertInternalError)
-		return false, errors.New("tls: no certificates configured")
-	}
-	hs.cert = &config.Certificates[0]
-	if len(hs.clientHello.serverName) > 0 {
-		hs.cert = config.getCertificateForName(hs.clientHello.serverName)
-	}
-	if expected := c.config.Bugs.ExpectServerName; expected != "" && expected != hs.clientHello.serverName {
-		return false, errors.New("tls: unexpected server name")
-	}
-
-	if hs.clientHello.channelIDSupported && config.RequestChannelID {
-		hs.hello.extensions.channelIDRequested = true
-	}
-
-	if hs.clientHello.srtpProtectionProfiles != nil {
-	SRTPLoop:
-		for _, p1 := range c.config.SRTPProtectionProfiles {
-			for _, p2 := range hs.clientHello.srtpProtectionProfiles {
-				if p1 == p2 {
-					hs.hello.extensions.srtpProtectionProfile = p1
-					c.srtpProtectionProfile = p1
-					break SRTPLoop
-				}
-			}
-		}
-	}
-
-	if c.config.Bugs.SendSRTPProtectionProfile != 0 {
-		hs.hello.extensions.srtpProtectionProfile = c.config.Bugs.SendSRTPProtectionProfile
-	}
-
-	if expected := c.config.Bugs.ExpectedCustomExtension; expected != nil {
-		if hs.clientHello.customExtension != *expected {
-			return false, fmt.Errorf("tls: bad custom extension contents %q", hs.clientHello.customExtension)
-		}
-	}
-
 	_, hs.ecdsaOk = hs.cert.PrivateKey.(*ecdsa.PrivateKey)
 
 	// For test purposes, check that the peer never offers a session when
@@ -376,24 +326,6 @@ Curves:
 		return true, nil
 	}
 
-	var scsvFound bool
-
-	for _, cipherSuite := range hs.clientHello.cipherSuites {
-		if cipherSuite == fallbackSCSV {
-			scsvFound = true
-			break
-		}
-	}
-
-	if !scsvFound && config.Bugs.FailIfNotFallbackSCSV {
-		return false, errors.New("tls: no fallback SCSV found when expected")
-	} else if scsvFound && !config.Bugs.FailIfNotFallbackSCSV {
-		return false, errors.New("tls: fallback SCSV found when not expected")
-	}
-
-	if config.Bugs.IgnorePeerCipherPreferences {
-		hs.clientHello.cipherSuites = c.config.cipherSuites()
-	}
 	var preferenceList, supportedList []uint16
 	if c.config.PreferServerCipherSuites {
 		preferenceList = c.config.cipherSuites()
@@ -415,6 +347,105 @@ Curves:
 	}
 
 	return false, nil
+}
+
+// processClientExtensions processes all ClientHello extensions not directly
+// related to cipher suite negotiation and writes responses in serverExtensions.
+func (hs *serverHandshakeState) processClientExtensions(serverExtensions *serverExtensions) error {
+	config := hs.c.config
+	c := hs.c
+
+	if !bytes.Equal(c.clientVerify, hs.clientHello.secureRenegotiation) {
+		c.sendAlert(alertHandshakeFailure)
+		return errors.New("tls: renegotiation mismatch")
+	}
+
+	if len(c.clientVerify) > 0 && !c.config.Bugs.EmptyRenegotiationInfo {
+		serverExtensions.secureRenegotiation = append(serverExtensions.secureRenegotiation, c.clientVerify...)
+		serverExtensions.secureRenegotiation = append(serverExtensions.secureRenegotiation, c.serverVerify...)
+		if c.config.Bugs.BadRenegotiationInfo {
+			serverExtensions.secureRenegotiation[0] ^= 0x80
+		}
+	} else {
+		serverExtensions.secureRenegotiation = hs.clientHello.secureRenegotiation
+	}
+
+	if c.noRenegotiationInfo() {
+		serverExtensions.secureRenegotiation = nil
+	}
+
+	serverExtensions.duplicateExtension = c.config.Bugs.DuplicateExtension
+
+	if len(hs.clientHello.serverName) > 0 {
+		c.serverName = hs.clientHello.serverName
+	}
+	if len(config.Certificates) == 0 {
+		c.sendAlert(alertInternalError)
+		return errors.New("tls: no certificates configured")
+	}
+	hs.cert = &config.Certificates[0]
+	if len(hs.clientHello.serverName) > 0 {
+		hs.cert = config.getCertificateForName(hs.clientHello.serverName)
+	}
+	if expected := c.config.Bugs.ExpectServerName; expected != "" && expected != hs.clientHello.serverName {
+		return errors.New("tls: unexpected server name")
+	}
+
+	if len(hs.clientHello.alpnProtocols) > 0 {
+		if proto := c.config.Bugs.ALPNProtocol; proto != nil {
+			serverExtensions.alpnProtocol = *proto
+			serverExtensions.alpnProtocolEmpty = len(*proto) == 0
+			c.clientProtocol = *proto
+			c.usedALPN = true
+		} else if selectedProto, fallback := mutualProtocol(hs.clientHello.alpnProtocols, c.config.NextProtos); !fallback {
+			serverExtensions.alpnProtocol = selectedProto
+			c.clientProtocol = selectedProto
+			c.usedALPN = true
+		}
+	}
+	if len(hs.clientHello.alpnProtocols) == 0 || c.config.Bugs.NegotiateALPNAndNPN {
+		// Although sending an empty NPN extension is reasonable, Firefox has
+		// had a bug around this. Best to send nothing at all if
+		// config.NextProtos is empty. See
+		// https://code.google.com/p/go/issues/detail?id=5445.
+		if hs.clientHello.nextProtoNeg && len(config.NextProtos) > 0 {
+			serverExtensions.nextProtoNeg = true
+			serverExtensions.nextProtos = config.NextProtos
+			serverExtensions.npnLast = config.Bugs.SwapNPNAndALPN
+		}
+	}
+
+	serverExtensions.extendedMasterSecret = c.vers >= VersionTLS10 && hs.clientHello.extendedMasterSecret && !c.config.Bugs.NoExtendedMasterSecret
+
+	if hs.clientHello.channelIDSupported && config.RequestChannelID {
+		serverExtensions.channelIDRequested = true
+	}
+
+	if hs.clientHello.srtpProtectionProfiles != nil {
+	SRTPLoop:
+		for _, p1 := range c.config.SRTPProtectionProfiles {
+			for _, p2 := range hs.clientHello.srtpProtectionProfiles {
+				if p1 == p2 {
+					serverExtensions.srtpProtectionProfile = p1
+					c.srtpProtectionProfile = p1
+					break SRTPLoop
+				}
+			}
+		}
+	}
+
+	if c.config.Bugs.SendSRTPProtectionProfile != 0 {
+		serverExtensions.srtpProtectionProfile = c.config.Bugs.SendSRTPProtectionProfile
+	}
+
+	if expected := c.config.Bugs.ExpectedCustomExtension; expected != nil {
+		if hs.clientHello.customExtension != *expected {
+			return fmt.Errorf("tls: bad custom extension contents %q", hs.clientHello.customExtension)
+		}
+	}
+	serverExtensions.customExtension = config.Bugs.CustomExtension
+
+	return nil
 }
 
 // checkForResumption returns true if we should perform resumption on this connection.

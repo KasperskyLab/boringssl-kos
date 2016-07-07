@@ -301,6 +301,21 @@ NextCipherSuite:
 	}
 	c.haveVers = true
 
+	// Check for downgrade signals in the server random, per
+	// draft-ietf-tls-tls13-13, section 6.3.1.2.
+	if c.vers <= VersionTLS12 && c.config.maxVersion(c.isDTLS) >= VersionTLS13 {
+		if bytes.Equal(serverHello.random[:8], downgradeTLS13) {
+			c.sendAlert(alertProtocolVersion)
+			return errors.New("tls: downgrade from TLS 1.3 detected")
+		}
+	}
+	if c.vers <= VersionTLS11 && c.config.maxVersion(c.isDTLS) >= VersionTLS12 {
+		if bytes.Equal(serverHello.random[:8], downgradeTLS12) {
+			c.sendAlert(alertProtocolVersion)
+			return errors.New("tls: downgrade from TLS 1.2 detected")
+		}
+	}
+
 	suite := mutualCipherSuite(c.config.cipherSuites(), serverHello.cipherSuite)
 	if suite == nil {
 		c.sendAlert(alertHandshakeFailure)
@@ -497,9 +512,18 @@ func (hs *clientHandshakeState) doTLS13Handshake() error {
 	var chainToSend *Certificate
 	var certRequested bool
 	var certRequestContext []byte
-	if hs.suite.flags&suitePSK == 0 {
-		// TODO(davidben): Save OCSP response and SCT list. Forbid them
-		// if not negotiating a certificate-based extension.
+	if hs.suite.flags&suitePSK != 0 {
+		if encryptedExtensions.extensions.ocspResponse != nil {
+			c.sendAlert(alertUnsupportedExtension)
+			return errors.New("tls: server sent OCSP response without a certificate")
+		}
+		if encryptedExtensions.extensions.sctList != nil {
+			c.sendAlert(alertUnsupportedExtension)
+			return errors.New("tls: server sent SCT list without a certificate")
+		}
+	} else {
+		c.ocspResponse = encryptedExtensions.extensions.ocspResponse
+		c.sctList = encryptedExtensions.extensions.sctList
 
 		msg, err := c.readHandshake()
 		if err != nil {
