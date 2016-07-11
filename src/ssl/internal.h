@@ -834,8 +834,16 @@ struct ssl_protocol_method_st {
   int (*begin_handshake)(SSL *ssl);
   /* finish_handshake is called when a handshake completes. */
   void (*finish_handshake)(SSL *ssl);
-  long (*ssl_get_message)(SSL *ssl, int msg_type,
-                          enum ssl_hash_message_t hash_message, int *ok);
+  /* ssl_get_message reads the next handshake message. If |msg_type| is not -1,
+   * the message must have the specified type. On success, it returns one and
+   * sets |ssl->s3->tmp.message_type|, |ssl->init_msg|, and |ssl->init_num|.
+   * Otherwise, it returns <= 0. */
+  int (*ssl_get_message)(SSL *ssl, int msg_type,
+                         enum ssl_hash_message_t hash_message);
+  /* hash_current_message incorporates the current handshake message into the
+   * handshake hash. It returns one on success and zero on allocation
+   * failure. */
+  int (*hash_current_message)(SSL *ssl);
   int (*read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek);
   int (*read_change_cipher_spec)(SSL *ssl);
   void (*read_close_notify)(SSL *ssl);
@@ -897,9 +905,19 @@ struct hm_header_st {
   uint32_t frag_len;
 };
 
+/* An hm_fragment is an incoming DTLS message, possibly not yet assembled. */
 typedef struct hm_fragment_st {
-  struct hm_header_st msg_header;
-  uint8_t *fragment;
+  /* type is the type of the message. */
+  uint8_t type;
+  /* seq is the sequence number of this message. */
+  uint16_t seq;
+  /* msg_len is the length of the message body. */
+  uint32_t msg_len;
+  /* data is a pointer to the message, including message header. It has length
+   * |DTLS1_HM_HEADER_LENGTH| + |msg_len|. */
+  uint8_t *data;
+  /* reassembly is a bitmask of |msg_len| bits corresponding to which parts of
+   * the message have been received. It is NULL if the message is complete. */
   uint8_t *reassembly;
 } hm_fragment;
 
@@ -1011,11 +1029,8 @@ int ssl3_get_finished(SSL *ssl);
 int ssl3_send_change_cipher_spec(SSL *ssl);
 void ssl3_cleanup_key_block(SSL *ssl);
 int ssl3_send_alert(SSL *ssl, int level, int desc);
-long ssl3_get_message(SSL *ssl, int msg_type,
-                      enum ssl_hash_message_t hash_message, int *ok);
-
-/* ssl3_hash_current_message incorporates the current handshake message into the
- * handshake hash. It returns one on success and zero on allocation failure. */
+int ssl3_get_message(SSL *ssl, int msg_type,
+                     enum ssl_hash_message_t hash_message);
 int ssl3_hash_current_message(SSL *ssl);
 
 /* ssl3_cert_verify_hash writes the SSL 3.0 CertificateVerify hash into the
@@ -1094,8 +1109,8 @@ int dtls1_accept(SSL *ssl);
 int dtls1_connect(SSL *ssl);
 void dtls1_free(SSL *ssl);
 
-long dtls1_get_message(SSL *ssl, int mt, enum ssl_hash_message_t hash_message,
-                       int *ok);
+int dtls1_get_message(SSL *ssl, int mt, enum ssl_hash_message_t hash_message);
+int dtls1_hash_current_message(SSL *ssl);
 int dtls1_dispatch_alert(SSL *ssl);
 
 /* ssl_is_wbio_buffered returns one if |ssl|'s write BIO is buffered and zero

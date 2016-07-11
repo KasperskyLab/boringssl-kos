@@ -261,34 +261,28 @@ static void ssl3_take_mac(SSL *ssl) {
 }
 
 int ssl3_get_finished(SSL *ssl) {
-  int al, finished_len, ok;
-  long message_len;
-  uint8_t *p;
-
-  message_len = ssl->method->ssl_get_message(ssl, SSL3_MT_FINISHED,
-                                             ssl_dont_hash_message, &ok);
-
-  if (!ok) {
-    return message_len;
+  int al;
+  int ret = ssl->method->ssl_get_message(ssl, SSL3_MT_FINISHED,
+                                         ssl_dont_hash_message);
+  if (ret <= 0) {
+    return ret;
   }
 
   /* Snapshot the finished hash before incorporating the new message. */
   ssl3_take_mac(ssl);
-  if (!ssl3_hash_current_message(ssl)) {
+  if (!ssl->method->hash_current_message(ssl)) {
     goto err;
   }
 
-  p = ssl->init_msg;
-  finished_len = ssl->s3->tmp.peer_finish_md_len;
-
-  if (finished_len != message_len) {
+  size_t finished_len = ssl->s3->tmp.peer_finish_md_len;
+  if (finished_len != ssl->init_num) {
     al = SSL_AD_DECODE_ERROR;
     OPENSSL_PUT_ERROR(SSL, SSL_R_BAD_DIGEST_LENGTH);
     goto f_err;
   }
 
   int finished_ret =
-      CRYPTO_memcmp(p, ssl->s3->tmp.peer_finish_md, finished_len);
+      CRYPTO_memcmp(ssl->init_msg, ssl->s3->tmp.peer_finish_md, finished_len);
 #if defined(BORINGSSL_UNSAFE_FUZZER_MODE)
   finished_ret = 0;
 #endif
@@ -516,12 +510,8 @@ static int read_v2_client_hello(SSL *ssl) {
   return 1;
 }
 
-/* Obtain handshake message of message type |msg_type| (any if |msg_type| ==
- * -1). */
-long ssl3_get_message(SSL *ssl, int msg_type,
-                      enum ssl_hash_message_t hash_message, int *ok) {
-  *ok = 0;
-
+int ssl3_get_message(SSL *ssl, int msg_type,
+                     enum ssl_hash_message_t hash_message) {
 again:
   if (ssl->server && !ssl->s3->v2_hello_done) {
     /* Bypass the record layer for the first message to handle V2ClientHello. */
@@ -601,16 +591,12 @@ again:
     return -1;
   }
 
-  *ok = 1;
-  return ssl->init_num;
+  return 1;
 }
 
 int ssl3_hash_current_message(SSL *ssl) {
-  /* The handshake header (different size between DTLS and TLS) is included in
-   * the hash. */
-  size_t header_len = ssl->init_msg - (uint8_t *)ssl->init_buf->data;
   return ssl3_update_handshake_hash(ssl, (uint8_t *)ssl->init_buf->data,
-                                    ssl->init_num + header_len);
+                                    ssl->init_buf->length);
 }
 
 int ssl_verify_alarm_type(long type) {
