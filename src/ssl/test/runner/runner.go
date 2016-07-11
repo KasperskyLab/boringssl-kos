@@ -4542,7 +4542,53 @@ func addRenegotiationTests() {
 		},
 	})
 
-	// TODO(davidben): Add a test that HelloRequests are illegal in TLS 1.3.
+	// Stray HelloRequests during the handshake are ignored in TLS 1.2.
+	testCases = append(testCases, testCase{
+		name: "StrayHelloRequest",
+		config: Config{
+			MaxVersion: VersionTLS12,
+			Bugs: ProtocolBugs{
+				SendHelloRequestBeforeEveryHandshakeMessage: true,
+			},
+		},
+	})
+	testCases = append(testCases, testCase{
+		name: "StrayHelloRequest-Packed",
+		config: Config{
+			MaxVersion: VersionTLS12,
+			Bugs: ProtocolBugs{
+				PackHandshakeFlight:                         true,
+				SendHelloRequestBeforeEveryHandshakeMessage: true,
+			},
+		},
+	})
+
+	// Renegotiation is forbidden in TLS 1.3.
+	testCases = append(testCases, testCase{
+		name: "Renegotiate-Client-TLS13",
+		config: Config{
+			MaxVersion: VersionTLS13,
+		},
+		renegotiate: 1,
+		flags: []string{
+			"-renegotiate-freely",
+		},
+		shouldFail:    true,
+		expectedError: ":NO_RENEGOTIATION:",
+	})
+
+	// Stray HelloRequests during the handshake are forbidden in TLS 1.3.
+	testCases = append(testCases, testCase{
+		name: "StrayHelloRequest-TLS13",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				SendHelloRequestBeforeEveryHandshakeMessage: true,
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":UNEXPECTED_MESSAGE:",
+	})
 }
 
 func addDTLSReplayTests() {
