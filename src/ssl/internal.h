@@ -778,10 +778,10 @@ typedef struct cert_st {
   /* peer_sigalgslen is the number of entries in |peer_sigalgs|. */
   size_t peer_sigalgslen;
 
-  /* digest_nids, if non-NULL, is the set of digests supported by |privatekey|
-   * in decreasing order of preference. */
-  int *digest_nids;
-  size_t num_digest_nids;
+  /* sigalgs, if non-NULL, is the set of digests supported by |privatekey| in
+   * decreasing order of preference. */
+  uint16_t *sigalgs;
+  size_t sigalgs_len;
 
   /* Certificate setup callback: if set is called whenever a
    * certificate may be required (client or server). the callback
@@ -1035,10 +1035,10 @@ int ssl3_hash_current_message(SSL *ssl);
 
 /* ssl3_cert_verify_hash writes the SSL 3.0 CertificateVerify hash into the
  * bytes pointed to by |out| and writes the number of bytes to |*out_len|. |out|
- * must have room for EVP_MAX_MD_SIZE bytes. It returns one on success and zero
- * on failure. */
-int ssl3_cert_verify_hash(SSL *ssl, uint8_t *out, size_t *out_len,
-                          uint16_t signature_algorithm);
+ * must have room for |EVP_MAX_MD_SIZE| bytes. It sets |*out_md| to the hash
+ * function used. It returns one on success and zero on failure. */
+int ssl3_cert_verify_hash(SSL *ssl, const EVP_MD **out_md, uint8_t *out,
+                          size_t *out_len, uint16_t signature_algorithm);
 
 int ssl3_send_finished(SSL *ssl, int a, int b);
 int ssl3_supports_cipher(const SSL_CIPHER *cipher);
@@ -1215,15 +1215,12 @@ uint16_t ssl3_protocol_version(const SSL *ssl);
 uint32_t ssl_get_algorithm_prf(const SSL *ssl);
 int tls1_parse_peer_sigalgs(SSL *ssl, const CBS *sigalgs);
 
-/* tls1_choose_signature_algorithm returns a signature algorithm for use with
- * |ssl|'s private key based on the peer's preferences the digests supported. */
-uint16_t tls1_choose_signature_algorithm(SSL *ssl);
+/* tls1_choose_signature_algorithm sets |*out| to a signature algorithm for use
+ * with |ssl|'s private key based on the peer's preferences and the digests
+ * supported. It returns one on success and zero on error. */
+int tls1_choose_signature_algorithm(SSL *ssl, uint16_t *out);
 
 size_t tls12_get_psigalgs(SSL *ssl, const uint16_t **psigs);
-
-/* tls12_get_hash returns the EVP_MD corresponding to the TLS signature
- * algorithm |sigalg|. It returns NULL if the type is unknown. */
-const EVP_MD *tls12_get_hash(uint16_t sigalg);
 
 /* tls12_check_peer_sigalg checks that |signature_algorithm| is consistent with
  * the |pkey| and |ssl|'s sent, supported signature algorithms and returns 1.

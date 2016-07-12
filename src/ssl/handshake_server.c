@@ -1045,7 +1045,10 @@ static int ssl3_send_server_key_exchange(SSL *ssl) {
     }
 
     /* Determine the signature algorithm. */
-    uint16_t signature_algorithm = tls1_choose_signature_algorithm(ssl);
+    uint16_t signature_algorithm;
+    if (!tls1_choose_signature_algorithm(ssl, &signature_algorithm)) {
+      goto err;
+    }
     if (ssl3_protocol_version(ssl) >= TLS1_2_VERSION) {
       if (!CBB_add_u16(&body, signature_algorithm)) {
         OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
@@ -1716,15 +1719,13 @@ static int ssl3_get_cert_verify(SSL *ssl) {
       goto err;
     }
 
+    const EVP_MD *md;
     uint8_t digest[EVP_MAX_MD_SIZE];
     size_t digest_len;
-    if (!ssl3_cert_verify_hash(ssl, digest, &digest_len,
+    if (!ssl3_cert_verify_hash(ssl, &md, digest, &digest_len,
                                signature_algorithm)) {
       goto err;
     }
-
-    const EVP_MD *md = tls12_get_hash(signature_algorithm);
-    assert(md != NULL);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(pkey, NULL);
     sig_ok = pctx != NULL &&
@@ -1732,7 +1733,6 @@ static int ssl3_get_cert_verify(SSL *ssl) {
              EVP_PKEY_CTX_set_signature_md(pctx, md) &&
              EVP_PKEY_verify(pctx, CBS_data(&signature), CBS_len(&signature),
                              digest, digest_len);
-
     EVP_PKEY_CTX_free(pctx);
   } else {
     sig_ok = ssl_public_key_verify(
