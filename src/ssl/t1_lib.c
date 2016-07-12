@@ -472,14 +472,19 @@ int tls1_check_group_id(SSL *ssl, uint16_t group_id) {
 }
 
 int tls1_check_ec_cert(SSL *ssl, X509 *x) {
-  int ret = 0;
+  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+    /* In TLS 1.3, the ECDSA curve is negotiated via signature algorithms. */
+    return 1;
+  }
+
   EVP_PKEY *pkey = X509_get_pubkey(x);
+  if (pkey == NULL) {
+    return 0;
+  }
+
+  int ret = 0;
   uint16_t group_id;
   uint8_t comp_id;
-
-  if (!pkey) {
-    goto done;
-  }
   EC_KEY *ec_key = EVP_PKEY_get0_EC_KEY(pkey);
   if (ec_key == NULL ||
       !tls1_curve_params_from_ec_key(&group_id, &comp_id, ec_key) ||
@@ -518,19 +523,9 @@ size_t tls12_get_psigalgs(SSL *ssl, const uint16_t **psigs) {
          sizeof(kDefaultSignatureAlgorithms[0]);
 }
 
-static int tls12_get_pkey_type(uint16_t sigalg);
-
-int tls12_check_peer_sigalg(SSL *ssl, int *out_alert,
-                            uint16_t sigalg, EVP_PKEY *pkey) {
+int tls12_check_peer_sigalg(SSL *ssl, int *out_alert, uint16_t sigalg) {
   const uint16_t *sent_sigs;
   size_t sent_sigslen, i;
-
-  /* Check key type is consistent with signature */
-  if (pkey->type != tls12_get_pkey_type(sigalg)) {
-    OPENSSL_PUT_ERROR(SSL, SSL_R_WRONG_SIGNATURE_TYPE);
-    *out_alert = SSL_AD_ILLEGAL_PARAMETER;
-    return 0;
-  }
 
   /* Check signature matches a type we sent */
   sent_sigslen = tls12_get_psigalgs(ssl, &sent_sigs);
@@ -2608,7 +2603,7 @@ int tls1_choose_signature_algorithm(SSL *ssl, uint16_t *out) {
 
   const uint16_t *peer_sigalgs = cert->peer_sigalgs;
   size_t peer_sigalgs_len = cert->peer_sigalgslen;
-  if (peer_sigalgs_len == 0) {
+  if (peer_sigalgs_len == 0 && ssl3_protocol_version(ssl) < TLS1_3_VERSION) {
     /* If the client didn't specify any signature_algorithms extension then
      * we can assume that it supports SHA1. See
      * http://tools.ietf.org/html/rfc5246#section-7.4.1.4.1 */
