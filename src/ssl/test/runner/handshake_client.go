@@ -168,7 +168,7 @@ NextCipherSuite:
 	}
 
 	if hello.vers >= VersionTLS12 && !c.config.Bugs.NoSignatureAlgorithms {
-		hello.signatureAlgorithms = c.config.signatureAlgorithmsForClient()
+		hello.signatureAlgorithms = c.config.verifySignatureAlgorithms()
 	}
 
 	var session *ClientSessionState
@@ -302,15 +302,15 @@ NextCipherSuite:
 	c.haveVers = true
 
 	// Check for downgrade signals in the server random, per
-	// draft-ietf-tls-tls13-13, section 6.3.1.2.
+	// draft-ietf-tls-tls13-14, section 6.3.1.2.
 	if c.vers <= VersionTLS12 && c.config.maxVersion(c.isDTLS) >= VersionTLS13 {
-		if bytes.Equal(serverHello.random[:8], downgradeTLS13) {
+		if bytes.Equal(serverHello.random[len(serverHello.random)-8:], downgradeTLS13) {
 			c.sendAlert(alertProtocolVersion)
 			return errors.New("tls: downgrade from TLS 1.3 detected")
 		}
 	}
 	if c.vers <= VersionTLS11 && c.config.maxVersion(c.isDTLS) >= VersionTLS12 {
-		if bytes.Equal(serverHello.random[:8], downgradeTLS12) {
+		if bytes.Equal(serverHello.random[len(serverHello.random)-8:], downgradeTLS12) {
 			c.sendAlert(alertProtocolVersion)
 			return errors.New("tls: downgrade from TLS 1.2 detected")
 		}
@@ -696,6 +696,9 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 	certReq, ok := msg.(*certificateRequestMsg)
 	if ok {
 		certRequested = true
+		if c.config.Bugs.IgnorePeerSignatureAlgorithmPreferences {
+			certReq.signatureAlgorithms = c.config.signSignatureAlgorithms()
+		}
 
 		hs.writeServerHash(certReq.marshal())
 
@@ -763,12 +766,9 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 
 		// Determine the hash to sign.
 		privKey := c.config.Certificates[0].PrivateKey
-		if c.config.Bugs.IgnorePeerSignatureAlgorithmPreferences {
-			certReq.signatureAlgorithms = c.config.signatureAlgorithmsForClient()
-		}
 
 		if certVerify.hasSignatureAlgorithm {
-			certVerify.signatureAlgorithm, err = selectSignatureAlgorithm(c.vers, privKey, c.config, certReq.signatureAlgorithms, c.config.signatureAlgorithmsForClient())
+			certVerify.signatureAlgorithm, err = selectSignatureAlgorithm(c.vers, privKey, c.config, certReq.signatureAlgorithms)
 			if err != nil {
 				c.sendAlert(alertInternalError)
 				return err
@@ -1254,7 +1254,7 @@ findCert:
 		// Ensure the private key supports one of the advertised
 		// signature algorithms.
 		if certReq.hasSignatureAlgorithm {
-			if _, err := selectSignatureAlgorithm(c.vers, chain.PrivateKey, c.config, certReq.signatureAlgorithms, c.config.signatureAlgorithmsForClient()); err != nil {
+			if _, err := selectSignatureAlgorithm(c.vers, chain.PrivateKey, c.config, certReq.signatureAlgorithms); err != nil {
 				continue
 			}
 		}
