@@ -120,11 +120,12 @@ func (c *Conn) serverHandshake() error {
 				return err
 			}
 		}
+
+		c.exporterSecret = hs.masterSecret
 	}
 	c.handshakeComplete = true
 	copy(c.clientRandom[:], hs.clientHello.random)
 	copy(c.serverRandom[:], hs.hello.random)
-	copy(c.masterSecret[:], hs.masterSecret)
 
 	return nil
 }
@@ -328,13 +329,9 @@ Curves:
 	hs.writeClientHash(hs.clientHello.marshal())
 
 	// Resolve PSK and compute the early secret.
-	var psk []byte
-	if hs.suite.flags&suitePSK != 0 {
-		return errors.New("tls: PSK ciphers not implemented for TLS 1.3")
-	} else {
-		psk = hs.finishedHash.zeroSecret()
-		hs.finishedHash.setResumptionContext(hs.finishedHash.zeroSecret())
-	}
+	// TODO(davidben): Implement PSK in TLS 1.3.
+	psk := hs.finishedHash.zeroSecret()
+	hs.finishedHash.setResumptionContext(hs.finishedHash.zeroSecret())
 
 	earlySecret := hs.finishedHash.extractKey(hs.finishedHash.zeroSecret(), psk)
 
@@ -392,6 +389,8 @@ Curves:
 	c.in.updateKeys(deriveTrafficAEAD(c.vers, hs.suite, handshakeTrafficSecret, handshakePhase, clientWrite), c.vers)
 
 	if hs.suite.flags&suitePSK != 0 {
+		return errors.New("tls: PSK ciphers not implemented for TLS 1.3")
+	} else {
 		if hs.clientHello.ocspStapling {
 			encryptedExtensions.extensions.ocspResponse = hs.cert.OCSPStaple
 		}
@@ -546,15 +545,16 @@ Curves:
 		c.sendAlert(alertHandshakeFailure)
 		return errors.New("tls: client's Finished message was incorrect")
 	}
+	hs.writeClientHash(clientFinished.marshal())
 
 	// Switch to application data keys.
 	c.out.updateKeys(deriveTrafficAEAD(c.vers, hs.suite, trafficSecret, applicationPhase, serverWrite), c.vers)
 	c.in.updateKeys(deriveTrafficAEAD(c.vers, hs.suite, trafficSecret, applicationPhase, clientWrite), c.vers)
 
-	// TODO(davidben): Derive and save the exporter master secret for key exporters. Swap out the masterSecret field.
 	// TODO(davidben): Derive and save the resumption master secret for receiving tickets.
 	// TODO(davidben): Save the traffic secret for KeyUpdate.
 	c.cipherSuite = hs.suite
+	c.exporterSecret = hs.finishedHash.deriveSecret(masterSecret, exporterLabel)
 	return nil
 }
 
