@@ -567,6 +567,7 @@ func (hs *clientHandshakeState) doTLS13Handshake() error {
 			return unexpectedMessageError(certVerifyMsg, msg)
 		}
 
+		c.peerSignatureAlgorithm = certVerifyMsg.signatureAlgorithm
 		input := hs.finishedHash.certificateVerifyInput(serverCertificateVerifyContextTLS13)
 		err = verifyMessage(c.vers, leaf.PublicKey, c.config, certVerifyMsg.signatureAlgorithm, input, certVerifyMsg.signature)
 		if err != nil {
@@ -984,6 +985,10 @@ func (hs *clientHandshakeState) processServerExtensions(serverExtensions *server
 	if serverExtensions.channelIDRequested && c.vers >= VersionTLS13 && enableTLS13Handshake {
 		c.sendAlert(alertHandshakeFailure)
 		return errors.New("server advertised Channel ID over TLS 1.3")
+	}
+
+	if serverExtensions.extendedMasterSecret && c.vers >= VersionTLS13 && enableTLS13Handshake {
+		return errors.New("tls: server advertised extended master secret over TLS 1.3")
 	}
 
 	if serverExtensions.srtpProtectionProfile != 0 {
