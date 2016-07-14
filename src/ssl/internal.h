@@ -466,7 +466,7 @@ enum ssl_open_record_t ssl_process_alert(SSL *ssl, uint8_t *out_alert,
 
 /* ssl_has_private_key returns one if |ssl| has a private key
  * configured and zero otherwise. */
-int ssl_has_private_key(SSL *ssl);
+int ssl_has_private_key(const SSL *ssl);
 
 /* ssl_private_key_* call the corresponding function on the
  * |SSL_PRIVATE_KEY_METHOD| for |ssl|, if configured. Otherwise, they implement
@@ -734,9 +734,39 @@ void ssl_write_buffer_clear(SSL *ssl);
 
 /* Certificate functions. */
 
+/* ssl_has_certificate returns one if a certificate and private key are
+ * configured and zero otherwise. */
+int ssl_has_certificate(const SSL *ssl);
+
+/* ssl_parse_cert_chain parses a certificate list from |cbs| in the format used
+ * by a TLS Certificate message. On success, it returns a newly-allocated
+ * |X509| list and advances |cbs|. Otherwise, it returns NULL and sets
+ * |*out_alert| to an alert to send to the peer. If the list is non-empty and
+ * |out_leaf_sha256| is non-NULL, it writes the SHA-256 hash of the leaf to
+ * |out_leaf_sha256|. */
+STACK_OF(X509) *ssl_parse_cert_chain(SSL *ssl, uint8_t *out_alert,
+                                     uint8_t *out_leaf_sha256, CBS *cbs);
+
 /* ssl_add_cert_to_cbb adds |x509| to |cbb|. It returns one on success and zero
  * on error. */
 int ssl_add_cert_to_cbb(CBB *cbb, X509 *x509);
+
+/* ssl_add_cert_chain adds |ssl|'s certificate chain to |cbb| in the format used
+ * by a TLS Certificate message. If there is no certificate chain, it emits an
+ * empty certificate list. It returns one on success and zero on error. */
+int ssl_add_cert_chain(SSL *ssl, CBB *cbb);
+
+/* ssl_parse_client_CA_list parses a CA list from |cbs| in the format used by a
+ * TLS CertificateRequest message. On success, it returns a newly-allocated
+ * |X509_NAME| list and advances |cbs|. Otherwise, it returns NULL and sets
+ * |*out_alert| to an alert to send to the peer. */
+STACK_OF(X509_NAME) *
+    ssl_parse_client_CA_list(SSL *ssl, uint8_t *out_alert, CBS *cbs);
+
+/* ssl_add_client_CA_list adds the configured CA list to |cbb| in the format
+ * used by a TLS CertificateRequest message. It returns one on success and zero
+ * on error. */
+int ssl_add_client_CA_list(SSL *ssl, CBB *cbb);
 
 
 /* Underdocumented functions.
@@ -1014,7 +1044,6 @@ void ssl_cert_set_cert_cb(CERT *cert,
                           int (*cb)(SSL *ssl, void *arg), void *arg);
 
 int ssl_verify_cert_chain(SSL *ssl, STACK_OF(X509) *cert_chain);
-int ssl_add_cert_chain(SSL *ssl, CBB *cbb);
 void ssl_update_cache(SSL *ssl, int mode);
 
 /* ssl_get_compatible_server_ciphers determines the key exchange and
