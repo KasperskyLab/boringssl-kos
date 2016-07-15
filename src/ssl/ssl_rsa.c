@@ -335,6 +335,19 @@ void SSL_CTX_set_private_key_method(SSL_CTX *ctx,
   ctx->cert->key_method = key_method;
 }
 
+int SSL_set_signing_algorithm_prefs(SSL *ssl, const uint16_t *prefs,
+                                    size_t prefs_len) {
+  ssl->cert->sigalgs_len = 0;
+  ssl->cert->sigalgs = BUF_memdup(prefs, prefs_len * sizeof(prefs[0]));
+  if (ssl->cert->sigalgs == NULL) {
+    OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
+    return 0;
+  }
+  ssl->cert->sigalgs_len = prefs_len;
+
+  return 1;
+}
+
 OPENSSL_COMPILE_ASSERT(sizeof(int) >= 2 * sizeof(uint16_t),
                        digest_list_conversion_cannot_overflow);
 
@@ -387,11 +400,32 @@ int ssl_has_private_key(const SSL *ssl) {
   return ssl->cert->privatekey != NULL || ssl->cert->key_method != NULL;
 }
 
+int ssl_is_ecdsa_key_type(int type) {
+  switch (type) {
+    /* TODO(davidben): Remove support for |EVP_PKEY_EC| key types. */
+    case EVP_PKEY_EC:
+    case NID_X9_62_prime256v1:
+    case NID_secp384r1:
+    case NID_secp521r1:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 int ssl_private_key_type(SSL *ssl) {
   if (ssl->cert->key_method != NULL) {
     return ssl->cert->key_method->type(ssl);
   }
-  return EVP_PKEY_id(ssl->cert->privatekey);
+  switch (EVP_PKEY_id(ssl->cert->privatekey)) {
+    case EVP_PKEY_RSA:
+      return NID_rsaEncryption;
+    case EVP_PKEY_EC:
+      return EC_GROUP_get_curve_name(
+          EC_KEY_get0_group(EVP_PKEY_get0_EC_KEY(ssl->cert->privatekey)));
+    default:
+      return NID_undef;
+  }
 }
 
 size_t ssl_private_key_max_signature_len(SSL *ssl) {
@@ -703,31 +737,28 @@ int ssl_private_key_supports_signature_algorithm(SSL *ssl,
                                                  uint16_t signature_algorithm) {
   const EVP_MD *md;
   if (is_rsa_pkcs1(&md, signature_algorithm)) {
-    return ssl_private_key_type(ssl) == EVP_PKEY_RSA;
+    return ssl_private_key_type(ssl) == NID_rsaEncryption;
   }
 
   int curve;
   if (is_ecdsa(&curve, &md, signature_algorithm)) {
-    if (ssl_private_key_type(ssl) != EVP_PKEY_EC) {
+    int type = ssl_private_key_type(ssl);
+    if (!ssl_is_ecdsa_key_type(type)) {
       return 0;
     }
 
-    /* For non-custom keys, also check the curve matches. Custom private keys
-     * must instead configure the signature algorithms accordingly. */
-    if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION &&
-        ssl->cert->key_method == NULL) {
-      EC_KEY *ec_key = EVP_PKEY_get0_EC_KEY(ssl->cert->privatekey);
-      if (curve == NID_undef ||
-          EC_GROUP_get_curve_name(EC_KEY_get0_group(ec_key)) != curve) {
-        return 0;
-      }
+    /* Prior to TLS 1.3, ECDSA curves did not match the signature algorithm. */
+    if (ssl3_protocol_version(ssl) < TLS1_3_VERSION) {
+      return 1;
     }
-    return 1;
+
+    /* TODO(davidben): Remove support for EVP_PKEY_EC keys. */
+    return curve != NID_undef && (type == EVP_PKEY_EC || type == curve);
   }
 
   if (is_rsa_pss(&md, signature_algorithm)) {
     if (ssl3_protocol_version(ssl) < TLS1_3_VERSION ||
-        ssl_private_key_type(ssl) != EVP_PKEY_RSA) {
+        ssl_private_key_type(ssl) != NID_rsaEncryption) {
       return 0;
     }
 

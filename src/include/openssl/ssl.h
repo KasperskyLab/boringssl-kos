@@ -869,13 +869,31 @@ OPENSSL_EXPORT int SSL_CTX_set_ocsp_response(SSL_CTX *ctx,
                                              const uint8_t *response,
                                              size_t response_len);
 
-/* SSL_set_private_key_digest_prefs copies |num_digests| NIDs from |digest_nids|
- * into |ssl|. These digests will be used, in decreasing order of preference,
- * when signing with |ssl|'s private key. It returns one on success and zero on
- * error. */
-OPENSSL_EXPORT int SSL_set_private_key_digest_prefs(SSL *ssl,
-                                                    const int *digest_nids,
-                                                    size_t num_digests);
+/* SSL_SIGN_* are signature algorithm values as defined in TLS 1.3. */
+#define SSL_SIGN_RSA_PKCS1_SHA1 0x0201
+#define SSL_SIGN_RSA_PKCS1_SHA256 0x0401
+#define SSL_SIGN_RSA_PKCS1_SHA384 0x0501
+#define SSL_SIGN_RSA_PKCS1_SHA512 0x0601
+#define SSL_SIGN_ECDSA_SHA1 0x0203
+#define SSL_SIGN_ECDSA_SECP256R1_SHA256 0x0403
+#define SSL_SIGN_ECDSA_SECP384R1_SHA384 0x0503
+#define SSL_SIGN_ECDSA_SECP521R1_SHA512 0x0603
+#define SSL_SIGN_RSA_PSS_SHA256 0x0700
+#define SSL_SIGN_RSA_PSS_SHA384 0x0701
+#define SSL_SIGN_RSA_PSS_SHA512 0x0702
+
+/* SSL_SIGN_RSA_PKCS1_MD5_SHA1 is an internal signature algorithm used to
+ * specify raw RSASSA-PKCS1-v1_5 with an MD5/SHA-1 concatenation, as used in TLS
+ * before TLS 1.2. */
+#define SSL_SIGN_RSA_PKCS1_MD5_SHA1 0xff01
+
+/* SSL_set_signing_algorithm_prefs configures |ssl| to use |prefs| as the
+ * preference list when signing with |ssl|'s private key. It returns one on
+ * success and zero on error. |prefs| should not include the internal-only value
+ * |SSL_SIGN_RSA_PKCS1_MD5_SHA1|. */
+OPENSSL_EXPORT int SSL_set_signing_algorithm_prefs(SSL *ssl,
+                                                   const uint16_t *prefs,
+                                                   size_t prefs_len);
 
 
 /* Certificate and private key convenience functions. */
@@ -962,8 +980,12 @@ enum ssl_private_key_result_t {
 /* SSL_PRIVATE_KEY_METHOD describes private key hooks. This is used to off-load
  * signing operations to a custom, potentially asynchronous, backend. */
 typedef struct ssl_private_key_method_st {
-  /* type returns either |EVP_PKEY_RSA| or |EVP_PKEY_EC| to denote the type of
-   * key used by |ssl|. */
+  /* type returns the type of the key used by |ssl|. For RSA keys, return
+   * |NID_rsaEncryption|. For ECDSA keys, return |NID_X9_62_prime256v1|,
+   * |NID_secp384r1|, or |NID_secp521r1|, depending on the curve.
+   *
+   * Returning |EVP_PKEY_EC| for ECDSA keys is deprecated and may result in
+   * connection failures in TLS 1.3. */
   int (*type)(SSL *ssl);
 
   /* max_signature_len returns the maximum length of a signature signed by the
@@ -3481,6 +3503,18 @@ OPENSSL_EXPORT int SSL_add_dir_cert_subjects_to_stack(STACK_OF(X509_NAME) *out,
  * APIs. */
 OPENSSL_EXPORT uint32_t SSL_SESSION_get_key_exchange_info(
     const SSL_SESSION *session);
+
+/* SSL_set_private_key_digest_prefs copies |num_digests| NIDs from |digest_nids|
+ * into |ssl|. These digests will be used, in decreasing order of preference,
+ * when signing with |ssl|'s private key. It returns one on success and zero on
+ * error.
+ *
+ * Use |SSL_set_signing_algorithm_prefs| instead.
+ *
+ * TODO(davidben): Remove this API when callers have been updated. */
+OPENSSL_EXPORT int SSL_set_private_key_digest_prefs(SSL *ssl,
+                                                    const int *digest_nids,
+                                                    size_t num_digests);
 
 
 /* Private structures.
