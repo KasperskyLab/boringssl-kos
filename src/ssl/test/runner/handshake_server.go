@@ -390,7 +390,15 @@ Curves:
 
 	// Send unencrypted ServerHello.
 	hs.writeServerHash(hs.hello.marshal())
-	c.writeRecord(recordTypeHandshake, hs.hello.marshal())
+	if config.Bugs.PartialEncryptedExtensionsWithServerHello {
+		helloBytes := hs.hello.marshal()
+		toWrite := make([]byte, 0, len(helloBytes)+1)
+		toWrite = append(toWrite, helloBytes...)
+		toWrite = append(toWrite, typeEncryptedExtensions)
+		c.writeRecord(recordTypeHandshake, toWrite)
+	} else {
+		c.writeRecord(recordTypeHandshake, hs.hello.marshal())
+	}
 	c.flushHandshake()
 
 	// Compute the handshake secret.
@@ -414,7 +422,12 @@ Curves:
 
 	// Send EncryptedExtensions.
 	hs.writeServerHash(encryptedExtensions.marshal())
-	c.writeRecord(recordTypeHandshake, encryptedExtensions.marshal())
+	if config.Bugs.PartialEncryptedExtensionsWithServerHello {
+		// The first byte has already been sent.
+		c.writeRecord(recordTypeHandshake, encryptedExtensions.marshal()[1:])
+	} else {
+		c.writeRecord(recordTypeHandshake, encryptedExtensions.marshal())
+	}
 
 	if hs.suite.flags&suitePSK == 0 {
 		if config.ClientAuth >= RequestClientCert {
@@ -446,9 +459,6 @@ Curves:
 			certMsg.certificates = hs.cert.Certificate
 		}
 		certMsgBytes := certMsg.marshal()
-		if config.Bugs.WrongCertificateMessageType {
-			certMsgBytes[0] += 42
-		}
 		hs.writeServerHash(certMsgBytes)
 		c.writeRecord(recordTypeHandshake, certMsgBytes)
 
@@ -925,9 +935,6 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 		}
 		if !config.Bugs.UnauthenticatedECDH {
 			certMsgBytes := certMsg.marshal()
-			if config.Bugs.WrongCertificateMessageType {
-				certMsgBytes[0] += 42
-			}
 			hs.writeServerHash(certMsgBytes)
 			c.writeRecord(recordTypeHandshake, certMsgBytes)
 		}
@@ -1261,6 +1268,9 @@ func (hs *serverHandshakeState) sendFinished(out []byte) error {
 	if c.config.Bugs.FragmentAcrossChangeCipherSpec {
 		c.writeRecord(recordTypeHandshake, postCCSBytes[:5])
 		postCCSBytes = postCCSBytes[5:]
+	} else if c.config.Bugs.SendUnencryptedFinished {
+		c.writeRecord(recordTypeHandshake, postCCSBytes)
+		postCCSBytes = nil
 	}
 	c.flushHandshake()
 
@@ -1280,7 +1290,7 @@ func (hs *serverHandshakeState) sendFinished(out []byte) error {
 		return errors.New("tls: simulating post-CCS alert")
 	}
 
-	if !c.config.Bugs.SkipFinished {
+	if !c.config.Bugs.SkipFinished && len(postCCSBytes) > 0 {
 		c.writeRecord(recordTypeHandshake, postCCSBytes)
 		c.flushHandshake()
 	}

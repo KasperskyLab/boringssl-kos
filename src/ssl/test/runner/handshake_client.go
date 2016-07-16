@@ -257,7 +257,18 @@ NextCipherSuite:
 		c.writeV2Record(helloBytes)
 	} else {
 		helloBytes = hello.marshal()
-		c.writeRecord(recordTypeHandshake, helloBytes)
+		if c.config.Bugs.PartialClientFinishedWithClientHello {
+			// Include one byte of Finished. We can compute it
+			// without completing the handshake. This assumes we
+			// negotiate TLS 1.3 with no HelloRetryRequest or
+			// CertificateRequest.
+			toWrite := make([]byte, 0, len(helloBytes)+1)
+			toWrite = append(toWrite, helloBytes...)
+			toWrite = append(toWrite, typeFinished)
+			c.writeRecord(recordTypeHandshake, toWrite)
+		} else {
+			c.writeRecord(recordTypeHandshake, helloBytes)
+		}
 	}
 	c.flushHandshake()
 
@@ -657,7 +668,12 @@ func (hs *clientHandshakeState) doTLS13Handshake() error {
 		finished.verifyData[0]++
 	}
 	hs.writeClientHash(finished.marshal())
-	c.writeRecord(recordTypeHandshake, finished.marshal())
+	if c.config.Bugs.PartialClientFinishedWithClientHello {
+		// The first byte has already been sent.
+		c.writeRecord(recordTypeHandshake, finished.marshal()[1:])
+	} else {
+		c.writeRecord(recordTypeHandshake, finished.marshal())
+	}
 	c.flushHandshake()
 
 	// Switch to application data keys.
@@ -1145,7 +1161,7 @@ func (hs *clientHandshakeState) readSessionTicket() error {
 func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 	c := hs.c
 
-	var postCCSBytes []byte
+	var postCCSMsgs [][]byte
 	seqno := hs.c.sendHandshakeSeq
 	if hs.serverHello.extensions.nextProtoNeg {
 		nextProto := new(nextProtoMsg)
@@ -1157,7 +1173,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 		nextProtoBytes := nextProto.marshal()
 		hs.writeHash(nextProtoBytes, seqno)
 		seqno++
-		postCCSBytes = append(postCCSBytes, nextProtoBytes...)
+		postCCSMsgs = append(postCCSMsgs, nextProtoBytes)
 	}
 
 	if hs.serverHello.extensions.channelIDRequested {
@@ -1185,7 +1201,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 		channelIDMsgBytes := channelIDMsg.marshal()
 		hs.writeHash(channelIDMsgBytes, seqno)
 		seqno++
-		postCCSBytes = append(postCCSBytes, channelIDMsgBytes...)
+		postCCSMsgs = append(postCCSMsgs, channelIDMsgBytes)
 	}
 
 	finished := new(finishedMsg)
@@ -1201,11 +1217,14 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 	c.clientVerify = append(c.clientVerify[:0], finished.verifyData...)
 	hs.finishedBytes = finished.marshal()
 	hs.writeHash(hs.finishedBytes, seqno)
-	postCCSBytes = append(postCCSBytes, hs.finishedBytes...)
+	postCCSMsgs = append(postCCSMsgs, hs.finishedBytes)
 
 	if c.config.Bugs.FragmentAcrossChangeCipherSpec {
-		c.writeRecord(recordTypeHandshake, postCCSBytes[:5])
-		postCCSBytes = postCCSBytes[5:]
+		c.writeRecord(recordTypeHandshake, postCCSMsgs[0][:5])
+		postCCSMsgs[0] = postCCSMsgs[0][5:]
+	} else if c.config.Bugs.SendUnencryptedFinished {
+		c.writeRecord(recordTypeHandshake, postCCSMsgs[0])
+		postCCSMsgs = postCCSMsgs[1:]
 	}
 	c.flushHandshake()
 
@@ -1227,7 +1246,9 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 	}
 
 	if !c.config.Bugs.SkipFinished {
-		c.writeRecord(recordTypeHandshake, postCCSBytes)
+		for _, msg := range postCCSMsgs {
+			c.writeRecord(recordTypeHandshake, msg)
+		}
 		c.flushHandshake()
 	}
 	return nil

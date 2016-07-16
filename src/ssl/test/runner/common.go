@@ -512,6 +512,20 @@ type ProtocolBugs struct {
 	// messages.
 	FragmentAcrossChangeCipherSpec bool
 
+	// SendUnencryptedFinished, if true, causes the Finished message to be
+	// send unencrypted before ChangeCipherSpec rather than after it.
+	SendUnencryptedFinished bool
+
+	// PartialEncryptedExtensionsWithServerHello, if true, causes the TLS
+	// 1.3 server to send part of EncryptedExtensions unencrypted
+	// in the same record as ServerHello.
+	PartialEncryptedExtensionsWithServerHello bool
+
+	// PartialClientFinishedWithClientHello, if true, causes the TLS 1.3
+	// client to send part of Finished unencrypted in the same record as
+	// ClientHello.
+	PartialClientFinishedWithClientHello bool
+
 	// SendV2ClientHello causes the client to send a V2ClientHello
 	// instead of a normal ClientHello.
 	SendV2ClientHello bool
@@ -709,6 +723,10 @@ type ProtocolBugs struct {
 	// Finished and will trigger a spurious retransmit.)
 	ReorderHandshakeFragments bool
 
+	// ReverseHandshakeFragments, if true, causes handshake fragments in
+	// DTLS to be reversed within a flight.
+	ReverseHandshakeFragments bool
+
 	// MixCompleteMessageWithFragments, if true, causes handshake
 	// messages in DTLS to redundantly both fragment the message
 	// and include a copy of the full one.
@@ -718,9 +736,9 @@ type ProtocolBugs struct {
 	// content type to be sent immediately following the handshake.
 	SendInvalidRecordType bool
 
-	// WrongCertificateMessageType, if true, causes Certificate message to
-	// be sent with the wrong message type.
-	WrongCertificateMessageType bool
+	// SendWrongMessageType, if non-zero, causes messages of the specified
+	// type to be sent with the wrong value.
+	SendWrongMessageType byte
 
 	// FragmentMessageTypeMismatch, if true, causes all non-initial
 	// handshake fragments in DTLS to have the wrong message type.
