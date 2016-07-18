@@ -2082,6 +2082,8 @@ func addBasicTests() {
 }
 
 func addCipherSuiteTests() {
+	const bogusCipher = 0xfe00
+
 	for _, suite := range testCipherSuites {
 		const psk = "12345"
 		const pskIdentity = "luggage combo"
@@ -2257,6 +2259,29 @@ func addCipherSuiteTests() {
 	})
 
 	testCases = append(testCases, testCase{
+		name: "ServerHelloBogusCipher",
+		config: Config{
+			MaxVersion: VersionTLS12,
+			Bugs: ProtocolBugs{
+				SendCipherSuite: bogusCipher,
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":UNKNOWN_CIPHER_RETURNED:",
+	})
+	testCases = append(testCases, testCase{
+		name: "ServerHelloBogusCipher-TLS13",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				SendCipherSuite: bogusCipher,
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":UNKNOWN_CIPHER_RETURNED:",
+	})
+
+	testCases = append(testCases, testCase{
 		name: "WeakDH",
 		config: Config{
 			MaxVersion:   VersionTLS12,
@@ -2305,7 +2330,6 @@ func addCipherSuiteTests() {
 	})
 
 	// The server must be tolerant to bogus ciphers.
-	const bogusCipher = 0x1234
 	testCases = append(testCases, testCase{
 		testType: serverTest,
 		name:     "UnknownCipher",
@@ -5475,8 +5499,8 @@ func addSignatureAlgorithmTests() {
 		expectedError: ":NO_COMMON_SIGNATURE_ALGORITHMS:",
 	})
 
-	// Test that hash preferences are enforced. BoringSSL defaults to
-	// rejecting MD5 signatures.
+	// Test that hash preferences are enforced. BoringSSL does not implement
+	// MD5 signatures.
 	testCases = append(testCases, testCase{
 		testType: serverTest,
 		name:     "ClientAuth-Enforced",
@@ -5485,11 +5509,6 @@ func addSignatureAlgorithmTests() {
 			Certificates: []Certificate{rsaCertificate},
 			SignSignatureAlgorithms: []signatureAlgorithm{
 				signatureRSAPKCS1WithMD5,
-				// Advertise SHA-1 so the handshake will
-				// proceed, but the shim's preferences will be
-				// ignored in CertificateVerify generation, so
-				// MD5 will be chosen.
-				signatureRSAPKCS1WithSHA1,
 			},
 			Bugs: ProtocolBugs{
 				IgnorePeerSignatureAlgorithmPreferences: true,
@@ -5510,6 +5529,41 @@ func addSignatureAlgorithmTests() {
 			},
 			Bugs: ProtocolBugs{
 				IgnorePeerSignatureAlgorithmPreferences: true,
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":WRONG_SIGNATURE_TYPE:",
+	})
+	testCases = append(testCases, testCase{
+		testType: serverTest,
+		name:     "ClientAuth-Enforced-TLS13",
+		config: Config{
+			MaxVersion:   VersionTLS13,
+			Certificates: []Certificate{rsaCertificate},
+			SignSignatureAlgorithms: []signatureAlgorithm{
+				signatureRSAPKCS1WithMD5,
+			},
+			Bugs: ProtocolBugs{
+				IgnorePeerSignatureAlgorithmPreferences: true,
+				IgnoreSignatureVersionChecks:            true,
+			},
+		},
+		flags:         []string{"-require-any-client-certificate"},
+		shouldFail:    true,
+		expectedError: ":WRONG_SIGNATURE_TYPE:",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "ServerAuth-Enforced-TLS13",
+		config: Config{
+			MaxVersion:   VersionTLS13,
+			CipherSuites: []uint16{TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+			SignSignatureAlgorithms: []signatureAlgorithm{
+				signatureRSAPKCS1WithMD5,
+			},
+			Bugs: ProtocolBugs{
+				IgnorePeerSignatureAlgorithmPreferences: true,
+				IgnoreSignatureVersionChecks:            true,
 			},
 		},
 		shouldFail:    true,
