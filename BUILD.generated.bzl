@@ -214,6 +214,7 @@ crypto_sources = [
     "src/crypto/bn/generic.c",
     "src/crypto/bn/kronecker.c",
     "src/crypto/bn/montgomery.c",
+    "src/crypto/bn/montgomery_inv.c",
     "src/crypto/bn/mul.c",
     "src/crypto/bn/prime.c",
     "src/crypto/bn/random.c",
