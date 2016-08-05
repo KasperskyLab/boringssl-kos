@@ -1533,9 +1533,9 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
  * used outside the library. */
 OPENSSL_EXPORT SSL_SESSION *SSL_SESSION_new(void);
 
-/* SSL_SESSION_up_ref, if |session| is not NULL, increments the reference count
- * of |session|. It then returns |session|. */
-OPENSSL_EXPORT SSL_SESSION *SSL_SESSION_up_ref(SSL_SESSION *session);
+/* SSL_SESSION_up_ref increments the reference count of |session| and returns
+ * one. */
+OPENSSL_EXPORT int SSL_SESSION_up_ref(SSL_SESSION *session);
 
 /* SSL_SESSION_free decrements the reference count of |session|. If it reaches
  * zero, all data referenced by |session| and |session| itself are released. */
@@ -3162,6 +3162,8 @@ OPENSSL_EXPORT const SSL_METHOD *DTLSv1_2_method(void);
 
 /* These client- and server-specific methods call their corresponding generic
  * methods. */
+OPENSSL_EXPORT const SSL_METHOD *TLS_server_method(void);
+OPENSSL_EXPORT const SSL_METHOD *TLS_client_method(void);
 OPENSSL_EXPORT const SSL_METHOD *SSLv23_server_method(void);
 OPENSSL_EXPORT const SSL_METHOD *SSLv23_client_method(void);
 OPENSSL_EXPORT const SSL_METHOD *SSLv3_server_method(void);
