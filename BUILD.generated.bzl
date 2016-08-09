@@ -61,6 +61,8 @@ crypto_headers = [
     "src/include/openssl/buf.h",
     "src/include/openssl/buffer.h",
     "src/include/openssl/bytestring.h",
+    "src/include/openssl/c++/aead.h",
+    "src/include/openssl/c++/scoped_helpers.h",
     "src/include/openssl/cast.h",
     "src/include/openssl/chacha.h",
     "src/include/openssl/cipher.h",
