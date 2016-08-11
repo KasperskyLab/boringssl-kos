@@ -12,7 +12,6 @@ test_support_sources = [
     "src/crypto/conf/internal.h",
     "src/crypto/curve25519/internal.h",
     "src/crypto/des/internal.h",
-    "src/crypto/dh/internal.h",
     "src/crypto/digest/internal.h",
     "src/crypto/digest/md32_common.h",
     "src/crypto/ec/internal.h",
