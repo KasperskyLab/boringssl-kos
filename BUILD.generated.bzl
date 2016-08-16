@@ -163,7 +163,6 @@ crypto_sources = [
     "src/crypto/aes/mode_wrappers.c",
     "src/crypto/asn1/a_bitstr.c",
     "src/crypto/asn1/a_bool.c",
-    "src/crypto/asn1/a_bytes.c",
     "src/crypto/asn1/a_d2i_fp.c",
     "src/crypto/asn1/a_dup.c",
     "src/crypto/asn1/a_enum.c",
