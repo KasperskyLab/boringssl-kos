@@ -581,6 +581,20 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
+      name = "ecdsa_sign_test",
+      size = "small",
+      srcs = ["src/crypto/ecdsa/ecdsa_sign_test.cc"] + test_support_sources,
+      args = [
+          "$(location src/crypto/ecdsa/ecdsa_sign_tests.txt)",
+      ],
+      copts = copts,
+      data = [
+          "src/crypto/ecdsa/ecdsa_sign_tests.txt",
+      ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
       name = "ecdsa_test",
       size = "small",
       srcs = ["src/crypto/ecdsa/ecdsa_test.cc"] + test_support_sources,
