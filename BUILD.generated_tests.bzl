@@ -28,7 +28,6 @@ test_support_sources = [
     "src/crypto/rsa/internal.h",
     "src/crypto/test/file_test.cc",
     "src/crypto/test/file_test.h",
-    "src/crypto/test/scoped_types.h",
     "src/crypto/test/test_util.cc",
     "src/crypto/test/test_util.h",
     "src/crypto/x509/charmap.h",
@@ -39,7 +38,6 @@ test_support_sources = [
     "src/ssl/internal.h",
     "src/ssl/test/async_bio.h",
     "src/ssl/test/packeted_bio.h",
-    "src/ssl/test/scoped_types.h",
     "src/ssl/test/test_config.h",
 ]
 
