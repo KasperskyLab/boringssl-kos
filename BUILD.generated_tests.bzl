@@ -685,7 +685,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "gcm_test",
       size = "small",
-      srcs = ["src/crypto/modes/gcm_test.c"] + test_support_sources,
+      srcs = ["src/crypto/modes/gcm_test.cc"] + test_support_sources,
       copts = copts,
       deps = [crypto],
   )
