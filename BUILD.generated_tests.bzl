@@ -195,36 +195,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "aead_test_rc4_md5_tls",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "rc4-md5-tls",
-          "$(location src/crypto/cipher/test/rc4_md5_tls_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/rc4_md5_tls_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aead_test_rc4_sha1_tls",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "rc4-sha1-tls",
-          "$(location src/crypto/cipher/test/rc4_sha1_tls_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/rc4_sha1_tls_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "aead_test_aes_128_cbc_sha1_tls",
       size = "small",
       srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
@@ -355,36 +325,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts,
       data = [
           "src/crypto/cipher/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aead_test_rc4_md5_ssl3",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "rc4-md5-ssl3",
-          "$(location src/crypto/cipher/test/rc4_md5_ssl3_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/rc4_md5_ssl3_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aead_test_rc4_sha1_ssl3",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "rc4-sha1-ssl3",
-          "$(location src/crypto/cipher/test/rc4_sha1_ssl3_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/rc4_sha1_ssl3_tests.txt",
       ],
       deps = [crypto],
   )
