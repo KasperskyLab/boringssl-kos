@@ -597,8 +597,8 @@ type ProtocolBugs struct {
 	// send a NewSessionTicket message during an abbreviated handshake.
 	RenewTicketOnResume bool
 
-	// SendClientVersion, if non-zero, causes the client to send a different
-	// TLS version in the ClientHello than the maximum supported version.
+	// SendClientVersion, if non-zero, causes the client to send the
+	// specified value in the ClientHello version field.
 	SendClientVersion uint16
 
 	// NegotiateVersion, if non-zero, causes the server to negotiate the
@@ -736,8 +736,8 @@ type ProtocolBugs struct {
 	// across a renego.
 	RequireSameRenegoClientVersion bool
 
-	// ExpectInitialRecordVersion, if non-zero, is the expected
-	// version of the records before the version is determined.
+	// ExpectInitialRecordVersion, if non-zero, is the expected value of
+	// record-layer version field before the version is determined.
 	ExpectInitialRecordVersion uint16
 
 	// MaxPacketLength, if non-zero, is the maximum acceptable size for a
@@ -1040,7 +1040,7 @@ type ProtocolBugs struct {
 	SecondHelloRetryRequest bool
 
 	// SendServerHelloVersion, if non-zero, causes the server to send the
-	// specified version in ServerHello rather than the true version.
+	// specified value in ServerHello version field.
 	SendServerHelloVersion uint16
 
 	// SkipHelloRetryRequest, if true, causes the TLS 1.3 server to not send
