@@ -616,7 +616,9 @@ func doExchange(test *testCase, config *Config, conn net.Conn, isResume bool, nu
 	}
 
 	for i := 0; i < test.sendKeyUpdates; i++ {
-		tlsConn.SendKeyUpdate()
+		if err := tlsConn.SendKeyUpdate(); err != nil {
+			return err
+		}
 	}
 
 	for i := 0; i < test.sendEmptyRecords; i++ {
@@ -4282,12 +4284,38 @@ func addVersionNegotiationTests() {
 		testType: serverTest,
 		name:     "ConflictingVersionNegotiation",
 		config: Config{
-			MaxVersion: VersionTLS13,
 			Bugs: ProtocolBugs{
-				SendClientVersion:     0x0304,
-				SendSupportedVersions: []uint16{0x0303},
+				SendClientVersion:     VersionTLS12,
+				SendSupportedVersions: []uint16{VersionTLS11},
 			},
 		},
+		// The extension takes precedence over the ClientHello version.
+		expectedVersion: VersionTLS11,
+	})
+
+	testCases = append(testCases, testCase{
+		testType: serverTest,
+		name:     "ConflictingVersionNegotiation-2",
+		config: Config{
+			Bugs: ProtocolBugs{
+				SendClientVersion:     VersionTLS11,
+				SendSupportedVersions: []uint16{VersionTLS12},
+			},
+		},
+		// The extension takes precedence over the ClientHello version.
+		expectedVersion: VersionTLS12,
+	})
+
+	testCases = append(testCases, testCase{
+		testType: serverTest,
+		name:     "RejectFinalTLS13",
+		config: Config{
+			Bugs: ProtocolBugs{
+				SendSupportedVersions: []uint16{VersionTLS13, VersionTLS12},
+			},
+		},
+		// We currently implement a draft TLS 1.3 version. Ensure that
+		// the true TLS 1.3 value is ignored for now.
 		expectedVersion: VersionTLS12,
 	})
 
@@ -4312,7 +4340,22 @@ func addVersionNegotiationTests() {
 				OmitSupportedVersions: true,
 			},
 		},
+		// TLS 1.3 must be negotiated with the supported_versions
+		// extension, not ClientHello.version.
 		expectedVersion: VersionTLS12,
+	})
+	testCases = append(testCases, testCase{
+		testType: serverTest,
+		name:     "VersionTolerance-TLS13",
+		config: Config{
+			Bugs: ProtocolBugs{
+				// Although TLS 1.3 does not use
+				// ClientHello.version, it still tolerates high
+				// values there.
+				SendClientVersion: 0x0400,
+			},
+		},
+		expectedVersion: VersionTLS13,
 	})
 
 	testCases = append(testCases, testCase{
@@ -4385,6 +4428,7 @@ func addVersionNegotiationTests() {
 				NegotiateVersion: VersionTLS12,
 			},
 		},
+		expectedVersion: VersionTLS12,
 		// TODO(davidben): This test should fail once TLS 1.3 is final
 		// and the fallback signal restored.
 	})
@@ -4393,9 +4437,10 @@ func addVersionNegotiationTests() {
 		name:     "Downgrade-TLS12-Server",
 		config: Config{
 			Bugs: ProtocolBugs{
-				SendClientVersion: VersionTLS12,
+				SendSupportedVersions: []uint16{VersionTLS12},
 			},
 		},
+		expectedVersion: VersionTLS12,
 		// TODO(davidben): This test should fail once TLS 1.3 is final
 		// and the fallback signal restored.
 	})
