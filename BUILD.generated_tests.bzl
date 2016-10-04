@@ -46,7 +46,13 @@ def create_tests(copts, crypto, ssl):
       name = "aes_test",
       size = "small",
       srcs = ["src/crypto/aes/aes_test.cc"] + test_support_sources,
+      args = [
+          "$(location src/crypto/aes/aes_tests.txt)",
+      ],
       copts = copts,
+      data = [
+          "src/crypto/aes/aes_tests.txt",
+      ],
       deps = [crypto],
   )
 
@@ -120,21 +126,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_key_wrap",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "aes-128-key-wrap",
-          "$(location src/crypto/cipher/test/aes_128_key_wrap_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/aes_128_key_wrap_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "aead_test_aes_256_gcm",
       size = "small",
       srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
@@ -145,21 +136,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts,
       data = [
           "src/crypto/cipher/test/aes_256_gcm_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aead_test_aes_256_key_wrap",
-      size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
-      args = [
-          "aes-256-key-wrap",
-          "$(location src/crypto/cipher/test/aes_256_key_wrap_tests.txt)",
-      ],
-      copts = copts,
-      data = [
-          "src/crypto/cipher/test/aes_256_key_wrap_tests.txt",
       ],
       deps = [crypto],
   )
