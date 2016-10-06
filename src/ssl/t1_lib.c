@@ -1240,13 +1240,10 @@ static int ext_ocsp_parse_serverhello(SSL *ssl, uint8_t *out_alert,
     return 1;
   }
 
-  /* OCSP stapling is forbidden on a non-certificate cipher. */
-  if (!ssl_cipher_uses_certificate_auth(ssl->s3->tmp.new_cipher)) {
-    return 0;
-  }
-
   if (ssl3_protocol_version(ssl) < TLS1_3_VERSION) {
-    if (CBS_len(contents) != 0) {
+    /* OCSP stapling is forbidden on non-certificate ciphers. */
+    if (CBS_len(contents) != 0 ||
+        !ssl_cipher_uses_certificate_auth(ssl->s3->tmp.new_cipher)) {
       return 0;
     }
 
@@ -1256,6 +1253,11 @@ static int ext_ocsp_parse_serverhello(SSL *ssl, uint8_t *out_alert,
 
     ssl->s3->tmp.certificate_status_expected = 1;
     return 1;
+  }
+
+  /* In TLS 1.3, OCSP stapling is forbidden on resumption. */
+  if (ssl->s3->session_reused) {
+    return 0;
   }
 
   uint8_t status_type;
@@ -1298,7 +1300,9 @@ static int ext_ocsp_parse_clienthello(SSL *ssl, uint8_t *out_alert,
 static int ext_ocsp_add_serverhello(SSL *ssl, CBB *out) {
   if (!ssl->s3->tmp.ocsp_stapling_requested ||
       ssl->ctx->ocsp_response_length == 0 ||
-      !ssl_cipher_uses_certificate_auth(ssl->s3->tmp.new_cipher)) {
+      ssl->s3->session_reused ||
+      (ssl3_protocol_version(ssl) < TLS1_3_VERSION &&
+       !ssl_cipher_uses_certificate_auth(ssl->s3->tmp.new_cipher))) {
     return 1;
   }
 
@@ -2019,7 +2023,7 @@ static int ext_ec_point_add_serverhello(SSL *ssl, CBB *out) {
 
 /* Pre Shared Key
  *
- * https://tools.ietf.org/html/draft-ietf-tls-tls13-14 */
+ * https://tools.ietf.org/html/draft-ietf-tls-tls13-15 */
 
 static int ext_pre_shared_key_add_clienthello(SSL *ssl, CBB *out) {
   uint16_t min_version, max_version;
@@ -2035,12 +2039,16 @@ static int ext_pre_shared_key_add_clienthello(SSL *ssl, CBB *out) {
     return 1;
   }
 
-  CBB contents, identities, identity;
+  CBB contents, identity, ke_modes, auth_modes, ticket;
   if (!CBB_add_u16(out, TLSEXT_TYPE_pre_shared_key) ||
       !CBB_add_u16_length_prefixed(out, &contents) ||
-      !CBB_add_u16_length_prefixed(&contents, &identities) ||
-      !CBB_add_u16_length_prefixed(&identities, &identity) ||
-      !CBB_add_bytes(&identity, ssl->session->tlsext_tick,
+      !CBB_add_u16_length_prefixed(&contents, &identity) ||
+      !CBB_add_u8_length_prefixed(&identity, &ke_modes) ||
+      !CBB_add_u8(&ke_modes, SSL_PSK_DHE_KE) ||
+      !CBB_add_u8_length_prefixed(&identity, &auth_modes) ||
+      !CBB_add_u8(&auth_modes, SSL_PSK_AUTH) ||
+      !CBB_add_u16_length_prefixed(&identity, &ticket) ||
+      !CBB_add_bytes(&ticket, ssl->session->tlsext_tick,
                      ssl->session->tlsext_ticklen)) {
     return 0;
   }
@@ -2053,11 +2061,13 @@ int ssl_ext_pre_shared_key_parse_serverhello(SSL *ssl, uint8_t *out_alert,
   uint16_t psk_id;
   if (!CBS_get_u16(contents, &psk_id) ||
       CBS_len(contents) != 0) {
+    OPENSSL_PUT_ERROR(SSL, SSL_R_DECODE_ERROR);
     *out_alert = SSL_AD_DECODE_ERROR;
     return 0;
   }
 
   if (psk_id != 0) {
+    OPENSSL_PUT_ERROR(SSL, SSL_R_PSK_IDENTITY_NOT_FOUND);
     *out_alert = SSL_AD_UNKNOWN_PSK_IDENTITY;
     return 0;
   }
@@ -2069,19 +2079,30 @@ int ssl_ext_pre_shared_key_parse_clienthello(SSL *ssl,
                                              SSL_SESSION **out_session,
                                              uint8_t *out_alert,
                                              CBS *contents) {
-  CBS identities, identity;
-  if (!CBS_get_u16_length_prefixed(contents, &identities) ||
-      !CBS_get_u16_length_prefixed(&identities, &identity) ||
-      CBS_len(contents) != 0) {
+  /* We only process the first PSK identity since we don't support pure PSK. */
+  CBS identity, ke_modes, auth_modes, ticket;
+  if (!CBS_get_u16_length_prefixed(contents, &identity) ||
+      !CBS_get_u8_length_prefixed(&identity, &ke_modes) ||
+      !CBS_get_u8_length_prefixed(&identity, &auth_modes) ||
+      !CBS_get_u16_length_prefixed(&identity, &ticket) ||
+      CBS_len(&identity) != 0) {
     *out_alert = SSL_AD_DECODE_ERROR;
     return 0;
+  }
+
+  /* We only support tickets with PSK_DHE_KE and PSK_AUTH. */
+  if (memchr(CBS_data(&ke_modes), SSL_PSK_DHE_KE, CBS_len(&ke_modes)) == NULL ||
+      memchr(CBS_data(&auth_modes), SSL_PSK_AUTH, CBS_len(&auth_modes)) ==
+          NULL) {
+    *out_session = NULL;
+    return 1;
   }
 
   /* TLS 1.3 session tickets are renewed separately as part of the
    * NewSessionTicket. */
   int renew;
-  return tls_process_ticket(ssl, out_session, &renew, CBS_data(&identity),
-                            CBS_len(&identity), NULL, 0);
+  return tls_process_ticket(ssl, out_session, &renew, CBS_data(&ticket),
+                            CBS_len(&ticket), NULL, 0);
 }
 
 int ssl_ext_pre_shared_key_add_serverhello(SSL *ssl, CBB *out) {
@@ -2216,8 +2237,13 @@ int ssl_ext_key_share_parse_clienthello(SSL *ssl, int *out_found,
                                         uint8_t *out_alert, CBS *contents) {
   uint16_t group_id;
   CBS key_shares;
-  if (!tls1_get_shared_group(ssl, &group_id) ||
-      !CBS_get_u16_length_prefixed(contents, &key_shares) ||
+  if (!tls1_get_shared_group(ssl, &group_id)) {
+    OPENSSL_PUT_ERROR(SSL, SSL_R_NO_SHARED_GROUP);
+    *out_alert = SSL_AD_HANDSHAKE_FAILURE;
+    return 0;
+  }
+
+  if (!CBS_get_u16_length_prefixed(contents, &key_shares) ||
       CBS_len(contents) != 0) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_DECODE_ERROR);
     return 0;
@@ -2271,6 +2297,7 @@ int ssl_ext_key_share_parse_clienthello(SSL *ssl, int *out_found,
     OPENSSL_free(secret);
     SSL_ECDH_CTX_cleanup(&group);
     CBB_cleanup(&public_key);
+    *out_alert = SSL_AD_ILLEGAL_PARAMETER;
     return 0;
   }
 
@@ -2283,10 +2310,6 @@ int ssl_ext_key_share_parse_clienthello(SSL *ssl, int *out_found,
 }
 
 int ssl_ext_key_share_add_serverhello(SSL *ssl, CBB *out) {
-  if (ssl->s3->tmp.new_cipher->algorithm_mkey != SSL_kECDHE) {
-    return 1;
-  }
-
   uint16_t group_id;
   CBB kse_bytes, public_key;
   if (!tls1_get_shared_group(ssl, &group_id) ||

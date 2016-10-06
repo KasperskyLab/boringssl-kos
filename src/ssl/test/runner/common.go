@@ -27,7 +27,7 @@ const (
 )
 
 // A draft version of TLS 1.3 that is sent over the wire for the current draft.
-const tls13DraftVersion = 0x7f0e
+const tls13DraftVersion = 0x7f0f
 
 const (
 	maxPlaintext        = 16384        // maximum plaintext payload length
@@ -189,11 +189,16 @@ const (
 	SRTP_AES128_CM_HMAC_SHA1_32        = 0x0002
 )
 
-// TicketFlags values (see draft-ietf-tls-tls13-14, section 4.4.1)
+// PskKeyExchangeMode values (see draft-ietf-tls-tls13-15)
 const (
-	ticketAllowEarlyData     = 1
-	ticketAllowDHEResumption = 2
-	ticketAllowPSKResumption = 4
+	pskKEMode    = 0
+	pskDHEKEMode = 1
+)
+
+// PskAuthenticationMode values (see draft-ietf-tls-tls13-15)
+const (
+	pskAuthMode     = 0
+	pskSignAuthMode = 1
 )
 
 // ConnectionState records basic TLS details about the connection.
@@ -243,8 +248,6 @@ type ClientSessionState struct {
 	ocspResponse         []byte
 	ticketCreationTime   time.Time
 	ticketExpiration     time.Time
-	ticketFlags          uint32
-	ticketAgeAdd         uint32
 }
 
 // ClientSessionCache is a cache of ClientSessionState objects that can be used
@@ -914,6 +917,13 @@ type ProtocolBugs struct {
 	// session ticket.
 	SendEmptySessionTicket bool
 
+	// SnedPSKKeyExchangeModes, if present, determines the PSK key exchange modes
+	// to send.
+	SendPSKKeyExchangeModes []byte
+
+	// SendPSKAuthModes, if present, determines the PSK auth modes to send.
+	SendPSKAuthModes []byte
+
 	// FailIfSessionOffered, if true, causes the server to fail any
 	// connections where the client offers a non-empty session ID or session
 	// ticket.
@@ -1015,6 +1025,26 @@ type ProtocolBugs struct {
 	// AdvertiseTicketExtension, if true, causes the ticket extension to be
 	// advertised in server extensions
 	AdvertiseTicketExtension bool
+
+	// NegotiatePSKResumption, if true, causes the server to attempt pure PSK
+	// resumption.
+	NegotiatePSKResumption bool
+
+	// AlwaysSelectPSKIdentity, if true, causes the server in TLS 1.3 to
+	// always acknowledge a session, regardless of one was offered.
+	AlwaysSelectPSKIdentity bool
+
+	// SelectPSKIdentityOnResume, if non-zero, causes the server to select
+	// the specified PSK identity index rather than the actual value.
+	SelectPSKIdentityOnResume uint16
+
+	// OmitServerHelloSignatureAlgorithms, if true, causes the server to omit the
+	// signature_algorithms extension in the ServerHello.
+	OmitServerHelloSignatureAlgorithms bool
+
+	// IncludeServerHelloSignatureAlgorithms, if true, causes the server to
+	// include the signature_algorithms extension in all ServerHellos.
+	IncludeServerHelloSignatureAlgorithms bool
 
 	// MissingKeyShare, if true, causes the TLS 1.3 implementation to skip
 	// sending a key_share extension and use the zero ECDHE secret
