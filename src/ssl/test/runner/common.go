@@ -100,6 +100,11 @@ const (
 	extensionChannelID                  uint16 = 30032 // not IANA assigned
 )
 
+// TLS ticket extension numbers
+const (
+	ticketExtensionCustom uint16 = 1234 // not IANA assigned
+)
+
 // TLS signaling cipher suite values
 const (
 	scsvRenegotiation uint16 = 0x00ff
@@ -887,6 +892,10 @@ type ProtocolBugs struct {
 	// of a custom extension.
 	ExpectedCustomExtension *string
 
+	// CustomTicketExtension, if not empty, contains the contents of an
+	// extension what will be added to NewSessionTicket in TLS 1.3.
+	CustomTicketExtension string
+
 	// NoCloseNotify, if true, causes the close_notify alert to be skipped
 	// on connection shutdown.
 	NoCloseNotify bool
@@ -1127,8 +1136,8 @@ type ProtocolBugs struct {
 	// invalid Channel ID signature.
 	InvalidChannelIDSignature bool
 
-	// ExpectGREASE, if true, causes the server to reject a ClientHello
-	// unless it contains GREASE values. See draft-davidben-tls-grease-01.
+	// ExpectGREASE, if true, causes messages without GREASE values to be
+	// rejected. See draft-davidben-tls-grease-01.
 	ExpectGREASE bool
 }
 

@@ -2263,7 +2263,7 @@ func addBasicTests() {
 			expectedLocalError: "remote error: illegal parameter",
 		},
 		{
-			name: "GREASE-TLS12",
+			name: "GREASE-Client-TLS12",
 			config: Config{
 				MaxVersion: VersionTLS12,
 				Bugs: ProtocolBugs{
@@ -2273,7 +2273,18 @@ func addBasicTests() {
 			flags: []string{"-enable-grease"},
 		},
 		{
-			name: "GREASE-TLS13",
+			name: "GREASE-Client-TLS13",
+			config: Config{
+				MaxVersion: VersionTLS13,
+				Bugs: ProtocolBugs{
+					ExpectGREASE: true,
+				},
+			},
+			flags: []string{"-enable-grease"},
+		},
+		{
+			testType: serverTest,
+			name:     "GREASE-Server-TLS13",
 			config: Config{
 				MaxVersion: VersionTLS13,
 				Bugs: ProtocolBugs{
@@ -8583,6 +8594,17 @@ func addTLS13HandshakeTests() {
 		resumeSession: true,
 		shouldFail:    true,
 		expectedError: ":PSK_IDENTITY_NOT_FOUND:",
+	})
+
+	// Test that unknown NewSessionTicket extensions are tolerated.
+	testCases = append(testCases, testCase{
+		name: "TLS13-CustomTicketExtension",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				CustomTicketExtension: "1234",
+			},
+		},
 	})
 }
 

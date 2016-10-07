@@ -1398,6 +1398,10 @@ func (c *Conn) handlePostHandshakeMessage() error {
 
 	if c.isClient {
 		if newSessionTicket, ok := msg.(*newSessionTicketMsg); ok {
+			if c.config.Bugs.ExpectGREASE && !newSessionTicket.hasGREASEExtension {
+				return errors.New("tls: no GREASE ticket extension found")
+			}
+
 			if c.config.ClientSessionCache == nil || newSessionTicket.ticketLifetime == 0 {
 				return nil
 			}
@@ -1710,10 +1714,11 @@ func (c *Conn) SendNewSessionTicket() error {
 
 	// TODO(davidben): Allow configuring these values.
 	m := &newSessionTicketMsg{
-		version:        c.vers,
-		ticketLifetime: uint32(24 * time.Hour / time.Second),
-		keModes:        []byte{pskDHEKEMode},
-		authModes:      []byte{pskAuthMode},
+		version:         c.vers,
+		ticketLifetime:  uint32(24 * time.Hour / time.Second),
+		keModes:         []byte{pskDHEKEMode},
+		authModes:       []byte{pskAuthMode},
+		customExtension: c.config.Bugs.CustomTicketExtension,
 	}
 
 	if len(c.config.Bugs.SendPSKKeyExchangeModes) != 0 {
