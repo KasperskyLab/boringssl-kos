@@ -706,10 +706,6 @@ static int dont_add_serverhello(SSL *ssl, CBB *out) {
  *
  * https://tools.ietf.org/html/rfc6066#section-3. */
 
-static void ext_sni_init(SSL *ssl) {
-  ssl->s3->tmp.should_ack_sni = 0;
-}
-
 static int ext_sni_add_clienthello(SSL *ssl, CBB *out) {
   if (ssl->tlsext_hostname == NULL) {
     return 1;
@@ -797,7 +793,7 @@ static int ext_sni_parse_clienthello(SSL *ssl, uint8_t *out_alert,
       return 0;
     }
 
-    ssl->s3->tmp.should_ack_sni = 1;
+    ssl->s3->hs->should_ack_sni = 1;
   }
 
   return 1;
@@ -805,7 +801,7 @@ static int ext_sni_parse_clienthello(SSL *ssl, uint8_t *out_alert,
 
 static int ext_sni_add_serverhello(SSL *ssl, CBB *out) {
   if (ssl->session != NULL ||
-      !ssl->s3->tmp.should_ack_sni ||
+      !ssl->s3->hs->should_ack_sni ||
       ssl->s3->new_session->tlsext_hostname == NULL) {
     return 1;
   }
@@ -1211,7 +1207,6 @@ static int ext_sigalgs_parse_clienthello(SSL *ssl, uint8_t *out_alert,
  * https://tools.ietf.org/html/rfc6066#section-8 */
 
 static void ext_ocsp_init(SSL *ssl) {
-  ssl->s3->tmp.certificate_status_expected = 0;
   ssl->tlsext_status_type = -1;
 }
 
@@ -1251,7 +1246,7 @@ static int ext_ocsp_parse_serverhello(SSL *ssl, uint8_t *out_alert,
      * status_request here does not make sense, but OpenSSL does so and the
      * specification does not say anything. Tolerate it but ignore it. */
 
-    ssl->s3->tmp.certificate_status_expected = 1;
+    ssl->s3->hs->certificate_status_expected = 1;
     return 1;
   }
 
@@ -1292,13 +1287,13 @@ static int ext_ocsp_parse_clienthello(SSL *ssl, uint8_t *out_alert,
 
   /* We cannot decide whether OCSP stapling will occur yet because the correct
    * SSL_CTX might not have been selected. */
-  ssl->s3->tmp.ocsp_stapling_requested = status_type == TLSEXT_STATUSTYPE_ocsp;
+  ssl->s3->hs->ocsp_stapling_requested = status_type == TLSEXT_STATUSTYPE_ocsp;
 
   return 1;
 }
 
 static int ext_ocsp_add_serverhello(SSL *ssl, CBB *out) {
-  if (!ssl->s3->tmp.ocsp_stapling_requested ||
+  if (!ssl->s3->hs->ocsp_stapling_requested ||
       ssl->ctx->ocsp_response_length == 0 ||
       ssl->s3->session_reused ||
       (ssl3_protocol_version(ssl) < TLS1_3_VERSION &&
@@ -1312,7 +1307,7 @@ static int ext_ocsp_add_serverhello(SSL *ssl, CBB *out) {
       return 1;
     }
 
-    ssl->s3->tmp.certificate_status_expected = 1;
+    ssl->s3->hs->certificate_status_expected = 1;
 
     return CBB_add_u16(out, TLSEXT_TYPE_status_request) &&
            CBB_add_u16(out, 0 /* length */);
@@ -1332,10 +1327,6 @@ static int ext_ocsp_add_serverhello(SSL *ssl, CBB *out) {
 /* Next protocol negotiation.
  *
  * https://htmlpreview.github.io/?https://github.com/agl/technotes/blob/master/nextprotoneg.html */
-
-static void ext_npn_init(SSL *ssl) {
-  ssl->s3->next_proto_neg_seen = 0;
-}
 
 static int ext_npn_add_clienthello(SSL *ssl, CBB *out) {
   if (ssl->s3->initial_handshake_complete ||
@@ -1406,7 +1397,7 @@ static int ext_npn_parse_serverhello(SSL *ssl, uint8_t *out_alert,
   }
 
   ssl->s3->next_proto_negotiated_len = selected_len;
-  ssl->s3->next_proto_neg_seen = 1;
+  ssl->s3->hs->next_proto_neg_seen = 1;
 
   return 1;
 }
@@ -1432,14 +1423,14 @@ static int ext_npn_parse_clienthello(SSL *ssl, uint8_t *out_alert,
     return 1;
   }
 
-  ssl->s3->next_proto_neg_seen = 1;
+  ssl->s3->hs->next_proto_neg_seen = 1;
   return 1;
 }
 
 static int ext_npn_add_serverhello(SSL *ssl, CBB *out) {
   /* |next_proto_neg_seen| might have been cleared when an ALPN extension was
    * parsed. */
-  if (!ssl->s3->next_proto_neg_seen) {
+  if (!ssl->s3->hs->next_proto_neg_seen) {
     return 1;
   }
 
@@ -1449,7 +1440,7 @@ static int ext_npn_add_serverhello(SSL *ssl, CBB *out) {
   if (ssl->ctx->next_protos_advertised_cb(
           ssl, &npa, &npa_len, ssl->ctx->next_protos_advertised_cb_arg) !=
       SSL_TLSEXT_ERR_OK) {
-    ssl->s3->next_proto_neg_seen = 0;
+    ssl->s3->hs->next_proto_neg_seen = 0;
     return 1;
   }
 
@@ -1572,7 +1563,7 @@ static int ext_alpn_parse_serverhello(SSL *ssl, uint8_t *out_alert,
   assert(!ssl->s3->initial_handshake_complete);
   assert(ssl->alpn_client_proto_list != NULL);
 
-  if (ssl->s3->next_proto_neg_seen) {
+  if (ssl->s3->hs->next_proto_neg_seen) {
     /* NPN and ALPN may not be negotiated in the same connection. */
     *out_alert = SSL_AD_ILLEGAL_PARAMETER;
     OPENSSL_PUT_ERROR(SSL, SSL_R_NEGOTIATED_BOTH_NPN_AND_ALPN);
@@ -1638,7 +1629,7 @@ static int ext_alpn_parse_clienthello(SSL *ssl, uint8_t *out_alert,
   }
 
   /* ALPN takes precedence over NPN. */
-  ssl->s3->next_proto_neg_seen = 0;
+  ssl->s3->hs->next_proto_neg_seen = 0;
 
   CBS protocol_name_list;
   if (!CBS_get_u16_length_prefixed(contents, &protocol_name_list) ||
@@ -2482,7 +2473,7 @@ static const struct tls_extension kExtensions[] = {
   },
   {
     TLSEXT_TYPE_server_name,
-    ext_sni_init,
+    NULL,
     ext_sni_add_clienthello,
     ext_sni_parse_serverhello,
     ext_sni_parse_clienthello,
@@ -2523,7 +2514,7 @@ static const struct tls_extension kExtensions[] = {
   },
   {
     TLSEXT_TYPE_next_proto_neg,
-    ext_npn_init,
+    NULL,
     ext_npn_add_clienthello,
     ext_npn_parse_serverhello,
     ext_npn_parse_clienthello,
@@ -2609,12 +2600,11 @@ static const struct tls_extension kExtensions[] = {
 #define kNumExtensions (sizeof(kExtensions) / sizeof(struct tls_extension))
 
 OPENSSL_COMPILE_ASSERT(kNumExtensions <=
-                           sizeof(((SSL *)NULL)->s3->tmp.extensions.sent) * 8,
+                           sizeof(((SSL_HANDSHAKE *)NULL)->extensions.sent) * 8,
                        too_many_extensions_for_sent_bitset);
-OPENSSL_COMPILE_ASSERT(kNumExtensions <=
-                           sizeof(((SSL *)NULL)->s3->tmp.extensions.received) *
-                               8,
-                       too_many_extensions_for_received_bitset);
+OPENSSL_COMPILE_ASSERT(
+    kNumExtensions <= sizeof(((SSL_HANDSHAKE *)NULL)->extensions.received) * 8,
+    too_many_extensions_for_received_bitset);
 
 static const struct tls_extension *tls_extension_find(uint32_t *out_index,
                                                       uint16_t value) {
@@ -2647,8 +2637,8 @@ int ssl_add_clienthello_tlsext(SSL *ssl, CBB *out, size_t header_len) {
     goto err;
   }
 
-  ssl->s3->tmp.extensions.sent = 0;
-  ssl->s3->tmp.custom_extensions.sent = 0;
+  ssl->s3->hs->extensions.sent = 0;
+  ssl->s3->hs->custom_extensions.sent = 0;
 
   for (size_t i = 0; i < kNumExtensions; i++) {
     if (kExtensions[i].init != NULL) {
@@ -2675,7 +2665,7 @@ int ssl_add_clienthello_tlsext(SSL *ssl, CBB *out, size_t header_len) {
     }
 
     if (CBB_len(&extensions) != len_before) {
-      ssl->s3->tmp.extensions.sent |= (1u << i);
+      ssl->s3->hs->extensions.sent |= (1u << i);
     }
   }
 
@@ -2750,7 +2740,7 @@ int ssl_add_serverhello_tlsext(SSL *ssl, CBB *out) {
 
   unsigned i;
   for (i = 0; i < kNumExtensions; i++) {
-    if (!(ssl->s3->tmp.extensions.received & (1u << i))) {
+    if (!(ssl->s3->hs->extensions.received & (1u << i))) {
       /* Don't send extensions that were not received. */
       continue;
     }
@@ -2788,8 +2778,8 @@ static int ssl_scan_clienthello_tlsext(
     }
   }
 
-  ssl->s3->tmp.extensions.received = 0;
-  ssl->s3->tmp.custom_extensions.received = 0;
+  ssl->s3->hs->extensions.received = 0;
+  ssl->s3->hs->custom_extensions.received = 0;
 
   CBS extensions;
   CBS_init(&extensions, client_hello->extensions, client_hello->extensions_len);
@@ -2822,7 +2812,7 @@ static int ssl_scan_clienthello_tlsext(
       continue;
     }
 
-    ssl->s3->tmp.extensions.received |= (1u << ext_index);
+    ssl->s3->hs->extensions.received |= (1u << ext_index);
     uint8_t alert = SSL_AD_DECODE_ERROR;
     if (!ext->parse_clienthello(ssl, &alert, &extension)) {
       *out_alert = alert;
@@ -2833,7 +2823,7 @@ static int ssl_scan_clienthello_tlsext(
   }
 
   for (size_t i = 0; i < kNumExtensions; i++) {
-    if (ssl->s3->tmp.extensions.received & (1u << i)) {
+    if (ssl->s3->hs->extensions.received & (1u << i)) {
       continue;
     }
 
@@ -2847,7 +2837,7 @@ static int ssl_scan_clienthello_tlsext(
       CBS_init(&fake_contents, kFakeRenegotiateExtension,
                sizeof(kFakeRenegotiateExtension));
       contents = &fake_contents;
-      ssl->s3->tmp.extensions.received |= (1u << i);
+      ssl->s3->hs->extensions.received |= (1u << i);
     }
 
     /* Extension wasn't observed so call the callback with a NULL
@@ -2919,7 +2909,7 @@ static int ssl_scan_serverhello_tlsext(SSL *ssl, CBS *cbs, int *out_alert) {
       continue;
     }
 
-    if (!(ssl->s3->tmp.extensions.sent & (1u << ext_index)) &&
+    if (!(ssl->s3->hs->extensions.sent & (1u << ext_index)) &&
         type != TLSEXT_TYPE_renegotiate) {
       /* If the extension was never sent then it is illegal, except for the
        * renegotiation extension which, in SSL 3.0, is signaled via SCSV. */
@@ -2979,7 +2969,7 @@ static int ssl_check_clienthello_tlsext(SSL *ssl) {
       return 1;
 
     case SSL_TLSEXT_ERR_NOACK:
-      ssl->s3->tmp.should_ack_sni = 0;
+      ssl->s3->hs->should_ack_sni = 0;
       return 1;
 
     default:

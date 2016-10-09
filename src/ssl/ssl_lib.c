@@ -2021,12 +2021,12 @@ void SSL_set_cert_cb(SSL *ssl, int (*cb)(SSL *ssl, void *arg), void *arg) {
 }
 
 size_t SSL_get0_certificate_types(SSL *ssl, const uint8_t **out_types) {
-  if (ssl->server) {
+  if (ssl->server || ssl->s3->hs == NULL) {
     *out_types = NULL;
     return 0;
   }
-  *out_types = ssl->s3->tmp.certificate_types;
-  return ssl->s3->tmp.num_certificate_types;
+  *out_types = ssl->s3->hs->certificate_types;
+  return ssl->s3->hs->num_certificate_types;
 }
 
 void ssl_get_compatible_server_ciphers(SSL *ssl, uint32_t *out_mask_k,
@@ -2674,7 +2674,10 @@ int SSL_in_init(const SSL *ssl) {
 }
 
 int SSL_in_false_start(const SSL *ssl) {
-  return ssl->s3->tmp.in_false_start;
+  if (ssl->s3->hs == NULL) {
+    return 0;
+  }
+  return ssl->s3->hs->in_false_start;
 }
 
 int SSL_cutthrough_complete(const SSL *ssl) {
@@ -2694,7 +2697,8 @@ int ssl3_can_false_start(const SSL *ssl) {
   /* False Start only for TLS 1.2 with an ECDHE+AEAD cipher and ALPN or NPN. */
   return !SSL_is_dtls(ssl) &&
       SSL_version(ssl) == TLS1_2_VERSION &&
-      (ssl->s3->alpn_selected || ssl->s3->next_proto_neg_seen) &&
+      (ssl->s3->alpn_selected != NULL ||
+       ssl->s3->next_proto_negotiated != NULL) &&
       cipher != NULL &&
       (cipher->algorithm_mkey == SSL_kECDHE ||
        cipher->algorithm_mkey == SSL_kCECPQ1) &&

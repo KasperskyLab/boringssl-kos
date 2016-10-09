@@ -898,6 +898,27 @@ struct ssl_handshake_st {
   uint8_t secret[EVP_MAX_MD_SIZE];
   uint8_t traffic_secret_0[EVP_MAX_MD_SIZE];
 
+  union {
+    /* sent is a bitset where the bits correspond to elements of kExtensions
+     * in t1_lib.c. Each bit is set if that extension was sent in a
+     * ClientHello. It's not used by servers. */
+    uint32_t sent;
+    /* received is a bitset, like |sent|, but is used by servers to record
+     * which extensions were received from a client. */
+    uint32_t received;
+  } extensions;
+
+  union {
+    /* sent is a bitset where the bits correspond to elements of
+     * |client_custom_extensions| in the |SSL_CTX|. Each bit is set if that
+     * extension was sent in a ClientHello. It's not used by servers. */
+    uint16_t sent;
+    /* received is a bitset, like |sent|, but is used by servers to record
+     * which custom extensions were received from a client. The bits here
+     * correspond to |server_custom_extensions|. */
+    uint16_t received;
+  } custom_extensions;
+
   /* ecdh_ctx is the active client ECDH offer in TLS 1.3. */
   SSL_ECDH_CTX ecdh_ctx;
 
@@ -922,11 +943,45 @@ struct ssl_handshake_st {
   /* num_peer_sigalgs is the number of entries in |peer_sigalgs|. */
   size_t num_peer_sigalgs;
 
+  /* session_tickets_sent, in TLS 1.3, is the number of tickets the server has
+   * sent. */
   uint8_t session_tickets_sent;
+
+  /* cert_request is one if a client certificate was requested and zero
+   * otherwise. */
+  unsigned cert_request:1;
+
+  /* certificate_status_expected is one if OCSP stapling was negotiated and the
+   * server is expected to send a CertificateStatus message. (This is used on
+   * both the client and server sides.) */
+  unsigned certificate_status_expected:1;
+
+  /* ocsp_stapling_requested is one if a client requested OCSP stapling. */
+  unsigned ocsp_stapling_requested:1;
+
+  /* should_ack_sni is used by a server and indicates that the SNI extension
+   * should be echoed in the ServerHello. */
+  unsigned should_ack_sni:1;
+
+  /* in_false_start is one if there is a pending client handshake in False
+   * Start. The client may write data at this point. */
+  unsigned in_false_start:1;
+
+  /* next_proto_neg_seen is one of NPN was negotiated. */
+  unsigned next_proto_neg_seen:1;
 
   /* peer_psk_identity_hint, on the client, is the psk_identity_hint sent by the
    * server when using a TLS 1.2 PSK key exchange. */
   char *peer_psk_identity_hint;
+
+  /* ca_names, on the client, contains the list of CAs received in a
+   * CertificateRequest message. */
+  STACK_OF(X509_NAME) *ca_names;
+
+  /* certificate_types, on the client, contains the set of certificate types
+   * received in a CertificateRequest message. */
+  uint8_t *certificate_types;
+  size_t num_certificate_types;
 } /* SSL_HANDSHAKE */;
 
 SSL_HANDSHAKE *ssl_handshake_new(enum ssl_hs_wait_t (*do_handshake)(SSL *ssl));
