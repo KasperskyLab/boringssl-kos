@@ -312,18 +312,8 @@ static const uint16_t kDefaultGroups[] = {
 #endif
 };
 
-void tls1_get_grouplist(SSL *ssl, int get_peer_groups,
-                        const uint16_t **out_group_ids,
+void tls1_get_grouplist(SSL *ssl, const uint16_t **out_group_ids,
                         size_t *out_group_ids_len) {
-  if (get_peer_groups) {
-    /* Only clients send a supported group list, so this function is only
-     * called on the server. */
-    assert(ssl->server);
-    *out_group_ids = ssl->s3->tmp.peer_supported_group_list;
-    *out_group_ids_len = ssl->s3->tmp.peer_supported_group_list_len;
-    return;
-  }
-
   *out_group_ids = ssl->supported_group_list;
   *out_group_ids_len = ssl->supported_group_list_len;
   if (!*out_group_ids) {
@@ -333,42 +323,35 @@ void tls1_get_grouplist(SSL *ssl, int get_peer_groups,
 }
 
 int tls1_get_shared_group(SSL *ssl, uint16_t *out_group_id) {
-  const uint16_t *groups, *peer_groups, *pref, *supp;
-  size_t groups_len, peer_groups_len, pref_len, supp_len, i, j;
+  assert(ssl->server);
 
-  /* Can't do anything on client side */
-  if (ssl->server == 0) {
-    return 0;
-  }
+  const uint16_t *groups, *pref, *supp;
+  size_t groups_len, pref_len, supp_len;
+  tls1_get_grouplist(ssl, &groups, &groups_len);
 
-  tls1_get_grouplist(ssl, 0 /* local groups */, &groups, &groups_len);
-  tls1_get_grouplist(ssl, 1 /* peer groups */, &peer_groups, &peer_groups_len);
-
-  if (peer_groups_len == 0) {
-    /* Clients are not required to send a supported_groups extension. In this
-     * case, the server is free to pick any group it likes. See RFC 4492,
-     * section 4, paragraph 3.
-     *
-     * However, in the interests of compatibility, we will skip ECDH if the
-     * client didn't send an extension because we can't be sure that they'll
-     * support our favoured group. */
-    return 0;
-  }
+  /* Clients are not required to send a supported_groups extension. In this
+   * case, the server is free to pick any group it likes. See RFC 4492,
+   * section 4, paragraph 3.
+   *
+   * However, in the interests of compatibility, we will skip ECDH if the
+   * client didn't send an extension because we can't be sure that they'll
+   * support our favoured group. Thus we do not special-case an emtpy
+   * |peer_supported_group_list|. */
 
   if (ssl->options & SSL_OP_CIPHER_SERVER_PREFERENCE) {
     pref = groups;
     pref_len = groups_len;
-    supp = peer_groups;
-    supp_len = peer_groups_len;
+    supp = ssl->s3->hs->peer_supported_group_list;
+    supp_len = ssl->s3->hs->peer_supported_group_list_len;
   } else {
-    pref = peer_groups;
-    pref_len = peer_groups_len;
+    pref = ssl->s3->hs->peer_supported_group_list;
+    pref_len = ssl->s3->hs->peer_supported_group_list_len;
     supp = groups;
     supp_len = groups_len;
   }
 
-  for (i = 0; i < pref_len; i++) {
-    for (j = 0; j < supp_len; j++) {
+  for (size_t i = 0; i < pref_len; i++) {
+    for (size_t j = 0; j < supp_len; j++) {
       if (pref[i] == supp[j]) {
         *out_group_id = pref[i];
         return 1;
@@ -445,110 +428,17 @@ err:
   return 0;
 }
 
-/* tls1_curve_params_from_ec_key sets |*out_group_id| and |*out_comp_id| to the
- * TLS group ID and point format, respectively, for |ec|. It returns one on
- * success and zero on failure. */
-static int tls1_curve_params_from_ec_key(uint16_t *out_group_id,
-                                         uint8_t *out_comp_id, EC_KEY *ec) {
-  int nid;
-  uint16_t id;
-  const EC_GROUP *grp;
-
-  if (ec == NULL) {
-    return 0;
-  }
-
-  grp = EC_KEY_get0_group(ec);
-  if (grp == NULL) {
-    return 0;
-  }
-
-  /* Determine group ID */
-  nid = EC_GROUP_get_curve_name(grp);
-  if (!ssl_nid_to_group_id(&id, nid)) {
-    return 0;
-  }
-
-  /* Set the named group ID. Arbitrary explicit groups are not supported. */
-  *out_group_id = id;
-
-  if (out_comp_id) {
-    if (EC_KEY_get0_public_key(ec) == NULL) {
-      return 0;
-    }
-    if (EC_KEY_get_conv_form(ec) == POINT_CONVERSION_COMPRESSED) {
-      *out_comp_id = TLSEXT_ECPOINTFORMAT_ansiX962_compressed_prime;
-    } else {
-      *out_comp_id = TLSEXT_ECPOINTFORMAT_uncompressed;
-    }
-  }
-
-  return 1;
-}
-
-/* tls1_check_group_id returns one if |group_id| is consistent with both our
- * and the peer's group preferences. Note: if called as the client, only our
- * preferences are checked; the peer (the server) does not send preferences. */
 int tls1_check_group_id(SSL *ssl, uint16_t group_id) {
   const uint16_t *groups;
-  size_t groups_len, i, get_peer_groups;
-
-  /* Check against our list, then the peer's list. */
-  for (get_peer_groups = 0; get_peer_groups <= 1; get_peer_groups++) {
-    if (get_peer_groups && !ssl->server) {
-      /* Servers do not present a preference list so, if we are a client, only
-       * check our list. */
-      continue;
-    }
-
-    tls1_get_grouplist(ssl, get_peer_groups, &groups, &groups_len);
-    if (get_peer_groups && groups_len == 0) {
-      /* Clients are not required to send a supported_groups extension. In this
-       * case, the server is free to pick any group it likes. See RFC 4492,
-       * section 4, paragraph 3. */
-      continue;
-    }
-    for (i = 0; i < groups_len; i++) {
-      if (groups[i] == group_id) {
-        break;
-      }
-    }
-
-    if (i == groups_len) {
-      return 0;
+  size_t groups_len;
+  tls1_get_grouplist(ssl, &groups, &groups_len);
+  for (size_t i = 0; i < groups_len; i++) {
+    if (groups[i] == group_id) {
+      return 1;
     }
   }
 
-  return 1;
-}
-
-int tls1_check_ec_cert(SSL *ssl, X509 *x) {
-  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
-    /* In TLS 1.3, the ECDSA curve is negotiated via signature algorithms. */
-    return 1;
-  }
-
-  EVP_PKEY *pkey = X509_get_pubkey(x);
-  if (pkey == NULL) {
-    return 0;
-  }
-
-  int ret = 0;
-  uint16_t group_id;
-  uint8_t comp_id;
-  EC_KEY *ec_key = EVP_PKEY_get0_EC_KEY(pkey);
-  if (ec_key == NULL ||
-      !tls1_curve_params_from_ec_key(&group_id, &comp_id, ec_key) ||
-      !tls1_check_group_id(ssl, group_id) ||
-      comp_id != TLSEXT_ECPOINTFORMAT_uncompressed) {
-    goto done;
-  }
-
-  ret = 1;
-
-done:
-  EVP_PKEY_free(pkey);
-  return ret;
+  return 0;
 }
 
 /* List of supported signature algorithms and hashes. Should make this
@@ -2160,7 +2050,7 @@ static int ext_key_share_add_clienthello(SSL *ssl, CBB *out) {
     /* Predict the most preferred group. */
     const uint16_t *groups;
     size_t groups_len;
-    tls1_get_grouplist(ssl, 0 /* local groups */, &groups, &groups_len);
+    tls1_get_grouplist(ssl, &groups, &groups_len);
     if (groups_len == 0) {
       OPENSSL_PUT_ERROR(SSL, SSL_R_NO_GROUPS_SPECIFIED);
       return 0;
@@ -2369,12 +2259,6 @@ static int ext_supported_versions_add_clienthello(SSL *ssl, CBB *out) {
  * https://tools.ietf.org/html/rfc4492#section-5.1.2
  * https://tools.ietf.org/html/draft-ietf-tls-tls13-12#section-6.3.2.2 */
 
-static void ext_supported_groups_init(SSL *ssl) {
-  OPENSSL_free(ssl->s3->tmp.peer_supported_group_list);
-  ssl->s3->tmp.peer_supported_group_list = NULL;
-  ssl->s3->tmp.peer_supported_group_list_len = 0;
-}
-
 static int ext_supported_groups_add_clienthello(SSL *ssl, CBB *out) {
   if (!ssl_any_ec_cipher_suites_enabled(ssl)) {
     return 1;
@@ -2396,7 +2280,7 @@ static int ext_supported_groups_add_clienthello(SSL *ssl, CBB *out) {
 
   const uint16_t *groups;
   size_t groups_len;
-  tls1_get_grouplist(ssl, 0, &groups, &groups_len);
+  tls1_get_grouplist(ssl, &groups, &groups_len);
 
   for (size_t i = 0; i < groups_len; i++) {
     if (!CBB_add_u16(&groups_bytes, groups[i])) {
@@ -2428,9 +2312,9 @@ static int ext_supported_groups_parse_clienthello(SSL *ssl, uint8_t *out_alert,
     return 0;
   }
 
-  ssl->s3->tmp.peer_supported_group_list = OPENSSL_malloc(
+  ssl->s3->hs->peer_supported_group_list = OPENSSL_malloc(
       CBS_len(&supported_group_list));
-  if (ssl->s3->tmp.peer_supported_group_list == NULL) {
+  if (ssl->s3->hs->peer_supported_group_list == NULL) {
     *out_alert = SSL_AD_INTERNAL_ERROR;
     return 0;
   }
@@ -2438,19 +2322,19 @@ static int ext_supported_groups_parse_clienthello(SSL *ssl, uint8_t *out_alert,
   const size_t num_groups = CBS_len(&supported_group_list) / 2;
   for (size_t i = 0; i < num_groups; i++) {
     if (!CBS_get_u16(&supported_group_list,
-                     &ssl->s3->tmp.peer_supported_group_list[i])) {
+                     &ssl->s3->hs->peer_supported_group_list[i])) {
       goto err;
     }
   }
 
   assert(CBS_len(&supported_group_list) == 0);
-  ssl->s3->tmp.peer_supported_group_list_len = num_groups;
+  ssl->s3->hs->peer_supported_group_list_len = num_groups;
 
   return 1;
 
 err:
-  OPENSSL_free(ssl->s3->tmp.peer_supported_group_list);
-  ssl->s3->tmp.peer_supported_group_list = NULL;
+  OPENSSL_free(ssl->s3->hs->peer_supported_group_list);
+  ssl->s3->hs->peer_supported_group_list = NULL;
   *out_alert = SSL_AD_INTERNAL_ERROR;
   return 0;
 }
@@ -2589,7 +2473,7 @@ static const struct tls_extension kExtensions[] = {
    * https://crbug.com/363583. */
   {
     TLSEXT_TYPE_supported_groups,
-    ext_supported_groups_init,
+    NULL,
     ext_supported_groups_add_clienthello,
     ext_supported_groups_parse_serverhello,
     ext_supported_groups_parse_clienthello,

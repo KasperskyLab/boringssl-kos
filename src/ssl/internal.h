@@ -943,6 +943,12 @@ struct ssl_handshake_st {
   /* num_peer_sigalgs is the number of entries in |peer_sigalgs|. */
   size_t num_peer_sigalgs;
 
+  /* peer_supported_group_list contains the supported group IDs advertised by
+   * the peer. This is only set on the server's end. The server does not
+   * advertise this extension to the client. */
+  uint16_t *peer_supported_group_list;
+  size_t peer_supported_group_list_len;
+
   /* session_tickets_sent, in TLS 1.3, is the number of tickets the server has
    * sent. */
   uint8_t session_tickets_sent;
@@ -1509,15 +1515,12 @@ int tls1_generate_master_secret(SSL *ssl, uint8_t *out, const uint8_t *premaster
                                 size_t premaster_len);
 
 /* tls1_get_grouplist sets |*out_group_ids| and |*out_group_ids_len| to the
- * list of allowed group IDs. If |get_peer_groups| is non-zero, return the
- * peer's group list. Otherwise, return the preferred list. */
-void tls1_get_grouplist(SSL *ssl, int get_peer_groups,
-                        const uint16_t **out_group_ids,
+ * locally-configured group preference list. */
+void tls1_get_grouplist(SSL *ssl, const uint16_t **out_group_ids,
                         size_t *out_group_ids_len);
 
-/* tls1_check_group_id returns one if |group_id| is consistent with both our
- * and the peer's group preferences. Note: if called as the client, only our
- * preferences are checked; the peer (the server) does not send preferences. */
+/* tls1_check_group_id returns one if |group_id| is consistent with
+ * locally-configured group preferences. */
 int tls1_check_group_id(SSL *ssl, uint16_t group_id);
 
 /* tls1_get_shared_group sets |*out_group_id| to the first preferred shared
@@ -1538,11 +1541,6 @@ int tls1_set_curves(uint16_t **out_group_ids, size_t *out_group_ids_len,
  * |*out_group_ids_len|. Otherwise, it returns zero. */
 int tls1_set_curves_list(uint16_t **out_group_ids, size_t *out_group_ids_len,
                          const char *curves);
-
-/* tls1_check_ec_cert returns one if |x| is an ECC certificate with curve and
- * point format compatible with the client's preferences. Otherwise it returns
- * zero. */
-int tls1_check_ec_cert(SSL *ssl, X509 *x);
 
 /* ssl_add_clienthello_tlsext writes ClientHello extensions to |out|. It
  * returns one on success and zero on failure. The |header_len| argument is the
