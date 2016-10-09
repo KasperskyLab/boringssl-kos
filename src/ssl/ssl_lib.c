@@ -635,8 +635,10 @@ int SSL_accept(SSL *ssl) {
 }
 
 static int ssl_do_renegotiate(SSL *ssl) {
-  /* We do not accept renegotiations as a server. */
-  if (ssl->server) {
+  /* We do not accept renegotiations as a server or SSL 3.0. SSL 3.0 will be
+   * removed entirely in the future and requires retaining more data for
+   * renegotiation_info. */
+  if (ssl->server || ssl->version == SSL3_VERSION) {
     goto no_renegotiation;
   }
 
@@ -1233,6 +1235,15 @@ int SSL_set_rfd(SSL *ssl, int fd) {
   return 1;
 }
 
+static size_t copy_finished(void *out, size_t out_len, const uint8_t *in,
+                            size_t in_len) {
+  if (out_len > in_len) {
+    out_len = in_len;
+  }
+  memcpy(out, in, out_len);
+  return in_len;
+}
+
 size_t SSL_get_finished(const SSL *ssl, void *buf, size_t count) {
   if (!ssl->s3->initial_handshake_complete ||
       ssl3_protocol_version(ssl) < TLS1_VERSION ||
@@ -1240,12 +1251,13 @@ size_t SSL_get_finished(const SSL *ssl, void *buf, size_t count) {
     return 0;
   }
 
-  size_t ret = ssl->s3->tmp.finish_md_len;
-  if (count > ret) {
-    count = ret;
+  if (ssl->server) {
+    return copy_finished(buf, count, ssl->s3->previous_server_finished,
+                         ssl->s3->previous_server_finished_len);
   }
-  memcpy(buf, ssl->s3->tmp.finish_md, count);
-  return ret;
+
+  return copy_finished(buf, count, ssl->s3->previous_client_finished,
+                       ssl->s3->previous_client_finished_len);
 }
 
 size_t SSL_get_peer_finished(const SSL *ssl, void *buf, size_t count) {
@@ -1255,12 +1267,13 @@ size_t SSL_get_peer_finished(const SSL *ssl, void *buf, size_t count) {
     return 0;
   }
 
-  size_t ret = ssl->s3->tmp.peer_finish_md_len;
-  if (count > ret) {
-    count = ret;
+  if (ssl->server) {
+    return copy_finished(buf, count, ssl->s3->previous_client_finished,
+                         ssl->s3->previous_client_finished_len);
   }
-  memcpy(buf, ssl->s3->tmp.peer_finish_md, count);
-  return ret;
+
+  return copy_finished(buf, count, ssl->s3->previous_server_finished,
+                       ssl->s3->previous_server_finished_len);
 }
 
 int SSL_get_verify_mode(const SSL *ssl) { return ssl->verify_mode; }
