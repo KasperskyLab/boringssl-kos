@@ -27,7 +27,7 @@ const (
 )
 
 // A draft version of TLS 1.3 that is sent over the wire for the current draft.
-const tls13DraftVersion = 0x7f0f
+const tls13DraftVersion = 0x7f10
 
 const (
 	maxPlaintext        = 16384        // maximum plaintext payload length
@@ -57,8 +57,8 @@ const (
 	typeServerHello         uint8 = 2
 	typeHelloVerifyRequest  uint8 = 3
 	typeNewSessionTicket    uint8 = 4
-	typeHelloRetryRequest   uint8 = 6 // draft-ietf-tls-tls13-13
-	typeEncryptedExtensions uint8 = 8 // draft-ietf-tls-tls13-13
+	typeHelloRetryRequest   uint8 = 6 // draft-ietf-tls-tls13-16
+	typeEncryptedExtensions uint8 = 8 // draft-ietf-tls-tls13-16
 	typeCertificate         uint8 = 11
 	typeServerKeyExchange   uint8 = 12
 	typeCertificateRequest  uint8 = 13
@@ -67,7 +67,7 @@ const (
 	typeClientKeyExchange   uint8 = 16
 	typeFinished            uint8 = 20
 	typeCertificateStatus   uint8 = 22
-	typeKeyUpdate           uint8 = 24  // draft-ietf-tls-tls13-13
+	typeKeyUpdate           uint8 = 24  // draft-ietf-tls-tls13-16
 	typeNextProtocol        uint8 = 67  // Not IANA assigned
 	typeChannelID           uint8 = 203 // Not IANA assigned
 )
@@ -89,11 +89,11 @@ const (
 	extensionSignedCertificateTimestamp uint16 = 18
 	extensionExtendedMasterSecret       uint16 = 23
 	extensionSessionTicket              uint16 = 35
-	extensionKeyShare                   uint16 = 40    // draft-ietf-tls-tls13-13
-	extensionPreSharedKey               uint16 = 41    // draft-ietf-tls-tls13-13
-	extensionEarlyData                  uint16 = 42    // draft-ietf-tls-tls13-13
+	extensionKeyShare                   uint16 = 40    // draft-ietf-tls-tls13-16
+	extensionPreSharedKey               uint16 = 41    // draft-ietf-tls-tls13-16
+	extensionEarlyData                  uint16 = 42    // draft-ietf-tls-tls13-16
 	extensionSupportedVersions          uint16 = 43    // draft-ietf-tls-tls13-16
-	extensionCookie                     uint16 = 44    // draft-ietf-tls-tls13-13
+	extensionCookie                     uint16 = 44    // draft-ietf-tls-tls13-16
 	extensionCustom                     uint16 = 1234  // not IANA assigned
 	extensionNextProtoNeg               uint16 = 13172 // not IANA assigned
 	extensionRenegotiationInfo          uint16 = 0xff01
@@ -194,16 +194,22 @@ const (
 	SRTP_AES128_CM_HMAC_SHA1_32        = 0x0002
 )
 
-// PskKeyExchangeMode values (see draft-ietf-tls-tls13-15)
+// PskKeyExchangeMode values (see draft-ietf-tls-tls13-16)
 const (
 	pskKEMode    = 0
 	pskDHEKEMode = 1
 )
 
-// PskAuthenticationMode values (see draft-ietf-tls-tls13-15)
+// PskAuthenticationMode values (see draft-ietf-tls-tls13-16)
 const (
 	pskAuthMode     = 0
 	pskSignAuthMode = 1
+)
+
+// KeyUpdateRequest values (see draft-ietf-tls-tls13-16, section 4.5.3)
+const (
+	keyUpdateNotRequested = 0
+	keyUpdateRequested    = 1
 )
 
 // ConnectionState records basic TLS details about the connection.
@@ -462,11 +468,6 @@ type ProtocolBugs struct {
 	// ID in ServerKeyExchange (TLS 1.2) or ServerHello (TLS 1.3) rather
 	// than the negotiated one.
 	SendCurve CurveID
-
-	// SendHelloRetryRequestCurve, if non-zero, causes the server to send
-	// the specified curve in HelloRetryRequest rather than the negotiated
-	// one.
-	SendHelloRetryRequestCurve CurveID
 
 	// InvalidECDHPoint, if true, causes the ECC points in
 	// ServerKeyExchange or ClientKeyExchange messages to be invalid.
@@ -900,6 +901,10 @@ type ProtocolBugs struct {
 	// extension what will be added to NewSessionTicket in TLS 1.3.
 	CustomTicketExtension string
 
+	// CustomTicketExtension, if not empty, contains the contents of an
+	// extension what will be added to HelloRetryRequest in TLS 1.3.
+	CustomHelloRetryRequestExtension string
+
 	// NoCloseNotify, if true, causes the close_notify alert to be skipped
 	// on connection shutdown.
 	NoCloseNotify bool
@@ -955,10 +960,6 @@ type ProtocolBugs struct {
 	// HelloRequest handshake message to be sent before each handshake
 	// message. This only makes sense for a server.
 	SendHelloRequestBeforeEveryHandshakeMessage bool
-
-	// SendKeyUpdateBeforeEveryAppDataRecord, if true, causes a KeyUpdate
-	// handshake message to be sent before each application data record.
-	SendKeyUpdateBeforeEveryAppDataRecord bool
 
 	// RequireDHPublicValueLen causes a fatal error if the length (in
 	// bytes) of the server's Diffie-Hellman public value is not equal to
@@ -1090,13 +1091,25 @@ type ProtocolBugs struct {
 	// include the KeyShare extension in the EncryptedExtensions block.
 	EncryptedExtensionsWithKeyShare bool
 
-	// UnnecessaryHelloRetryRequest, if true, causes the TLS 1.3 server to
-	// send a HelloRetryRequest regardless of whether it needs to.
-	UnnecessaryHelloRetryRequest bool
+	// AlwaysSendHelloRetryRequest, if true, causes a HelloRetryRequest to
+	// be sent by the server, even if empty.
+	AlwaysSendHelloRetryRequest bool
 
 	// SecondHelloRetryRequest, if true, causes the TLS 1.3 server to send
 	// two HelloRetryRequests instead of one.
 	SecondHelloRetryRequest bool
+
+	// SendHelloRetryRequestCurve, if non-zero, causes the server to send
+	// the specified curve in a HelloRetryRequest.
+	SendHelloRetryRequestCurve CurveID
+
+	// SendHelloRetryRequestCookie, if not nil, contains a cookie to be
+	// sent by the server in HelloRetryRequest.
+	SendHelloRetryRequestCookie []byte
+
+	// DuplicateHelloRetryRequestExtensions, if true, causes all
+	// HelloRetryRequest extensions to be sent twice.
+	DuplicateHelloRetryRequestExtensions bool
 
 	// SendServerHelloVersion, if non-zero, causes the server to send the
 	// specified value in ServerHello version field.
@@ -1522,7 +1535,7 @@ func isSupportedSignatureAlgorithm(sigAlg signatureAlgorithm, sigAlgs []signatur
 }
 
 var (
-	// See draft-ietf-tls-tls13-13, section 6.3.1.2.
+	// See draft-ietf-tls-tls13-16, section 6.3.1.2.
 	downgradeTLS13 = []byte{0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x01}
 	downgradeTLS12 = []byte{0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x00}
 )

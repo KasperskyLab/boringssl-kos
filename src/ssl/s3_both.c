@@ -148,14 +148,18 @@ void ssl_handshake_free(SSL_HANDSHAKE *hs) {
   }
 
   OPENSSL_cleanse(hs->secret, sizeof(hs->secret));
-  OPENSSL_cleanse(hs->traffic_secret_0, sizeof(hs->traffic_secret_0));
+  OPENSSL_cleanse(hs->client_traffic_secret_0,
+                  sizeof(hs->client_traffic_secret_0));
+  OPENSSL_cleanse(hs->server_traffic_secret_0,
+                  sizeof(hs->server_traffic_secret_0));
   SSL_ECDH_CTX_cleanup(&hs->ecdh_ctx);
-  OPENSSL_free(hs->peer_key);
-  OPENSSL_free(hs->server_params);
+  OPENSSL_free(hs->cookie);
   OPENSSL_free(hs->key_share_bytes);
   OPENSSL_free(hs->public_key);
   OPENSSL_free(hs->peer_sigalgs);
   OPENSSL_free(hs->peer_supported_group_list);
+  OPENSSL_free(hs->peer_key);
+  OPENSSL_free(hs->server_params);
   OPENSSL_free(hs->peer_psk_identity_hint);
   sk_X509_NAME_pop_free(hs->ca_names, X509_NAME_free);
   OPENSSL_free(hs->certificate_types);

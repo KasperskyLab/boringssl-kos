@@ -254,10 +254,11 @@ static enum ssl_hs_wait_t do_send_hello_retry_request(SSL *ssl,
   if (!ssl->method->init_message(ssl, &cbb, &body,
                                  SSL3_MT_HELLO_RETRY_REQUEST) ||
       !CBB_add_u16(&body, ssl->version) ||
-      !CBB_add_u16(&body, ssl_cipher_get_value(ssl->s3->tmp.new_cipher)) ||
       !tls1_get_shared_group(ssl, &group_id) ||
-      !CBB_add_u16(&body, group_id) ||
       !CBB_add_u16_length_prefixed(&body, &extensions) ||
+      !CBB_add_u16(&extensions, TLSEXT_TYPE_key_share) ||
+      !CBB_add_u16(&extensions, 2 /* length */) ||
+      !CBB_add_u16(&extensions, group_id) ||
       !ssl->method->finish_message(ssl, &cbb)) {
     CBB_cleanup(&cbb);
     return ssl_hs_error;
@@ -459,7 +460,7 @@ static enum ssl_hs_wait_t do_flush(SSL *ssl, SSL_HANDSHAKE *hs) {
   if (!tls13_advance_key_schedule(ssl, kZeroes, hs->hash_len) ||
       !tls13_derive_traffic_secret_0(ssl) ||
       !tls13_set_traffic_key(ssl, type_data, evp_aead_seal,
-                             hs->traffic_secret_0, hs->hash_len)) {
+                             hs->server_traffic_secret_0, hs->hash_len)) {
     return ssl_hs_error;
   }
 
@@ -523,7 +524,7 @@ static enum ssl_hs_wait_t do_process_client_finished(SSL *ssl,
       !ssl->method->hash_current_message(ssl) ||
       /* evp_aead_seal keys have already been switched. */
       !tls13_set_traffic_key(ssl, type_data, evp_aead_open,
-                             hs->traffic_secret_0, hs->hash_len) ||
+                             hs->client_traffic_secret_0, hs->hash_len) ||
       !tls13_finalize_keys(ssl)) {
     return ssl_hs_error;
   }

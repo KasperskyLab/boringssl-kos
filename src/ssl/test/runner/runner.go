@@ -359,6 +359,8 @@ type testCase struct {
 	// sendKeyUpdates is the number of consecutive key updates to send
 	// before and after the test message.
 	sendKeyUpdates int
+	// keyUpdateRequest is the KeyUpdateRequest value to send in KeyUpdate messages.
+	keyUpdateRequest byte
 	// expectMessageDropped, if true, means the test message is expected to
 	// be dropped by the client rather than echoed back.
 	expectMessageDropped bool
@@ -616,7 +618,7 @@ func doExchange(test *testCase, config *Config, conn net.Conn, isResume bool, nu
 	}
 
 	for i := 0; i < test.sendKeyUpdates; i++ {
-		if err := tlsConn.SendKeyUpdate(); err != nil {
+		if err := tlsConn.SendKeyUpdate(test.keyUpdateRequest); err != nil {
 			return err
 		}
 	}
@@ -678,7 +680,7 @@ func doExchange(test *testCase, config *Config, conn net.Conn, isResume bool, nu
 		tlsConn.Write(testMessage)
 
 		for i := 0; i < test.sendKeyUpdates; i++ {
-			tlsConn.SendKeyUpdate()
+			tlsConn.SendKeyUpdate(test.keyUpdateRequest)
 		}
 
 		for i := 0; i < test.sendEmptyRecords; i++ {
@@ -1981,13 +1983,14 @@ func addBasicTests() {
 			expectedError:     ":TOO_MANY_WARNING_ALERTS:",
 		},
 		{
-			name: "SendKeyUpdates",
+			name: "TooManyKeyUpdates",
 			config: Config{
 				MaxVersion: VersionTLS13,
 			},
-			sendKeyUpdates: 33,
-			shouldFail:     true,
-			expectedError:  ":TOO_MANY_KEY_UPDATES:",
+			sendKeyUpdates:   33,
+			keyUpdateRequest: keyUpdateNotRequested,
+			shouldFail:       true,
+			expectedError:    ":TOO_MANY_KEY_UPDATES:",
 		},
 		{
 			name: "EmptySessionID",
@@ -2195,14 +2198,22 @@ func addBasicTests() {
 			expectedError: ":WRONG_VERSION_NUMBER:",
 		},
 		{
-			testType: clientTest,
-			name:     "KeyUpdate",
+			name: "KeyUpdate",
 			config: Config{
 				MaxVersion: VersionTLS13,
-				Bugs: ProtocolBugs{
-					SendKeyUpdateBeforeEveryAppDataRecord: true,
-				},
 			},
+			sendKeyUpdates:   1,
+			keyUpdateRequest: keyUpdateNotRequested,
+		},
+		{
+			name: "KeyUpdate-InvalidRequestMode",
+			config: Config{
+				MaxVersion: VersionTLS13,
+			},
+			sendKeyUpdates:   1,
+			keyUpdateRequest: 42,
+			shouldFail:       true,
+			expectedError:    ":DECODE_ERROR:",
 		},
 		{
 			name: "SendSNIWarningAlert",
@@ -3370,10 +3381,8 @@ func addStateMachineCoverageTests(config stateMachineTestConfig) {
 			config: Config{
 				MaxVersion: VersionTLS13,
 				MinVersion: VersionTLS13,
-				// P-384 requires a HelloRetryRequest against
-				// BoringSSL's default configuration. Assert
-				// that we do indeed test this with
-				// ExpectMissingKeyShare.
+				// P-384 requires a HelloRetryRequest against BoringSSL's default
+				// configuration. Assert this with ExpectMissingKeyShare.
 				CurvePreferences: []CurveID{CurveP384},
 				Bugs: ProtocolBugs{
 					ExpectMissingKeyShare: true,
@@ -8494,9 +8503,10 @@ func addTLS13HandshakeTests() {
 	testCases = append(testCases, testCase{
 		name: "UnnecessaryHelloRetryRequest",
 		config: Config{
-			MaxVersion: VersionTLS13,
+			MaxVersion:       VersionTLS13,
+			CurvePreferences: []CurveID{CurveX25519},
 			Bugs: ProtocolBugs{
-				UnnecessaryHelloRetryRequest: true,
+				SendHelloRetryRequestCurve: CurveX25519,
 			},
 		},
 		shouldFail:    true,
@@ -8515,6 +8525,97 @@ func addTLS13HandshakeTests() {
 		},
 		shouldFail:    true,
 		expectedError: ":UNEXPECTED_MESSAGE:",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-Empty",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				AlwaysSendHelloRetryRequest: true,
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":DECODE_ERROR:",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-DuplicateCurve",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			// P-384 requires a HelloRetryRequest against BoringSSL's default
+			// configuration. Assert this ExpectMissingKeyShare.
+			CurvePreferences: []CurveID{CurveP384},
+			Bugs: ProtocolBugs{
+				ExpectMissingKeyShare:                true,
+				DuplicateHelloRetryRequestExtensions: true,
+			},
+		},
+		shouldFail:         true,
+		expectedError:      ":DUPLICATE_EXTENSION:",
+		expectedLocalError: "remote error: illegal parameter",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-Cookie",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				SendHelloRetryRequestCookie: []byte("cookie"),
+			},
+		},
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-DuplicateCookie",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				SendHelloRetryRequestCookie:          []byte("cookie"),
+				DuplicateHelloRetryRequestExtensions: true,
+			},
+		},
+		shouldFail:         true,
+		expectedError:      ":DUPLICATE_EXTENSION:",
+		expectedLocalError: "remote error: illegal parameter",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-EmptyCookie",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				SendHelloRetryRequestCookie: []byte{},
+			},
+		},
+		shouldFail:    true,
+		expectedError: ":DECODE_ERROR:",
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-Cookie-Curve",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			// P-384 requires HelloRetryRequest in BoringSSL.
+			CurvePreferences: []CurveID{CurveP384},
+			Bugs: ProtocolBugs{
+				SendHelloRetryRequestCookie: []byte("cookie"),
+				ExpectMissingKeyShare:       true,
+			},
+		},
+	})
+
+	testCases = append(testCases, testCase{
+		name: "HelloRetryRequest-Unknown",
+		config: Config{
+			MaxVersion: VersionTLS13,
+			Bugs: ProtocolBugs{
+				CustomHelloRetryRequestExtension: "extension",
+			},
+		},
+		shouldFail:         true,
+		expectedError:      ":UNEXPECTED_EXTENSION:",
+		expectedLocalError: "remote error: unsupported extension",
 	})
 
 	testCases = append(testCases, testCase{
@@ -8723,11 +8824,10 @@ func addPeekTests() {
 		name: "Peek-KeyUpdate",
 		config: Config{
 			MaxVersion: VersionTLS13,
-			Bugs: ProtocolBugs{
-				SendKeyUpdateBeforeEveryAppDataRecord: true,
-			},
 		},
-		flags: []string{"-peek-then-read"},
+		sendKeyUpdates:   1,
+		keyUpdateRequest: keyUpdateNotRequested,
+		flags:            []string{"-peek-then-read"},
 	})
 }
 

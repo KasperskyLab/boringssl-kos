@@ -896,7 +896,8 @@ struct ssl_handshake_st {
   size_t hash_len;
   uint8_t resumption_hash[EVP_MAX_MD_SIZE];
   uint8_t secret[EVP_MAX_MD_SIZE];
-  uint8_t traffic_secret_0[EVP_MAX_MD_SIZE];
+  uint8_t client_traffic_secret_0[EVP_MAX_MD_SIZE];
+  uint8_t server_traffic_secret_0[EVP_MAX_MD_SIZE];
 
   union {
     /* sent is a bitset where the bits correspond to elements of kExtensions
@@ -922,9 +923,15 @@ struct ssl_handshake_st {
   /* ecdh_ctx is the current ECDH instance. */
   SSL_ECDH_CTX ecdh_ctx;
 
+  unsigned received_hello_retry_request:1;
+
   /* retry_group is the group ID selected by the server in HelloRetryRequest in
    * TLS 1.3. */
   uint16_t retry_group;
+
+  /* cookie is the value of the cookie received from the server, if any. */
+  uint8_t *cookie;
+  size_t cookie_len;
 
   /* key_share_bytes is the value of the previously sent KeyShare extension by
    * the client in TLS 1.3. */
@@ -1340,12 +1347,17 @@ typedef struct dtls1_state_st {
 extern const SSL3_ENC_METHOD TLSv1_enc_data;
 extern const SSL3_ENC_METHOD SSLv3_enc_data;
 
-/* From draft-ietf-tls-tls13-15, used in determining PSK modes. */
+/* From draft-ietf-tls-tls13-16, used in determining PSK modes. */
 #define SSL_PSK_KE        0x0
 #define SSL_PSK_DHE_KE    0x1
 
 #define SSL_PSK_AUTH      0x0
 #define SSL_PSK_SIGN_AUTH 0x1
+
+/* From draft-ietf-tls-tls13-16, used in determining whether to respond with a
+ * KeyUpdate. */
+#define SSL_KEY_UPDATE_NOT_REQUESTED 0
+#define SSL_KEY_UPDATE_REQUESTED 1
 
 CERT *ssl_cert_new(void);
 CERT *ssl_cert_dup(CERT *cert);
