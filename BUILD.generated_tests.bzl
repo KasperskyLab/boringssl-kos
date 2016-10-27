@@ -24,6 +24,7 @@ test_support_sources = [
     "src/crypto/obj/obj_xref.h",
     "src/crypto/pkcs8/internal.h",
     "src/crypto/poly1305/internal.h",
+    "src/crypto/pool/internal.h",
     "src/crypto/rand/internal.h",
     "src/crypto/rsa/internal.h",
     "src/crypto/test/file_test.cc",
@@ -671,6 +672,14 @@ def create_tests(copts, crypto, ssl):
       data = [
           "src/crypto/poly1305/poly1305_tests.txt",
       ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
+      name = "pool_test",
+      size = "small",
+      srcs = ["src/crypto/pool/pool_test.cc"] + test_support_sources,
+      copts = copts,
       deps = [crypto],
   )
 
