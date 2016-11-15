@@ -135,6 +135,7 @@ crypto_internal_headers = [
     "src/crypto/digest/md32_common.h",
     "src/crypto/ec/internal.h",
     "src/crypto/ec/p256-x86_64-table.h",
+    "src/crypto/ec/p256-x86_64.h",
     "src/crypto/evp/internal.h",
     "src/crypto/internal.h",
     "src/crypto/modes/internal.h",

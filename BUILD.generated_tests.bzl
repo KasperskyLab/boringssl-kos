@@ -16,6 +16,7 @@ test_support_sources = [
     "src/crypto/digest/md32_common.h",
     "src/crypto/ec/internal.h",
     "src/crypto/ec/p256-x86_64-table.h",
+    "src/crypto/ec/p256-x86_64.h",
     "src/crypto/evp/internal.h",
     "src/crypto/internal.h",
     "src/crypto/modes/internal.h",
@@ -478,6 +479,20 @@ def create_tests(copts, crypto, ssl):
       size = "small",
       srcs = ["src/crypto/ec/example_mul.c"] + test_support_sources,
       copts = copts,
+      deps = [crypto],
+  )
+
+  native.cc_test(
+      name = "p256-x86_64_test",
+      size = "small",
+      srcs = ["src/crypto/ec/p256-x86_64_test.cc"] + test_support_sources,
+      args = [
+          "$(location src/crypto/ec/p256-x86_64_tests.txt)",
+      ],
+      copts = copts,
+      data = [
+          "src/crypto/ec/p256-x86_64_tests.txt",
+      ],
       deps = [crypto],
   )
 
