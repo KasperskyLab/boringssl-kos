@@ -430,17 +430,11 @@ Curves:
 				// test cross-version resumption attempts.
 				sessionState.cipherSuite = TLS_AES_128_GCM_SHA256
 			} else {
-				if sessionState.vers != c.vers && c.config.Bugs.AcceptAnySession {
+				if sessionState.vers != c.vers {
 					continue
 				}
 				if sessionState.ticketExpiration.Before(c.config.time()) {
 					continue
-				}
-
-				clientTicketAge := time.Duration(uint32(pskIdentity.obfuscatedTicketAge-sessionState.ticketAgeAdd)) * time.Millisecond
-				if config.Bugs.ExpectTicketAge != 0 && clientTicketAge != config.Bugs.ExpectTicketAge {
-					c.sendAlert(alertHandshakeFailure)
-					return errors.New("tls: invalid ticket age")
 				}
 
 				cipherSuiteOk := false
@@ -455,6 +449,12 @@ Curves:
 					continue
 				}
 
+			}
+
+			clientTicketAge := time.Duration(uint32(pskIdentity.obfuscatedTicketAge-sessionState.ticketAgeAdd)) * time.Millisecond
+			if config.Bugs.ExpectTicketAge != 0 && clientTicketAge != config.Bugs.ExpectTicketAge {
+				c.sendAlert(alertHandshakeFailure)
+				return errors.New("tls: invalid ticket age")
 			}
 
 			// Check that we also support the ciphersuite from the session.
