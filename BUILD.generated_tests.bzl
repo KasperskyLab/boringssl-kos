@@ -51,7 +51,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/aes/aes_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/aes/aes_tests.txt",
       ],
@@ -62,7 +62,7 @@ def create_tests(copts, crypto, ssl):
       name = "asn1_test",
       size = "small",
       srcs = ["src/crypto/asn1/asn1_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -70,7 +70,7 @@ def create_tests(copts, crypto, ssl):
       name = "base64_test",
       size = "small",
       srcs = ["src/crypto/base64/base64_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -78,7 +78,7 @@ def create_tests(copts, crypto, ssl):
       name = "bio_test",
       size = "small",
       srcs = ["src/crypto/bio/bio_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -89,7 +89,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/bn/bn_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/bn/bn_tests.txt",
       ],
@@ -100,7 +100,7 @@ def create_tests(copts, crypto, ssl):
       name = "bytestring_test",
       size = "small",
       srcs = ["src/crypto/bytestring/bytestring_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -108,7 +108,7 @@ def create_tests(copts, crypto, ssl):
       name = "chacha_test",
       size = "small",
       srcs = ["src/crypto/chacha/chacha_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -120,7 +120,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-gcm",
           "$(location src/crypto/cipher/test/aes_128_gcm_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_gcm_tests.txt",
       ],
@@ -135,7 +135,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-gcm",
           "$(location src/crypto/cipher/test/aes_256_gcm_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_gcm_tests.txt",
       ],
@@ -150,7 +150,7 @@ def create_tests(copts, crypto, ssl):
           "chacha20-poly1305",
           "$(location src/crypto/cipher/test/chacha20_poly1305_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/chacha20_poly1305_tests.txt",
       ],
@@ -165,7 +165,7 @@ def create_tests(copts, crypto, ssl):
           "chacha20-poly1305-old",
           "$(location src/crypto/cipher/test/chacha20_poly1305_old_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/chacha20_poly1305_old_tests.txt",
       ],
@@ -180,7 +180,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-cbc-sha1-tls",
           "$(location src/crypto/cipher/test/aes_128_cbc_sha1_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_cbc_sha1_tls_tests.txt",
       ],
@@ -195,7 +195,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-cbc-sha1-tls-implicit-iv",
           "$(location src/crypto/cipher/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
@@ -210,7 +210,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-cbc-sha256-tls",
           "$(location src/crypto/cipher/test/aes_128_cbc_sha256_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_cbc_sha256_tls_tests.txt",
       ],
@@ -225,7 +225,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-cbc-sha1-tls",
           "$(location src/crypto/cipher/test/aes_256_cbc_sha1_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_cbc_sha1_tls_tests.txt",
       ],
@@ -240,7 +240,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-cbc-sha1-tls-implicit-iv",
           "$(location src/crypto/cipher/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
@@ -255,7 +255,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-cbc-sha256-tls",
           "$(location src/crypto/cipher/test/aes_256_cbc_sha256_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_cbc_sha256_tls_tests.txt",
       ],
@@ -270,7 +270,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-cbc-sha384-tls",
           "$(location src/crypto/cipher/test/aes_256_cbc_sha384_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_cbc_sha384_tls_tests.txt",
       ],
@@ -285,7 +285,7 @@ def create_tests(copts, crypto, ssl):
           "des-ede3-cbc-sha1-tls",
           "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_tls_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/des_ede3_cbc_sha1_tls_tests.txt",
       ],
@@ -300,7 +300,7 @@ def create_tests(copts, crypto, ssl):
           "des-ede3-cbc-sha1-tls-implicit-iv",
           "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
@@ -315,7 +315,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-cbc-sha1-ssl3",
           "$(location src/crypto/cipher/test/aes_128_cbc_sha1_ssl3_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_cbc_sha1_ssl3_tests.txt",
       ],
@@ -330,7 +330,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-cbc-sha1-ssl3",
           "$(location src/crypto/cipher/test/aes_256_cbc_sha1_ssl3_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_cbc_sha1_ssl3_tests.txt",
       ],
@@ -345,7 +345,7 @@ def create_tests(copts, crypto, ssl):
           "des-ede3-cbc-sha1-ssl3",
           "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_ssl3_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/des_ede3_cbc_sha1_ssl3_tests.txt",
       ],
@@ -360,7 +360,7 @@ def create_tests(copts, crypto, ssl):
           "aes-128-ctr-hmac-sha256",
           "$(location src/crypto/cipher/test/aes_128_ctr_hmac_sha256.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_128_ctr_hmac_sha256.txt",
       ],
@@ -375,7 +375,7 @@ def create_tests(copts, crypto, ssl):
           "aes-256-ctr-hmac-sha256",
           "$(location src/crypto/cipher/test/aes_256_ctr_hmac_sha256.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/aes_256_ctr_hmac_sha256.txt",
       ],
@@ -389,7 +389,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/cipher/test/cipher_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher/test/cipher_tests.txt",
       ],
@@ -400,7 +400,7 @@ def create_tests(copts, crypto, ssl):
       name = "cmac_test",
       size = "small",
       srcs = ["src/crypto/cmac/cmac_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -408,7 +408,7 @@ def create_tests(copts, crypto, ssl):
       name = "constant_time_test",
       size = "small",
       srcs = ["src/crypto/constant_time_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -419,7 +419,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/curve25519/ed25519_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/curve25519/ed25519_tests.txt",
       ],
@@ -430,7 +430,7 @@ def create_tests(copts, crypto, ssl):
       name = "x25519_test",
       size = "small",
       srcs = ["src/crypto/curve25519/x25519_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -438,7 +438,7 @@ def create_tests(copts, crypto, ssl):
       name = "spake25519_test",
       size = "small",
       srcs = ["src/crypto/curve25519/spake25519_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -446,7 +446,7 @@ def create_tests(copts, crypto, ssl):
       name = "dh_test",
       size = "small",
       srcs = ["src/crypto/dh/dh_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -454,7 +454,7 @@ def create_tests(copts, crypto, ssl):
       name = "digest_test",
       size = "small",
       srcs = ["src/crypto/digest/digest_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -462,7 +462,7 @@ def create_tests(copts, crypto, ssl):
       name = "dsa_test",
       size = "small",
       srcs = ["src/crypto/dsa/dsa_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -470,7 +470,7 @@ def create_tests(copts, crypto, ssl):
       name = "ec_test",
       size = "small",
       srcs = ["src/crypto/ec/ec_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -478,7 +478,7 @@ def create_tests(copts, crypto, ssl):
       name = "example_mul",
       size = "small",
       srcs = ["src/crypto/ec/example_mul.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -489,7 +489,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/ec/p256-x86_64_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/ec/p256-x86_64_tests.txt",
       ],
@@ -503,7 +503,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/ecdh/ecdh_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/ecdh/ecdh_tests.txt",
       ],
@@ -517,7 +517,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/ecdsa/ecdsa_sign_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/ecdsa/ecdsa_sign_tests.txt",
       ],
@@ -528,7 +528,7 @@ def create_tests(copts, crypto, ssl):
       name = "ecdsa_test",
       size = "small",
       srcs = ["src/crypto/ecdsa/ecdsa_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -539,7 +539,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/ecdsa/ecdsa_verify_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/ecdsa/ecdsa_verify_tests.txt",
       ],
@@ -550,7 +550,7 @@ def create_tests(copts, crypto, ssl):
       name = "err_test",
       size = "small",
       srcs = ["src/crypto/err/err_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -558,7 +558,7 @@ def create_tests(copts, crypto, ssl):
       name = "evp_extra_test",
       size = "small",
       srcs = ["src/crypto/evp/evp_extra_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -569,7 +569,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/evp/evp_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/evp/evp_tests.txt",
       ],
@@ -580,7 +580,7 @@ def create_tests(copts, crypto, ssl):
       name = "pbkdf_test",
       size = "small",
       srcs = ["src/crypto/evp/pbkdf_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -588,7 +588,7 @@ def create_tests(copts, crypto, ssl):
       name = "hkdf_test",
       size = "small",
       srcs = ["src/crypto/hkdf/hkdf_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -599,7 +599,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/hmac/hmac_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/hmac/hmac_tests.txt",
       ],
@@ -610,7 +610,7 @@ def create_tests(copts, crypto, ssl):
       name = "lhash_test",
       size = "small",
       srcs = ["src/crypto/lhash/lhash_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -618,7 +618,7 @@ def create_tests(copts, crypto, ssl):
       name = "gcm_test",
       size = "small",
       srcs = ["src/crypto/modes/gcm_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -626,7 +626,7 @@ def create_tests(copts, crypto, ssl):
       name = "newhope_test",
       size = "small",
       srcs = ["src/crypto/newhope/newhope_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -634,7 +634,7 @@ def create_tests(copts, crypto, ssl):
       name = "newhope_statistical_test",
       size = "small",
       srcs = ["src/crypto/newhope/newhope_statistical_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -645,7 +645,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/newhope/newhope_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/newhope/newhope_tests.txt",
       ],
@@ -656,7 +656,7 @@ def create_tests(copts, crypto, ssl):
       name = "obj_test",
       size = "small",
       srcs = ["src/crypto/obj/obj_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -664,7 +664,7 @@ def create_tests(copts, crypto, ssl):
       name = "pkcs12_test",
       size = "small",
       srcs = ["src/crypto/pkcs8/pkcs12_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -672,7 +672,7 @@ def create_tests(copts, crypto, ssl):
       name = "pkcs8_test",
       size = "small",
       srcs = ["src/crypto/pkcs8/pkcs8_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -683,7 +683,7 @@ def create_tests(copts, crypto, ssl):
       args = [
           "$(location src/crypto/poly1305/poly1305_tests.txt)",
       ],
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/poly1305/poly1305_tests.txt",
       ],
@@ -694,7 +694,7 @@ def create_tests(copts, crypto, ssl):
       name = "pool_test",
       size = "small",
       srcs = ["src/crypto/pool/pool_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -702,7 +702,7 @@ def create_tests(copts, crypto, ssl):
       name = "refcount_test",
       size = "small",
       srcs = ["src/crypto/refcount_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -710,7 +710,7 @@ def create_tests(copts, crypto, ssl):
       name = "rsa_test",
       size = "small",
       srcs = ["src/crypto/rsa/rsa_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -718,7 +718,7 @@ def create_tests(copts, crypto, ssl):
       name = "thread_test",
       size = "small",
       srcs = ["src/crypto/thread_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -726,7 +726,7 @@ def create_tests(copts, crypto, ssl):
       name = "pkcs7_test",
       size = "small",
       srcs = ["src/crypto/x509/pkcs7_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -734,7 +734,7 @@ def create_tests(copts, crypto, ssl):
       name = "x509_test",
       size = "small",
       srcs = ["src/crypto/x509/x509_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -742,7 +742,7 @@ def create_tests(copts, crypto, ssl):
       name = "tab_test",
       size = "small",
       srcs = ["src/crypto/x509v3/tab_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -750,7 +750,7 @@ def create_tests(copts, crypto, ssl):
       name = "v3name_test",
       size = "small",
       srcs = ["src/crypto/x509v3/v3name_test.c"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -758,7 +758,7 @@ def create_tests(copts, crypto, ssl):
       name = "ssl_test",
       size = "small",
       srcs = ["src/ssl/ssl_test.cc"] + test_support_sources,
-      copts = copts,
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [
           crypto,
           ssl,
