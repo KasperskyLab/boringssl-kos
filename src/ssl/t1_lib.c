@@ -1421,11 +1421,6 @@ static int ext_sct_add_serverhello(SSL *ssl, CBB *out) {
  *
  * https://tools.ietf.org/html/rfc7301 */
 
-static void ext_alpn_init(SSL *ssl) {
-  OPENSSL_free(ssl->s3->alpn_selected);
-  ssl->s3->alpn_selected = NULL;
-}
-
 static int ext_alpn_add_clienthello(SSL *ssl, CBB *out) {
   if (ssl->alpn_client_proto_list == NULL ||
       ssl->s3->initial_handshake_complete) {
@@ -2007,9 +2002,14 @@ int ssl_ext_pre_shared_key_parse_clienthello(SSL *ssl,
 
   /* TLS 1.3 session tickets are renewed separately as part of the
    * NewSessionTicket. */
-  int renew;
-  return tls_process_ticket(ssl, out_session, &renew, CBS_data(&ticket),
-                            CBS_len(&ticket), NULL, 0);
+  int unused_renew;
+  if (!tls_process_ticket(ssl, out_session, &unused_renew, CBS_data(&ticket),
+                          CBS_len(&ticket), NULL, 0)) {
+    *out_alert = SSL_AD_INTERNAL_ERROR;
+    return 0;
+  }
+
+  return 1;
 }
 
 int ssl_ext_pre_shared_key_add_serverhello(SSL *ssl, CBB *out) {
@@ -2512,7 +2512,7 @@ static const struct tls_extension kExtensions[] = {
   },
   {
     TLSEXT_TYPE_application_layer_protocol_negotiation,
-    ext_alpn_init,
+    NULL,
     ext_alpn_add_clienthello,
     ext_alpn_parse_serverhello,
     /* ALPN is negotiated late in |ssl_negotiate_alpn|. */
