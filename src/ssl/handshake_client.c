@@ -369,7 +369,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
 
         ssl->state = SSL3_ST_CW_NEXT_PROTO_A;
 
-        if (!tls1_change_cipher_state(ssl, SSL3_CHANGE_CIPHER_CLIENT_WRITE)) {
+        if (!tls1_change_cipher_state(hs, SSL3_CHANGE_CIPHER_CLIENT_WRITE)) {
           ret = -1;
           goto end;
         }
@@ -460,7 +460,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           goto end;
         }
 
-        if (!tls1_change_cipher_state(ssl, SSL3_CHANGE_CIPHER_CLIENT_READ)) {
+        if (!tls1_change_cipher_state(hs, SSL3_CHANGE_CIPHER_CLIENT_READ)) {
           ret = -1;
           goto end;
         }
@@ -535,7 +535,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         ssl->s3->initial_handshake_complete = 1;
         if (is_initial_handshake) {
           /* Renegotiations do not participate in session resumption. */
-          ssl_update_cache(ssl, SSL_SESS_CACHE_CLIENT);
+          ssl_update_cache(hs, SSL_SESS_CACHE_CLIENT);
         }
 
         ret = 1;
@@ -658,7 +658,8 @@ static int ssl_write_client_cipher_list(SSL *ssl, CBB *out,
   return CBB_flush(out);
 }
 
-int ssl_write_client_hello(SSL *ssl) {
+int ssl_write_client_hello(SSL_HANDSHAKE *hs) {
+  SSL *const ssl = hs->ssl;
   uint16_t min_version, max_version;
   if (!ssl_get_version_range(ssl, &min_version, &max_version)) {
     return 0;
@@ -695,7 +696,7 @@ int ssl_write_client_hello(SSL *ssl) {
   if (!ssl_write_client_cipher_list(ssl, &body, min_version, max_version) ||
       !CBB_add_u8(&body, 1 /* one compression method */) ||
       !CBB_add_u8(&body, 0 /* null compression */) ||
-      !ssl_add_clienthello_tlsext(ssl, &body, header_len + CBB_len(&body))) {
+      !ssl_add_clienthello_tlsext(hs, &body, header_len + CBB_len(&body))) {
     goto err;
   }
 
@@ -707,7 +708,7 @@ int ssl_write_client_hello(SSL *ssl) {
 
   /* Now that the length prefixes have been computed, fill in the placeholder
    * PSK binder. */
-  if (ssl->s3->hs->needs_psk_binder &&
+  if (hs->needs_psk_binder &&
       !tls13_write_psk_binder(ssl, msg, len)) {
     OPENSSL_free(msg);
     goto err;
@@ -774,7 +775,7 @@ static int ssl3_send_client_hello(SSL_HANDSHAKE *hs) {
     return -1;
   }
 
-  if (!ssl_write_client_hello(ssl)) {
+  if (!ssl_write_client_hello(hs)) {
     return -1;
   }
 
@@ -893,7 +894,7 @@ static int ssl3_get_server_hello(SSL_HANDSHAKE *hs) {
     return 1;
   }
 
-  ssl_clear_tls13_state(ssl);
+  ssl_clear_tls13_state(hs);
 
   if (ssl->s3->tmp.message_type != SSL3_MT_SERVER_HELLO) {
     ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_UNEXPECTED_MESSAGE);
@@ -926,7 +927,7 @@ static int ssl3_get_server_hello(SSL_HANDSHAKE *hs) {
     /* The session wasn't resumed. Create a fresh SSL_SESSION to
      * fill out. */
     ssl_set_session(ssl, NULL);
-    if (!ssl_get_new_session(ssl, 0 /* client */)) {
+    if (!ssl_get_new_session(hs, 0 /* client */)) {
       goto f_err;
     }
     /* Note: session_id could be empty. */
@@ -997,7 +998,7 @@ static int ssl3_get_server_hello(SSL_HANDSHAKE *hs) {
   }
 
   /* TLS extensions */
-  if (!ssl_parse_serverhello_tlsext(ssl, &server_hello)) {
+  if (!ssl_parse_serverhello_tlsext(hs, &server_hello)) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_PARSE_TLSEXT);
     goto err;
   }
@@ -1423,7 +1424,7 @@ static int ssl3_get_certificate_request(SSL_HANDSHAKE *hs) {
   if (ssl3_protocol_version(ssl) >= TLS1_2_VERSION) {
     CBS supported_signature_algorithms;
     if (!CBS_get_u16_length_prefixed(&cbs, &supported_signature_algorithms) ||
-        !tls1_parse_peer_sigalgs(ssl, &supported_signature_algorithms)) {
+        !tls1_parse_peer_sigalgs(hs, &supported_signature_algorithms)) {
       ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
       OPENSSL_PUT_ERROR(SSL, SSL_R_DECODE_ERROR);
       return -1;
@@ -1735,7 +1736,7 @@ static int ssl3_send_cert_verify(SSL_HANDSHAKE *hs) {
   }
 
   uint16_t signature_algorithm;
-  if (!tls1_choose_signature_algorithm(ssl, &signature_algorithm)) {
+  if (!tls1_choose_signature_algorithm(hs, &signature_algorithm)) {
     goto err;
   }
   if (ssl3_protocol_version(ssl) >= TLS1_2_VERSION) {
