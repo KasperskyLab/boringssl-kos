@@ -143,6 +143,36 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
+      name = "aead_test_aes_128_gcm_siv",
+      size = "small",
+      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      args = [
+          "aes-128-gcm-siv",
+          "$(location src/crypto/cipher/test/aes_128_gcm_siv_tests.txt)",
+      ],
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      data = [
+          "src/crypto/cipher/test/aes_128_gcm_siv_tests.txt",
+      ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
+      name = "aead_test_aes_256_gcm_siv",
+      size = "small",
+      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      args = [
+          "aes-256-gcm-siv",
+          "$(location src/crypto/cipher/test/aes_256_gcm_siv_tests.txt)",
+      ],
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      data = [
+          "src/crypto/cipher/test/aes_256_gcm_siv_tests.txt",
+      ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
       name = "aead_test_chacha20_poly1305",
       size = "small",
       srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
