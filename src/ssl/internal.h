@@ -1706,13 +1706,6 @@ void ssl_cipher_preference_list_free(
 const struct ssl_cipher_preference_list_st *ssl_get_cipher_preferences(
     const SSL *ssl);
 
-int ssl_cert_set0_chain(CERT *cert, STACK_OF(X509) *chain);
-int ssl_cert_set1_chain(CERT *cert, STACK_OF(X509) *chain);
-int ssl_cert_add0_chain_cert(CERT *cert, X509 *x509);
-int ssl_cert_add1_chain_cert(CERT *cert, X509 *x509);
-void ssl_cert_set_cert_cb(CERT *cert,
-                          int (*cb)(SSL *ssl, void *arg), void *arg);
-
 int ssl_verify_cert_chain(SSL *ssl, long *out_verify_result,
                           STACK_OF(X509) * cert_chain);
 void ssl_update_cache(SSL_HANDSHAKE *hs, int mode);
@@ -1735,7 +1728,6 @@ int ssl3_cert_verify_hash(SSL *ssl, const EVP_MD **out_md, uint8_t *out,
                           size_t *out_len, uint16_t signature_algorithm);
 
 int ssl3_send_finished(SSL_HANDSHAKE *hs, int a, int b);
-int ssl3_supports_cipher(const SSL_CIPHER *cipher);
 int ssl3_dispatch_alert(SSL *ssl);
 int ssl3_read_app_data(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
                        int peek);
@@ -1755,9 +1747,6 @@ int ssl3_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
 int ssl3_finish_message(SSL *ssl, CBB *cbb, uint8_t **out_msg, size_t *out_len);
 int ssl3_queue_message(SSL *ssl, uint8_t *msg, size_t len);
 int ssl3_write_message(SSL *ssl);
-
-void ssl3_expect_flight(SSL *ssl);
-void ssl3_received_flight(SSL *ssl);
 
 int dtls1_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
 int dtls1_finish_message(SSL *ssl, CBB *cbb, uint8_t **out_msg,
@@ -1798,10 +1787,7 @@ int dtls1_parse_fragment(CBS *cbs, struct hm_header_st *out_hdr,
                          CBS *out_body);
 int dtls1_check_timeout_num(SSL *ssl);
 int dtls1_handshake_write(SSL *ssl);
-void dtls1_expect_flight(SSL *ssl);
-void dtls1_received_flight(SSL *ssl);
 
-int dtls1_supports_cipher(const SSL_CIPHER *cipher);
 void dtls1_start_timer(SSL *ssl);
 void dtls1_stop_timer(SSL *ssl);
 int dtls1_is_timer_expired(SSL *ssl);
