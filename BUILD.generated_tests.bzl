@@ -20,7 +20,6 @@ test_support_sources = [
     "src/crypto/evp/internal.h",
     "src/crypto/internal.h",
     "src/crypto/modes/internal.h",
-    "src/crypto/newhope/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/obj/obj_xref.h",
     "src/crypto/pkcs8/internal.h",
@@ -649,36 +648,6 @@ def create_tests(copts, crypto, ssl):
       size = "small",
       srcs = ["src/crypto/modes/gcm_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "newhope_test",
-      size = "small",
-      srcs = ["src/crypto/newhope/newhope_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "newhope_statistical_test",
-      size = "small",
-      srcs = ["src/crypto/newhope/newhope_statistical_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "newhope_vectors_test",
-      size = "small",
-      srcs = ["src/crypto/newhope/newhope_vectors_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/newhope/newhope_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/newhope/newhope_tests.txt",
-      ],
       deps = [crypto],
   )
 
