@@ -3465,11 +3465,6 @@ OPENSSL_EXPORT void SSL_CTX_set_client_cert_cb(
     SSL_CTX *ctx,
     int (*client_cert_cb)(SSL *ssl, X509 **out_x509, EVP_PKEY **out_pkey));
 
-/* SSL_CTX_get_client_cert_cb returns the callback set by
- * |SSL_CTX_set_client_cert_cb|. */
-OPENSSL_EXPORT int (*SSL_CTX_get_client_cert_cb(SSL_CTX *ctx))(
-      SSL *ssl, X509 **out_x509, EVP_PKEY **out_pkey);
-
 #define SSL_NOTHING 1
 #define SSL_WRITING 2
 #define SSL_READING 3
@@ -3483,16 +3478,8 @@ OPENSSL_EXPORT int (*SSL_CTX_get_client_cert_cb(SSL_CTX *ctx))(
  * operation on |ssl| was blocked on. Use |SSL_get_error| instead. */
 OPENSSL_EXPORT int SSL_want(const SSL *ssl);
 
-#define SSL_want_nothing(ssl) (SSL_want(ssl) == SSL_NOTHING)
 #define SSL_want_read(ssl) (SSL_want(ssl) == SSL_READING)
 #define SSL_want_write(ssl) (SSL_want(ssl) == SSL_WRITING)
-#define SSL_want_x509_lookup(ssl) (SSL_want(ssl) == SSL_X509_LOOKUP)
-#define SSL_want_channel_id_lookup(ssl) (SSL_want(ssl) == SSL_CHANNEL_ID_LOOKUP)
-#define SSL_want_session(ssl) (SSL_want(ssl) == SSL_PENDING_SESSION)
-#define SSL_want_certificate(ssl) \
-  (SSL_want(ssl) == SSL_CERTIFICATE_SELECTION_PENDING)
-#define SSL_want_private_key_operation(ssl) \
-  (SSL_want(ssl) == SSL_PRIVATE_KEY_OPERATION)
 
  /* SSL_get_finished writes up to |count| bytes of the Finished message sent by
   * |ssl| to |buf|. It returns the total untruncated length or zero if none has
