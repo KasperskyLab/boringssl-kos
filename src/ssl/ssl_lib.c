@@ -1593,14 +1593,11 @@ uint16_t SSL_get_curve_id(const SSL *ssl) {
   /* TODO(davidben): This checks the wrong session if there is a renegotiation in
    * progress. */
   SSL_SESSION *session = SSL_get_session(ssl);
-  if (session == NULL ||
-      session->cipher == NULL ||
-      (ssl3_protocol_version(ssl) < TLS1_3_VERSION &&
-       !SSL_CIPHER_is_ECDHE(session->cipher))) {
+  if (session == NULL) {
     return 0;
   }
 
-  return (uint16_t)session->key_exchange_info;
+  return session->group_id;
 }
 
 int SSL_CTX_set_tmp_dh(SSL_CTX *ctx, const DH *dh) {
@@ -2422,19 +2419,6 @@ void SSL_CTX_set_tmp_dh_callback(SSL_CTX *ctx,
 void SSL_set_tmp_dh_callback(SSL *ssl, DH *(*callback)(SSL *ssl, int is_export,
                                                        int keylength)) {
   ssl->cert->dh_tmp_cb = callback;
-}
-
-unsigned SSL_get_dhe_group_size(const SSL *ssl) {
-  /* TODO(davidben): This checks the wrong session if there is a renegotiation in
-   * progress. */
-  SSL_SESSION *session = SSL_get_session(ssl);
-  if (session == NULL ||
-      session->cipher == NULL ||
-      !SSL_CIPHER_is_DHE(session->cipher)) {
-    return 0;
-  }
-
-  return session->key_exchange_info;
 }
 
 int SSL_CTX_use_psk_identity_hint(SSL_CTX *ctx, const char *identity_hint) {
