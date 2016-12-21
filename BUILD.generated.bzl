@@ -139,7 +139,6 @@ crypto_internal_headers = [
     "src/crypto/internal.h",
     "src/crypto/modes/internal.h",
     "src/crypto/obj/obj_dat.h",
-    "src/crypto/obj/obj_xref.h",
     "src/crypto/pkcs8/internal.h",
     "src/crypto/poly1305/internal.h",
     "src/crypto/pool/internal.h",
