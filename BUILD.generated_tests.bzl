@@ -435,7 +435,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "constant_time_test",
       size = "small",
-      srcs = ["src/crypto/constant_time_test.c"] + test_support_sources,
+      srcs = ["src/crypto/constant_time_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -489,7 +489,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "dsa_test",
       size = "small",
-      srcs = ["src/crypto/dsa/dsa_test.c"] + test_support_sources,
+      srcs = ["src/crypto/dsa/dsa_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -615,7 +615,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "hkdf_test",
       size = "small",
-      srcs = ["src/crypto/hkdf/hkdf_test.c"] + test_support_sources,
+      srcs = ["src/crypto/hkdf/hkdf_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -637,7 +637,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "lhash_test",
       size = "small",
-      srcs = ["src/crypto/lhash/lhash_test.c"] + test_support_sources,
+      srcs = ["src/crypto/lhash/lhash_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -699,7 +699,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "refcount_test",
       size = "small",
-      srcs = ["src/crypto/refcount_test.c"] + test_support_sources,
+      srcs = ["src/crypto/refcount_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
