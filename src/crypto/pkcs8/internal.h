@@ -71,21 +71,7 @@ typedef struct {
   ASN1_INTEGER *iter;
 } PBEPARAM;
 
-typedef struct {
-  X509_ALGOR *keyfunc;
-  X509_ALGOR *encryption;
-} PBE2PARAM;
-
-typedef struct {
-  ASN1_TYPE *salt; /* Usually OCTET STRING but could be anything */
-  ASN1_INTEGER *iter;
-  ASN1_INTEGER *keylength;
-  X509_ALGOR *prf;
-} PBKDF2PARAM;
-
 DECLARE_ASN1_FUNCTIONS(PBEPARAM)
-DECLARE_ASN1_FUNCTIONS(PBE2PARAM)
-DECLARE_ASN1_FUNCTIONS(PBKDF2PARAM)
 
 /* PKCS5_v2_PBE_keyivgen intializes the supplied |ctx| for PBKDF v2, which must
  * be specified by |param|. The password is specified by |pass_raw| and
@@ -99,7 +85,7 @@ int PKCS5_v2_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const uint8_t *pass_raw,
 X509_ALGOR *PKCS5_pbe_set(int alg, int iter, const unsigned char *salt,
                           int saltlen);
 X509_ALGOR *PKCS5_pbe2_set(const EVP_CIPHER *cipher, int iter,
-                           const unsigned char *salt, int saltlen);
+                           const uint8_t *salt, size_t salt_len);
 
 
 #if defined(__cplusplus)
