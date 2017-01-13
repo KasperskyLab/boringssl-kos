@@ -317,6 +317,7 @@ crypto_sources = [
     "src/crypto/poly1305/poly1305_vec.c",
     "src/crypto/pool/pool.c",
     "src/crypto/rand/deterministic.c",
+    "src/crypto/rand/fuchsia.c",
     "src/crypto/rand/rand.c",
     "src/crypto/rand/urandom.c",
     "src/crypto/rand/windows.c",
