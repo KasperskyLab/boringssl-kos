@@ -21,58 +21,6 @@ $L$ONE_mont:
 	DQ	0x0000000000000001,0xffffffff00000000,0xffffffffffffffff,0x00000000fffffffe
 
 
-ALIGN	64
-ecp_nistz256_mul_by_2:
-	mov	QWORD[8+rsp],rdi	;WIN64 prologue
-	mov	QWORD[16+rsp],rsi
-	mov	rax,rsp
-$L$SEH_begin_ecp_nistz256_mul_by_2:
-	mov	rdi,rcx
-	mov	rsi,rdx
-
-
-	push	r12
-	push	r13
-
-	mov	r8,QWORD[rsi]
-	xor	r13,r13
-	mov	r9,QWORD[8+rsi]
-	add	r8,r8
-	mov	r10,QWORD[16+rsi]
-	adc	r9,r9
-	mov	r11,QWORD[24+rsi]
-	lea	rsi,[$L$poly]
-	mov	rax,r8
-	adc	r10,r10
-	adc	r11,r11
-	mov	rdx,r9
-	adc	r13,0
-
-	sub	r8,QWORD[rsi]
-	mov	rcx,r10
-	sbb	r9,QWORD[8+rsi]
-	sbb	r10,QWORD[16+rsi]
-	mov	r12,r11
-	sbb	r11,QWORD[24+rsi]
-	sbb	r13,0
-
-	cmovc	r8,rax
-	cmovc	r9,rdx
-	mov	QWORD[rdi],r8
-	cmovc	r10,rcx
-	mov	QWORD[8+rdi],r9
-	cmovc	r11,r12
-	mov	QWORD[16+rdi],r10
-	mov	QWORD[24+rdi],r11
-
-	pop	r13
-	pop	r12
-	mov	rdi,QWORD[8+rsp]	;WIN64 epilogue
-	mov	rsi,QWORD[16+rsp]
-	DB	0F3h,0C3h		;repret
-$L$SEH_end_ecp_nistz256_mul_by_2:
-
-
 
 global	ecp_nistz256_neg
 

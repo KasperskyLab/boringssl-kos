@@ -17,48 +17,6 @@
 .LONE_mont:
 .quad	0x0000000000000001, 0xffffffff00000000, 0xffffffffffffffff, 0x00000000fffffffe
 
-.type	ecp_nistz256_mul_by_2,@function
-.align	64
-ecp_nistz256_mul_by_2:
-	pushq	%r12
-	pushq	%r13
-
-	movq	0(%rsi),%r8
-	xorq	%r13,%r13
-	movq	8(%rsi),%r9
-	addq	%r8,%r8
-	movq	16(%rsi),%r10
-	adcq	%r9,%r9
-	movq	24(%rsi),%r11
-	leaq	.Lpoly(%rip),%rsi
-	movq	%r8,%rax
-	adcq	%r10,%r10
-	adcq	%r11,%r11
-	movq	%r9,%rdx
-	adcq	$0,%r13
-
-	subq	0(%rsi),%r8
-	movq	%r10,%rcx
-	sbbq	8(%rsi),%r9
-	sbbq	16(%rsi),%r10
-	movq	%r11,%r12
-	sbbq	24(%rsi),%r11
-	sbbq	$0,%r13
-
-	cmovcq	%rax,%r8
-	cmovcq	%rdx,%r9
-	movq	%r8,0(%rdi)
-	cmovcq	%rcx,%r10
-	movq	%r9,8(%rdi)
-	cmovcq	%r12,%r11
-	movq	%r10,16(%rdi)
-	movq	%r11,24(%rdi)
-
-	popq	%r13
-	popq	%r12
-	.byte	0xf3,0xc3
-.size	ecp_nistz256_mul_by_2,.-ecp_nistz256_mul_by_2
-
 
 
 .globl	ecp_nistz256_neg
