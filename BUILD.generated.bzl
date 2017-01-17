@@ -34,6 +34,7 @@ ssl_sources = [
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
     "src/ssl/ssl_rsa.c",
+    "src/ssl/ssl_rsa_cc.cc",
     "src/ssl/ssl_session.c",
     "src/ssl/ssl_stat.c",
     "src/ssl/t1_enc.c",
