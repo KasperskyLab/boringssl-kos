@@ -186,6 +186,21 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
+      name = "aead_test_chacha20_poly1305_old",
+      size = "small",
+      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      args = [
+          "chacha20-poly1305-old",
+          "$(location src/crypto/cipher/test/chacha20_poly1305_old_tests.txt)",
+      ],
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      data = [
+          "src/crypto/cipher/test/chacha20_poly1305_old_tests.txt",
+      ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
       name = "aead_test_aes_128_cbc_sha1_tls",
       size = "small",
       srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
