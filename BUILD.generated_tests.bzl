@@ -41,6 +41,17 @@ test_support_sources = [
     "src/ssl/test/test_config.h",
 ]
 
+
+crypto_test_sources = [
+    "crypto/dh/dh_test.cc",
+    "crypto/dsa/dsa_test.cc",
+    "crypto/test/gtest_main.cc",
+]
+
+ssl_test_sources = [
+    "crypto/test/gtest_main.cc",
+    "ssl/ssl_test.cc",
+]
 def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "aes_test",
@@ -456,25 +467,9 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "dh_test",
-      size = "small",
-      srcs = ["src/crypto/dh/dh_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "digest_test",
       size = "small",
       srcs = ["src/crypto/digest/digest_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "dsa_test",
-      size = "small",
-      srcs = ["src/crypto/dsa/dsa_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -735,15 +730,4 @@ def create_tests(copts, crypto, ssl):
       srcs = ["src/crypto/x509v3/v3name_test.c"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "ssl_test",
-      size = "small",
-      srcs = ["src/ssl/ssl_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [
-          crypto,
-          ssl,
-      ],
   )
