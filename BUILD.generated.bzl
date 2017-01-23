@@ -47,6 +47,45 @@ ssl_sources = [
     "src/ssl/tls_record.c",
 ]
 
+ssl_c_sources = [
+    "src/ssl/custom_extensions.c",
+    "src/ssl/d1_both.c",
+    "src/ssl/d1_lib.c",
+    "src/ssl/d1_pkt.c",
+    "src/ssl/d1_srtp.c",
+    "src/ssl/dtls_method.c",
+    "src/ssl/dtls_record.c",
+    "src/ssl/handshake_client.c",
+    "src/ssl/handshake_server.c",
+    "src/ssl/s3_both.c",
+    "src/ssl/s3_enc.c",
+    "src/ssl/s3_lib.c",
+    "src/ssl/s3_pkt.c",
+    "src/ssl/ssl_aead_ctx.c",
+    "src/ssl/ssl_asn1.c",
+    "src/ssl/ssl_buffer.c",
+    "src/ssl/ssl_cert.c",
+    "src/ssl/ssl_cipher.c",
+    "src/ssl/ssl_ecdh.c",
+    "src/ssl/ssl_file.c",
+    "src/ssl/ssl_lib.c",
+    "src/ssl/ssl_rsa.c",
+    "src/ssl/ssl_session.c",
+    "src/ssl/ssl_stat.c",
+    "src/ssl/t1_enc.c",
+    "src/ssl/t1_lib.c",
+    "src/ssl/tls13_both.c",
+    "src/ssl/tls13_client.c",
+    "src/ssl/tls13_enc.c",
+    "src/ssl/tls13_server.c",
+    "src/ssl/tls_method.c",
+    "src/ssl/tls_record.c",
+]
+
+ssl_cc_sources = [
+    "src/ssl/ssl_rsa_cc.cc",
+]
+
 crypto_headers = [
     "src/include/openssl/aead.h",
     "src/include/openssl/aes.h",
