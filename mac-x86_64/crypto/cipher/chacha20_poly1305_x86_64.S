@@ -1,5 +1,4 @@
 #if defined(__x86_64__)
-
 .text	
 
 .p2align	6
@@ -8784,5 +8783,4 @@ seal_avx2_short_tail:
 	vzeroupper
 	jmp	seal_sse_tail_16
 .cfi_endproc	
-
 #endif

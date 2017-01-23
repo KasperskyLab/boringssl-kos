@@ -1,5 +1,4 @@
 #if defined(__x86_64__)
-
 .text	
 .extern	OPENSSL_ia32cap_P
 .hidden OPENSSL_ia32cap_P
@@ -8785,5 +8784,4 @@ seal_avx2_short_tail:
 	vzeroupper
 	jmp	seal_sse_tail_16
 .cfi_endproc	
-
 #endif
