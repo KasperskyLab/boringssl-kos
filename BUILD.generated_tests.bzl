@@ -43,14 +43,14 @@ test_support_sources = [
 
 
 crypto_test_sources = [
-    "crypto/dh/dh_test.cc",
-    "crypto/dsa/dsa_test.cc",
-    "crypto/test/gtest_main.cc",
+    "src/crypto/dh/dh_test.cc",
+    "src/crypto/dsa/dsa_test.cc",
+    "src/crypto/test/gtest_main.cc",
 ]
 
 ssl_test_sources = [
-    "crypto/test/gtest_main.cc",
-    "ssl/ssl_test.cc",
+    "src/crypto/test/gtest_main.cc",
+    "src/ssl/ssl_test.cc",
 ]
 def create_tests(copts, crypto, ssl):
   native.cc_test(
