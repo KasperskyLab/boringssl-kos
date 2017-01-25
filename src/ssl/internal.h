@@ -433,6 +433,10 @@ enum dtls1_use_epoch_t {
   dtls1_use_current_epoch,
 };
 
+/* dtls_max_seal_overhead returns the maximum overhead, in bytes, of sealing a
+ * record. */
+size_t dtls_max_seal_overhead(const SSL *ssl, enum dtls1_use_epoch_t use_epoch);
+
 /* dtls_seal_prefix_len returns the number of bytes of prefix to reserve in
  * front of the plaintext when sealing a record in-place. */
 size_t dtls_seal_prefix_len(const SSL *ssl, enum dtls1_use_epoch_t use_epoch);
@@ -884,7 +888,6 @@ enum ssl_hs_wait_t {
   ssl_hs_error,
   ssl_hs_ok,
   ssl_hs_read_message,
-  ssl_hs_write_message,
   ssl_hs_flush,
   ssl_hs_flush_and_read_message,
   ssl_hs_x509_lookup,
@@ -1083,10 +1086,10 @@ int tls13_process_certificate(SSL_HANDSHAKE *hs, int allow_anonymous);
 int tls13_process_certificate_verify(SSL_HANDSHAKE *hs);
 int tls13_process_finished(SSL_HANDSHAKE *hs);
 
-int tls13_prepare_certificate(SSL_HANDSHAKE *hs);
-enum ssl_private_key_result_t tls13_prepare_certificate_verify(
-    SSL_HANDSHAKE *hs, int is_first_run);
-int tls13_prepare_finished(SSL_HANDSHAKE *hs);
+int tls13_add_certificate(SSL_HANDSHAKE *hs);
+enum ssl_private_key_result_t tls13_add_certificate_verify(SSL_HANDSHAKE *hs,
+                                                           int is_first_run);
+int tls13_add_finished(SSL_HANDSHAKE *hs);
 int tls13_process_new_session_ticket(SSL *ssl);
 
 int ssl_ext_key_share_parse_serverhello(SSL_HANDSHAKE *hs, uint8_t **out_secret,
@@ -1329,16 +1332,17 @@ struct ssl_protocol_method_st {
    * release it with |OPENSSL_free| when done. It returns one on success and
    * zero on error. */
   int (*finish_message)(SSL *ssl, CBB *cbb, uint8_t **out_msg, size_t *out_len);
-  /* queue_message queues a handshake message and prepares it to be written. It
-   * takes ownership of |msg| and releases it with |OPENSSL_free| when done. It
-   * returns one on success and zero on error. */
-  int (*queue_message)(SSL *ssl, uint8_t *msg, size_t len);
-  /* write_message writes the next message to the transport. It returns one on
-   * success and <= 0 on error. */
-  int (*write_message)(SSL *ssl);
-  /* send_change_cipher_spec sends a ChangeCipherSpec message. */
-  int (*send_change_cipher_spec)(SSL *ssl);
-  /* flush_flight flushes the current flight to the transport. It returns one on
+  /* add_message adds a handshake message to the pending flight. It returns one
+   * on success and zero on error. In either case, it takes ownership of |msg|
+   * and releases it with |OPENSSL_free| when done. */
+  int (*add_message)(SSL *ssl, uint8_t *msg, size_t len);
+  /* add_change_cipher_spec adds a ChangeCipherSpec record to the pending
+   * flight. It returns one on success and zero on error. */
+  int (*add_change_cipher_spec)(SSL *ssl);
+  /* add_alert adds an alert to the pending flight. It returns one on success
+   * and zero on error. */
+  int (*add_alert)(SSL *ssl, uint8_t level, uint8_t desc);
+  /* flush_flight flushes the pending flight to the transport. It returns one on
    * success and <= 0 on error. */
   int (*flush_flight)(SSL *ssl);
   /* expect_flight is called when the handshake expects a flight of messages from
@@ -1487,9 +1491,13 @@ typedef struct ssl3_state_st {
 
   uint8_t send_alert[2];
 
-  /* pending_message is the current outgoing handshake message. */
-  uint8_t *pending_message;
-  uint32_t pending_message_len;
+  /* pending_flight is the pending outgoing flight. This is used to flush each
+   * handshake flight in a single write. */
+  BUF_MEM *pending_flight;
+
+  /* pending_flight_offset is the number of bytes of |pending_flight| which have
+   * been successfully written. */
+  uint32_t pending_flight_offset;
 
   /* aead_read_ctx is the current read cipher state. */
   SSL_AEAD_CTX *aead_read_ctx;
@@ -1645,6 +1653,13 @@ typedef struct dtls1_state_st {
   DTLS_OUTGOING_MESSAGE outgoing_messages[SSL_MAX_HANDSHAKE_FLIGHT];
   uint8_t outgoing_messages_len;
 
+  /* outgoing_written is the number of outgoing messages that have been
+   * written. */
+  uint8_t outgoing_written;
+  /* outgoing_offset is the number of bytes of the next outgoing message have
+   * been written. */
+  uint32_t outgoing_offset;
+
   unsigned int mtu; /* max DTLS packet size */
 
   /* num_timeouts is the number of times the retransmit timer has fired since
@@ -1739,7 +1754,6 @@ void ssl_update_cache(SSL_HANDSHAKE *hs, int mode);
 int ssl_verify_alarm_type(long type);
 
 int ssl3_get_finished(SSL_HANDSHAKE *hs);
-int ssl3_send_change_cipher_spec(SSL *ssl);
 int ssl3_send_alert(SSL *ssl, int level, int desc);
 int ssl3_get_message(SSL *ssl, int msg_type,
                      enum ssl_hash_message_t hash_message);
@@ -1753,7 +1767,7 @@ void ssl3_release_current_message(SSL *ssl, int free_buffer);
 int ssl3_cert_verify_hash(SSL *ssl, const EVP_MD **out_md, uint8_t *out,
                           size_t *out_len, uint16_t signature_algorithm);
 
-int ssl3_send_finished(SSL_HANDSHAKE *hs, int a, int b);
+int ssl3_send_finished(SSL_HANDSHAKE *hs);
 int ssl3_dispatch_alert(SSL *ssl);
 int ssl3_read_app_data(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
                        int peek);
@@ -1771,18 +1785,22 @@ int ssl3_connect(SSL_HANDSHAKE *hs);
 
 int ssl3_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
 int ssl3_finish_message(SSL *ssl, CBB *cbb, uint8_t **out_msg, size_t *out_len);
-int ssl3_queue_message(SSL *ssl, uint8_t *msg, size_t len);
-int ssl3_write_message(SSL *ssl);
+int ssl3_add_message(SSL *ssl, uint8_t *msg, size_t len);
+int ssl3_add_change_cipher_spec(SSL *ssl);
+int ssl3_add_alert(SSL *ssl, uint8_t level, uint8_t desc);
+int ssl3_flush_flight(SSL *ssl);
 
 int dtls1_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
 int dtls1_finish_message(SSL *ssl, CBB *cbb, uint8_t **out_msg,
                          size_t *out_len);
-int dtls1_queue_message(SSL *ssl, uint8_t *msg, size_t len);
-int dtls1_write_message(SSL *ssl);
+int dtls1_add_message(SSL *ssl, uint8_t *msg, size_t len);
+int dtls1_add_change_cipher_spec(SSL *ssl);
+int dtls1_add_alert(SSL *ssl, uint8_t level, uint8_t desc);
+int dtls1_flush_flight(SSL *ssl);
 
-/* ssl_complete_message calls |finish_message| and |queue_message| on |cbb| to
- * queue the message for writing. */
-int ssl_complete_message(SSL *ssl, CBB *cbb);
+/* ssl_add_message_cbb finishes the handshake message in |cbb| and adds it to
+ * the pending flight. It returns one on success and zero on error. */
+int ssl_add_message_cbb(SSL *ssl, CBB *cbb);
 
 /* ssl_hash_current_message incorporates the current handshake message into the
  * handshake hash. It returns one on success and zero on allocation failure. */
@@ -1805,7 +1823,6 @@ int dtls1_write_app_data(SSL *ssl, const void *buf, int len);
 int dtls1_write_record(SSL *ssl, int type, const uint8_t *buf, size_t len,
                        enum dtls1_use_epoch_t use_epoch);
 
-int dtls1_send_change_cipher_spec(SSL *ssl);
 int dtls1_send_finished(SSL *ssl, int a, int b, const char *sender, int slen);
 int dtls1_retransmit_outgoing_messages(SSL *ssl);
 void dtls1_clear_record_buffer(SSL *ssl);
@@ -1829,13 +1846,6 @@ int dtls1_get_message(SSL *ssl, int mt, enum ssl_hash_message_t hash_message);
 void dtls1_get_current_message(const SSL *ssl, CBS *out);
 void dtls1_release_current_message(SSL *ssl, int free_buffer);
 int dtls1_dispatch_alert(SSL *ssl);
-
-/* ssl_is_wbio_buffered returns one if |ssl|'s write BIO is buffered and zero
- * otherwise. */
-int ssl_is_wbio_buffered(const SSL *ssl);
-
-int ssl_init_wbio_buffer(SSL *ssl);
-void ssl_free_wbio_buffer(SSL *ssl);
 
 int tls1_change_cipher_state(SSL_HANDSHAKE *hs, int which);
 int tls1_handshake_digest(SSL *ssl, uint8_t *out, size_t out_len);

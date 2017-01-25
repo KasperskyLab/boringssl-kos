@@ -65,14 +65,6 @@ int tls13_handshake(SSL_HANDSHAKE *hs) {
         break;
       }
 
-      case ssl_hs_write_message: {
-        int ret = ssl->method->write_message(ssl);
-        if (ret <= 0) {
-          return ret;
-        }
-        break;
-      }
-
       case ssl_hs_x509_lookup:
         ssl->rwstate = SSL_X509_LOOKUP;
         hs->wait = ssl_hs_ok;
@@ -441,7 +433,7 @@ int tls13_process_finished(SSL_HANDSHAKE *hs) {
   return 1;
 }
 
-int tls13_prepare_certificate(SSL_HANDSHAKE *hs) {
+int tls13_add_certificate(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
   CBB cbb, body, certificate_list;
   if (!ssl->method->init_message(ssl, &cbb, &body, SSL3_MT_CERTIFICATE) ||
@@ -453,7 +445,7 @@ int tls13_prepare_certificate(SSL_HANDSHAKE *hs) {
   }
 
   if (!ssl_has_certificate(ssl)) {
-    if (!ssl_complete_message(ssl, &cbb)) {
+    if (!ssl_add_message_cbb(ssl, &cbb)) {
       goto err;
     }
 
@@ -507,7 +499,7 @@ int tls13_prepare_certificate(SSL_HANDSHAKE *hs) {
     }
   }
 
-  if (!ssl_complete_message(ssl, &cbb)) {
+  if (!ssl_add_message_cbb(ssl, &cbb)) {
     goto err;
   }
 
@@ -518,8 +510,8 @@ err:
   return 0;
 }
 
-enum ssl_private_key_result_t tls13_prepare_certificate_verify(
-    SSL_HANDSHAKE *hs, int is_first_run) {
+enum ssl_private_key_result_t tls13_add_certificate_verify(SSL_HANDSHAKE *hs,
+                                                           int is_first_run) {
   SSL *const ssl = hs->ssl;
   enum ssl_private_key_result_t ret = ssl_private_key_failure;
   uint8_t *msg = NULL;
@@ -569,7 +561,7 @@ enum ssl_private_key_result_t tls13_prepare_certificate_verify(
   }
 
   if (!CBB_did_write(&child, sig_len) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     goto err;
   }
 
@@ -581,7 +573,7 @@ err:
   return ret;
 }
 
-int tls13_prepare_finished(SSL_HANDSHAKE *hs) {
+int tls13_add_finished(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
   size_t verify_data_len;
   uint8_t verify_data[EVP_MAX_MD_SIZE];
@@ -595,7 +587,7 @@ int tls13_prepare_finished(SSL_HANDSHAKE *hs) {
   CBB cbb, body;
   if (!ssl->method->init_message(ssl, &cbb, &body, SSL3_MT_FINISHED) ||
       !CBB_add_bytes(&body, verify_data, verify_data_len) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     CBB_cleanup(&cbb);
     return 0;
   }

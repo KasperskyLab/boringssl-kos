@@ -206,13 +206,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
       case SSL_ST_ACCEPT:
         ssl_do_info_callback(ssl, SSL_CB_HANDSHAKE_START, 1);
 
-        /* Enable a write buffer. This groups handshake messages within a flight
-         * into a single write. */
-        if (!ssl_init_wbio_buffer(ssl)) {
-          ret = -1;
-          goto end;
-        }
-
         if (!ssl3_init_handshake_buffer(ssl)) {
           OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
           ret = -1;
@@ -239,7 +232,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_SRVR_HELLO_A:
-      case SSL3_ST_SW_SRVR_HELLO_B:
         ret = ssl3_send_server_hello(hs);
         if (ret <= 0) {
           goto end;
@@ -252,7 +244,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_CERT_A:
-      case SSL3_ST_SW_CERT_B:
         if (ssl_cipher_uses_certificate_auth(ssl->s3->tmp.new_cipher)) {
           ret = ssl3_send_server_certificate(hs);
           if (ret <= 0) {
@@ -265,7 +256,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_CERT_STATUS_A:
-      case SSL3_ST_SW_CERT_STATUS_B:
         if (hs->certificate_status_expected) {
           ret = ssl3_send_certificate_status(hs);
           if (ret <= 0) {
@@ -279,7 +269,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
 
       case SSL3_ST_SW_KEY_EXCH_A:
       case SSL3_ST_SW_KEY_EXCH_B:
-      case SSL3_ST_SW_KEY_EXCH_C:
         alg_a = ssl->s3->tmp.new_cipher->algorithm_auth;
 
         /* PSK ciphers send ServerKeyExchange if there is an identity hint. */
@@ -297,7 +286,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_CERT_REQ_A:
-      case SSL3_ST_SW_CERT_REQ_B:
         if (hs->cert_request) {
           ret = ssl3_send_certificate_request(hs);
           if (ret <= 0) {
@@ -310,7 +298,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_SRVR_DONE_A:
-      case SSL3_ST_SW_SRVR_DONE_B:
         ret = ssl3_send_server_hello_done(hs);
         if (ret <= 0) {
           goto end;
@@ -410,7 +397,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_SESSION_TICKET_A:
-      case SSL3_ST_SW_SESSION_TICKET_B:
         if (hs->ticket_expected) {
           ret = ssl3_send_new_session_ticket(hs);
           if (ret <= 0) {
@@ -423,22 +409,17 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         break;
 
       case SSL3_ST_SW_CHANGE:
-        ret = ssl->method->send_change_cipher_spec(ssl);
-        if (ret <= 0) {
-          goto end;
-        }
-        hs->state = SSL3_ST_SW_FINISHED_A;
-
-        if (!tls1_change_cipher_state(hs, SSL3_CHANGE_CIPHER_SERVER_WRITE)) {
+        if (!ssl->method->add_change_cipher_spec(ssl) ||
+            !tls1_change_cipher_state(hs, SSL3_CHANGE_CIPHER_SERVER_WRITE)) {
           ret = -1;
           goto end;
         }
+
+        hs->state = SSL3_ST_SW_FINISHED_A;
         break;
 
       case SSL3_ST_SW_FINISHED_A:
-      case SSL3_ST_SW_FINISHED_B:
-        ret = ssl3_send_finished(hs, SSL3_ST_SW_FINISHED_A,
-                                 SSL3_ST_SW_FINISHED_B);
+        ret = ssl3_send_finished(hs);
         if (ret <= 0) {
           goto end;
         }
@@ -492,9 +473,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           ssl->s3->established_session->not_resumable = 0;
           ssl->s3->new_session = NULL;
         }
-
-        /* remove buffering on output */
-        ssl_free_wbio_buffer(ssl);
 
         ssl->s3->initial_handshake_complete = 1;
         ssl_update_cache(hs, SSL_SESS_CACHE_SERVER);
@@ -1052,11 +1030,6 @@ err:
 
 static int ssl3_send_server_hello(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_SRVR_HELLO_B) {
-    return ssl->method->write_message(ssl);
-  }
-
-  assert(hs->state == SSL3_ST_SW_SRVR_HELLO_A);
 
   /* We only accept ChannelIDs on connections with ECDHE in order to avoid a
    * known attack while we fix ChannelID itself. */
@@ -1101,40 +1074,30 @@ static int ssl3_send_server_hello(SSL_HANDSHAKE *hs) {
       !CBB_add_u16(&body, ssl_cipher_get_value(ssl->s3->tmp.new_cipher)) ||
       !CBB_add_u8(&body, 0 /* no compression */) ||
       !ssl_add_serverhello_tlsext(hs, &body) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
     CBB_cleanup(&cbb);
     return -1;
   }
 
-  hs->state = SSL3_ST_SW_SRVR_HELLO_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 }
 
 static int ssl3_send_server_certificate(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_CERT_B) {
-    return ssl->method->write_message(ssl);
-  }
-
   if (!ssl_has_certificate(ssl)) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_NO_CERTIFICATE_SET);
-    return 0;
+    return -1;
   }
 
   if (!ssl3_output_cert_chain(ssl)) {
-    return 0;
+    return -1;
   }
-  hs->state = SSL3_ST_SW_CERT_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 }
 
 static int ssl3_send_certificate_status(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_CERT_STATUS_B) {
-    return ssl->method->write_message(ssl);
-  }
-
   CBB cbb, body, ocsp_response;
   if (!ssl->method->init_message(ssl, &cbb, &body,
                                  SSL3_MT_CERTIFICATE_STATUS) ||
@@ -1142,22 +1105,17 @@ static int ssl3_send_certificate_status(SSL_HANDSHAKE *hs) {
       !CBB_add_u24_length_prefixed(&body, &ocsp_response) ||
       !CBB_add_bytes(&ocsp_response, CRYPTO_BUFFER_data(ssl->ocsp_response),
                      CRYPTO_BUFFER_len(ssl->ocsp_response)) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
     CBB_cleanup(&cbb);
     return -1;
   }
 
-  hs->state = SSL3_ST_SW_CERT_STATUS_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 }
 
 static int ssl3_send_server_key_exchange(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_KEY_EXCH_C) {
-    return ssl->method->write_message(ssl);
-  }
-
   CBB cbb, child;
   CBB_zero(&cbb);
 
@@ -1317,7 +1275,7 @@ static int ssl3_send_server_key_exchange(SSL_HANDSHAKE *hs) {
     }
   }
 
-  if (!ssl_complete_message(ssl, &cbb)) {
+  if (!ssl_add_message_cbb(ssl, &cbb)) {
     goto err;
   }
 
@@ -1325,8 +1283,7 @@ static int ssl3_send_server_key_exchange(SSL_HANDSHAKE *hs) {
   hs->server_params = NULL;
   hs->server_params_len = 0;
 
-  hs->state = SSL3_ST_SW_KEY_EXCH_C;
-  return ssl->method->write_message(ssl);
+  return 1;
 
 err:
   CBB_cleanup(&cbb);
@@ -1373,10 +1330,6 @@ static int add_cert_types(SSL *ssl, CBB *cbb) {
 
 static int ssl3_send_certificate_request(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_CERT_REQ_B) {
-    return ssl->method->write_message(ssl);
-  }
-
   CBB cbb, body, cert_types, sigalgs_cbb;
   if (!ssl->method->init_message(ssl, &cbb, &body,
                                  SSL3_MT_CERTIFICATE_REQUEST) ||
@@ -1400,12 +1353,11 @@ static int ssl3_send_certificate_request(SSL_HANDSHAKE *hs) {
   }
 
   if (!ssl_add_client_CA_list(ssl, &body) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     goto err;
   }
 
-  hs->state = SSL3_ST_SW_CERT_REQ_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 
 err:
   OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
@@ -1415,20 +1367,15 @@ err:
 
 static int ssl3_send_server_hello_done(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_SRVR_DONE_B) {
-    return ssl->method->write_message(ssl);
-  }
-
   CBB cbb, body;
   if (!ssl->method->init_message(ssl, &cbb, &body, SSL3_MT_SERVER_HELLO_DONE) ||
-      !ssl_complete_message(ssl, &cbb)) {
+      !ssl_add_message_cbb(ssl, &cbb)) {
     OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
     CBB_cleanup(&cbb);
     return -1;
   }
 
-  hs->state = SSL3_ST_SW_SRVR_DONE_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 }
 
 static int ssl3_get_client_certificate(SSL_HANDSHAKE *hs) {
@@ -1942,10 +1889,6 @@ static int ssl3_get_channel_id(SSL_HANDSHAKE *hs) {
 
 static int ssl3_send_new_session_ticket(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  if (hs->state == SSL3_ST_SW_SESSION_TICKET_B) {
-    return ssl->method->write_message(ssl);
-  }
-
   const SSL_SESSION *session;
   SSL_SESSION *session_copy = NULL;
   if (ssl->session == NULL) {
@@ -1970,7 +1913,7 @@ static int ssl3_send_new_session_ticket(SSL_HANDSHAKE *hs) {
       CBB_add_u32(&body, session->timeout) &&
       CBB_add_u16_length_prefixed(&body, &ticket) &&
       ssl_encrypt_ticket(ssl, &ticket, session) &&
-      ssl_complete_message(ssl, &cbb);
+      ssl_add_message_cbb(ssl, &cbb);
 
   SSL_SESSION_free(session_copy);
   CBB_cleanup(&cbb);
@@ -1979,6 +1922,5 @@ static int ssl3_send_new_session_ticket(SSL_HANDSHAKE *hs) {
     return -1;
   }
 
-  hs->state = SSL3_ST_SW_SESSION_TICKET_B;
-  return ssl->method->write_message(ssl);
+  return 1;
 }
