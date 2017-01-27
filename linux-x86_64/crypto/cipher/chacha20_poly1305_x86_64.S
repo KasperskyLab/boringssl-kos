@@ -61,7 +61,7 @@ poly_fast_tls_ad:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -74,7 +74,7 @@ poly_fast_tls_ad:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -108,7 +108,7 @@ hash_ad_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -121,7 +121,7 @@ hash_ad_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -140,7 +140,7 @@ hash_ad_loop:
 	adcq	%r9,%r11
 	adcq	$0,%r12
 
-	leaq	(1*16)(%rcx),%rcx
+	leaq	16(%rcx),%rcx
 	subq	$16,%r8
 	jmp	hash_ad_loop
 hash_ad_tail:
@@ -170,7 +170,7 @@ hash_ad_tail_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -183,7 +183,7 @@ hash_ad_tail_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -406,7 +406,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movdqa	.rol8(%rip),%xmm8
@@ -459,7 +459,7 @@ open_sse_main_loop:
 	pslld	$32-25,%xmm4
 	pxor	%xmm8,%xmm4
 	movdqa	80(%rbp),%xmm8
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 .byte	102,15,58,15,255,4
@@ -594,7 +594,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -607,7 +607,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -727,7 +727,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -740,7 +740,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -845,7 +845,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -858,7 +858,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1032,7 +1032,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1045,7 +1045,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1209,7 +1209,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1222,7 +1222,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1253,7 +1253,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1266,7 +1266,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1431,7 +1431,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movdqa	%xmm9,80(%rbp)
@@ -1510,7 +1510,7 @@ open_sse_main_loop:
 .byte	102,15,58,15,237,12
 .byte	102,69,15,58,15,201,8
 .byte	102,69,15,58,15,237,4
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	paddd	%xmm6,%xmm2
@@ -1590,7 +1590,7 @@ open_sse_main_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1603,7 +1603,7 @@ open_sse_main_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1742,7 +1742,7 @@ open_sse_tail_16:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1755,7 +1755,7 @@ open_sse_tail_16:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -1786,7 +1786,7 @@ open_sse_finalize:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -1799,7 +1799,7 @@ open_sse_finalize:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -2042,7 +2042,7 @@ open_sse_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -2055,7 +2055,7 @@ open_sse_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -2508,7 +2508,7 @@ chacha20_poly1305_seal:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movdqa	.rol8(%rip),%xmm8
@@ -2561,7 +2561,7 @@ chacha20_poly1305_seal:
 	pslld	$32-25,%xmm4
 	pxor	%xmm8,%xmm4
 	movdqa	80(%rbp),%xmm8
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 .byte	102,15,58,15,255,4
@@ -2697,7 +2697,7 @@ chacha20_poly1305_seal:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -2710,7 +2710,7 @@ chacha20_poly1305_seal:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -2843,7 +2843,7 @@ seal_sse_tail_64:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -2856,7 +2856,7 @@ seal_sse_tail_64:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -2929,7 +2929,7 @@ seal_sse_tail_64:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -2942,7 +2942,7 @@ seal_sse_tail_64:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3001,7 +3001,7 @@ seal_sse_tail_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3014,7 +3014,7 @@ seal_sse_tail_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3087,7 +3087,7 @@ seal_sse_tail_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3100,7 +3100,7 @@ seal_sse_tail_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3224,7 +3224,7 @@ seal_sse_tail_192:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3237,7 +3237,7 @@ seal_sse_tail_192:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3331,7 +3331,7 @@ seal_sse_tail_192:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3344,7 +3344,7 @@ seal_sse_tail_192:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3485,7 +3485,7 @@ seal_sse_128_seal_hash:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3498,7 +3498,7 @@ seal_sse_128_seal_hash:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3542,7 +3542,7 @@ seal_sse_128_seal:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3555,7 +3555,7 @@ seal_sse_128_seal:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3627,7 +3627,7 @@ seal_sse_tail_16:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3640,7 +3640,7 @@ seal_sse_tail_16:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3670,7 +3670,7 @@ seal_sse_finalize:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -3683,7 +3683,7 @@ seal_sse_finalize:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -3997,7 +3997,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -4010,7 +4010,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4085,7 +4085,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpshufb	%ymm8,%ymm15,%ymm15
@@ -4103,7 +4103,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpxor	%ymm11,%ymm7,%ymm7
 	vpxor	%ymm10,%ymm6,%ymm6
 	vpxor	%ymm9,%ymm5,%ymm5
@@ -4167,7 +4167,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vmovdqa	%ymm8,128(%rbp)
@@ -4194,7 +4194,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpalignr	$8,%ymm10,%ymm10,%ymm10
 	vpalignr	$12,%ymm14,%ymm14,%ymm14
 	vpalignr	$4,%ymm5,%ymm5,%ymm5
@@ -4274,7 +4274,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpshufb	%ymm8,%ymm15,%ymm15
@@ -4291,7 +4291,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpaddd	%ymm12,%ymm8,%ymm8
 	vpxor	%ymm11,%ymm7,%ymm7
 	vpxor	%ymm10,%ymm6,%ymm6
@@ -4385,7 +4385,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -4398,7 +4398,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4450,7 +4450,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -4463,7 +4463,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4528,7 +4528,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -4541,7 +4541,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4648,7 +4648,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -4657,7 +4657,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4795,7 +4795,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -4804,7 +4804,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4894,7 +4894,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -4903,7 +4903,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -4991,7 +4991,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -5004,7 +5004,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5102,7 +5102,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -5111,7 +5111,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5215,7 +5215,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -5228,7 +5228,7 @@ chacha20_poly1305_open_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5293,7 +5293,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -5302,7 +5302,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5375,7 +5375,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -5384,7 +5384,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5506,7 +5506,7 @@ chacha20_poly1305_open_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -5515,7 +5515,7 @@ chacha20_poly1305_open_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5758,7 +5758,7 @@ open_avx2_hash_and_xor_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -5771,7 +5771,7 @@ open_avx2_hash_and_xor_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5799,7 +5799,7 @@ open_avx2_hash_and_xor_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -5812,7 +5812,7 @@ open_avx2_hash_and_xor_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -5862,7 +5862,7 @@ open_avx2_short_tail_32:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -5875,7 +5875,7 @@ open_avx2_short_tail_32:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -6632,7 +6632,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpshufb	%ymm8,%ymm15,%ymm15
@@ -6650,7 +6650,7 @@ chacha20_poly1305_seal_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpxor	%ymm11,%ymm7,%ymm7
 	vpxor	%ymm10,%ymm6,%ymm6
 	vpxor	%ymm9,%ymm5,%ymm5
@@ -6716,7 +6716,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vmovdqa	%ymm8,128(%rbp)
@@ -6743,7 +6743,7 @@ chacha20_poly1305_seal_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpalignr	$8,%ymm10,%ymm10,%ymm10
 	vpalignr	$12,%ymm14,%ymm14,%ymm14
 	vpalignr	$4,%ymm5,%ymm5,%ymm5
@@ -6823,7 +6823,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpshufb	%ymm8,%ymm15,%ymm15
@@ -6840,7 +6840,7 @@ chacha20_poly1305_seal_avx2:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpaddd	%ymm12,%ymm8,%ymm8
 	vpxor	%ymm11,%ymm7,%ymm7
 	vpxor	%ymm10,%ymm6,%ymm6
@@ -6935,7 +6935,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -6948,7 +6948,7 @@ chacha20_poly1305_seal_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7000,7 +7000,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7013,7 +7013,7 @@ chacha20_poly1305_seal_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7058,7 +7058,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7071,7 +7071,7 @@ chacha20_poly1305_seal_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7099,7 +7099,7 @@ chacha20_poly1305_seal_avx2:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7112,7 +7112,7 @@ chacha20_poly1305_seal_avx2:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7156,7 +7156,7 @@ seal_avx2_tail_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7169,7 +7169,7 @@ seal_avx2_tail_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7219,7 +7219,7 @@ seal_avx2_tail_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7232,7 +7232,7 @@ seal_avx2_tail_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7279,7 +7279,7 @@ seal_avx2_tail_128:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7292,7 +7292,7 @@ seal_avx2_tail_128:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7355,7 +7355,7 @@ seal_avx2_tail_256:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7368,7 +7368,7 @@ seal_avx2_tail_256:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7437,7 +7437,7 @@ seal_avx2_tail_256:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7450,7 +7450,7 @@ seal_avx2_tail_256:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7516,7 +7516,7 @@ seal_avx2_tail_256:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7529,7 +7529,7 @@ seal_avx2_tail_256:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7616,7 +7616,7 @@ seal_avx2_tail_384:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7629,7 +7629,7 @@ seal_avx2_tail_384:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7698,7 +7698,7 @@ seal_avx2_tail_384:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7711,7 +7711,7 @@ seal_avx2_tail_384:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7777,7 +7777,7 @@ seal_avx2_tail_384:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -7790,7 +7790,7 @@ seal_avx2_tail_384:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -7930,7 +7930,7 @@ seal_avx2_tail_512:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rdx
@@ -7939,7 +7939,7 @@ seal_avx2_tail_512:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	addq	%rax,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -8007,7 +8007,7 @@ seal_avx2_tail_512:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpaddd	%ymm4,%ymm0,%ymm0
@@ -8036,7 +8036,7 @@ seal_avx2_tail_512:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpslld	$32-25,%ymm7,%ymm7
 	vpxor	%ymm8,%ymm7,%ymm7
 	vpsrld	$25,%ymm6,%ymm8
@@ -8141,7 +8141,7 @@ seal_avx2_tail_512:
 	movq	%rdx,%r15
 	mulxq	%r10,%r13,%r14
 	mulxq	%r11,%rax,%rdx
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	vpxor	%ymm9,%ymm5,%ymm5
@@ -8170,7 +8170,7 @@ seal_avx2_tail_512:
 	mulxq	%r11,%r11,%r9
 	adcq	%r11,%r15
 	adcq	$0,%r9
-	imul	%r12,%rdx
+	imulq	%r12,%rdx
 	vpalignr	$8,%ymm10,%ymm10,%ymm10
 	vpalignr	$4,%ymm14,%ymm14,%ymm14
 	vpalignr	$12,%ymm5,%ymm5,%ymm5
@@ -8590,7 +8590,7 @@ seal_avx2_hash:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -8603,7 +8603,7 @@ seal_avx2_hash:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -8644,7 +8644,7 @@ seal_avx2_short_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -8657,7 +8657,7 @@ seal_avx2_short_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -8685,7 +8685,7 @@ seal_avx2_short_loop:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -8698,7 +8698,7 @@ seal_avx2_short_loop:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10
@@ -8746,7 +8746,7 @@ seal_avx2_short_tail:
 	movq	%rdx,%r14
 	movq	0+0(%rbp),%rax
 	mulq	%r11
-	imul	%r12,%r15
+	imulq	%r12,%r15
 	addq	%rax,%r14
 	adcq	%rdx,%r15
 	movq	8+0(%rbp),%rax
@@ -8759,7 +8759,7 @@ seal_avx2_short_tail:
 	mulq	%r11
 	addq	%rax,%r15
 	adcq	$0,%rdx
-	imul	%r12,%r9
+	imulq	%r12,%r9
 	addq	%r10,%r15
 	adcq	%rdx,%r9
 	movq	%r13,%r10

@@ -398,7 +398,7 @@ int ssl3_send_finished(SSL_HANDSHAKE *hs) {
 
 int ssl3_get_finished(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
-  int ret = ssl->method->ssl_get_message(ssl, ssl_dont_hash_message);
+  int ret = ssl->method->ssl_get_message(ssl);
   if (ret <= 0) {
     return ret;
   }
@@ -506,7 +506,7 @@ static int extend_handshake_buffer(SSL *ssl, size_t length) {
   return 1;
 }
 
-static int read_v2_client_hello(SSL *ssl, int *out_is_v2_client_hello) {
+static int read_v2_client_hello(SSL *ssl) {
   /* Read the first 5 bytes, the size of the TLS record header. This is
    * sufficient to detect a V2ClientHello and ensures that we never read beyond
    * the first record. */
@@ -534,7 +534,6 @@ static int read_v2_client_hello(SSL *ssl, int *out_is_v2_client_hello) {
   if ((p[0] & 0x80) == 0 || p[2] != SSL2_MT_CLIENT_HELLO ||
       p[3] != SSL3_VERSION_MAJOR) {
     /* Not a V2ClientHello. */
-    *out_is_v2_client_hello = 0;
     return 1;
   }
 
@@ -656,11 +655,13 @@ static int read_v2_client_hello(SSL *ssl, int *out_is_v2_client_hello) {
   ssl_read_buffer_consume(ssl, 2 + msg_length);
   ssl_read_buffer_discard(ssl);
 
-  *out_is_v2_client_hello = 1;
+  ssl->s3->is_v2_hello = 1;
+  /* This is the first message, so hs must be non-NULL. */
+  ssl->s3->hs->v2_clienthello = 1;
   return 1;
 }
 
-int ssl3_get_message(SSL *ssl, enum ssl_hash_message_t hash_message) {
+int ssl3_get_message(SSL *ssl) {
 again:
   /* Re-create the handshake buffer if needed. */
   if (ssl->init_buf == NULL) {
@@ -672,30 +673,17 @@ again:
 
   if (ssl->server && !ssl->s3->v2_hello_done) {
     /* Bypass the record layer for the first message to handle V2ClientHello. */
-    assert(hash_message == ssl_hash_message);
-    int is_v2_client_hello = 0;
-    int ret = read_v2_client_hello(ssl, &is_v2_client_hello);
+    int ret = read_v2_client_hello(ssl);
     if (ret <= 0) {
       return ret;
-    }
-    if (is_v2_client_hello) {
-      /* This is the first message, so hs must be non-NULL. */
-      ssl->s3->hs->v2_clienthello = 1;
-      /* V2ClientHello is hashed separately. */
-      hash_message = ssl_dont_hash_message;
     }
     ssl->s3->v2_hello_done = 1;
   }
 
   if (ssl->s3->tmp.reuse_message) {
-    /* A ssl_dont_hash_message call cannot be combined with reuse_message; the
-     * ssl_dont_hash_message would have to have been applied to the previous
-     * call. */
-    assert(hash_message == ssl_hash_message);
+    /* There must be a current message. */
     assert(ssl->init_msg != NULL);
-
     ssl->s3->tmp.reuse_message = 0;
-    hash_message = ssl_dont_hash_message;
   } else {
     ssl3_release_current_message(ssl, 0 /* don't free buffer */);
   }
@@ -739,11 +727,6 @@ again:
     goto again;
   }
 
-  /* Feed this message into MAC computation. */
-  if (hash_message == ssl_hash_message && !ssl_hash_current_message(ssl)) {
-    return -1;
-  }
-
   return 1;
 }
 
@@ -752,6 +735,11 @@ void ssl3_get_current_message(const SSL *ssl, CBS *out) {
 }
 
 int ssl_hash_current_message(SSL *ssl) {
+  /* V2ClientHellos are hashed implicitly. */
+  if (ssl->s3->is_v2_hello) {
+    return 1;
+  }
+
   CBS cbs;
   ssl->method->get_current_message(ssl, &cbs);
   return ssl3_update_handshake_hash(ssl, CBS_data(&cbs), CBS_len(&cbs));
@@ -766,6 +754,7 @@ void ssl3_release_current_message(SSL *ssl, int free_buffer) {
     ssl->init_msg = NULL;
     ssl->init_num = 0;
     ssl->init_buf->length = 0;
+    ssl->s3->is_v2_hello = 0;
   }
 
   if (free_buffer) {
