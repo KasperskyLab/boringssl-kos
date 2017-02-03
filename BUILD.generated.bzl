@@ -12,6 +12,7 @@ ssl_internal_headers = [
 ]
 
 ssl_sources = [
+    "src/ssl/bio_ssl.c",
     "src/ssl/custom_extensions.c",
     "src/ssl/d1_both.c",
     "src/ssl/d1_lib.c",
@@ -49,6 +50,7 @@ ssl_sources = [
 ]
 
 ssl_c_sources = [
+    "src/ssl/bio_ssl.c",
     "src/ssl/custom_extensions.c",
     "src/ssl/d1_both.c",
     "src/ssl/d1_lib.c",
