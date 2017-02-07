@@ -904,6 +904,14 @@ OPENSSL_EXPORT int SSL_CTX_set_signed_cert_timestamp_list(SSL_CTX *ctx,
                                                           const uint8_t *list,
                                                           size_t list_len);
 
+/* SSL_set_signed_cert_timestamp_list sets the list of signed certificate
+ * timestamps that is sent to clients that request is. The same format as the
+ * one used for |SSL_CTX_set_signed_cert_timestamp_list| applies. The caller
+ * retains ownership of |list|. */
+OPENSSL_EXPORT int SSL_set_signed_cert_timestamp_list(SSL *ctx,
+                                                      const uint8_t *list,
+                                                      size_t list_len);
+
 /* SSL_CTX_set_ocsp_response sets the OCSP response that is sent to clients
  * which request it. It returns one on success and zero on error. The caller
  * retains ownership of |response|. */
@@ -1752,20 +1760,6 @@ OPENSSL_EXPORT void SSL_CTX_set_session_psk_dhe_timeout(SSL_CTX *ctx,
 /* SSL_CTX_get_timeout returns the lifetime, in seconds, of TLS 1.2 (or earlier)
  * sessions created in |ctx|. */
 OPENSSL_EXPORT long SSL_CTX_get_timeout(const SSL_CTX *ctx);
-
-/* SSL_set_session_timeout sets the default lifetime, in seconds, of a TLS 1.2
- * (or earlier) session created in |ssl| to |timeout|, and returns the old
- * value.
- *
- * By default the value |SSL_DEFAULT_SESSION_TIMEOUT| is used, which can be
- * overridden at the context level by calling |SSL_CTX_set_timeout|.
- *
- * If |timeout| is zero the newly created session will not be resumable. */
-OPENSSL_EXPORT long SSL_set_session_timeout(SSL *ssl, long timeout);
-
-/* SSL_set_session_psk_dhe_timeout sets the lifetime, in seconds, of TLS 1.3
- * sessions created in |ssl| to |timeout|. */
-OPENSSL_EXPORT void SSL_set_session_psk_dhe_timeout(SSL *ssl, long timeout);
 
 /* SSL_CTX_set_session_id_context sets |ctx|'s session ID context to |sid_ctx|.
  * It returns one on success and zero on error. The session ID context is an
@@ -4064,8 +4058,7 @@ struct ssl_ctx_st {
   EVP_PKEY *tlsext_channel_id_private;
 
   /* Signed certificate timestamp list to be sent to the client, if requested */
-  uint8_t *signed_cert_timestamp_list;
-  size_t signed_cert_timestamp_list_length;
+  CRYPTO_BUFFER *signed_cert_timestamp_list;
 
   /* OCSP response to be sent to the client, if requested. */
   CRYPTO_BUFFER *ocsp_response;
