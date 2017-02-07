@@ -2514,11 +2514,6 @@ func addTestForCipherSuite(suite testCipherSuite, ver tlsVersion, protocol proto
 		// NULL ciphers must be explicitly enabled.
 		flags = append(flags, "-cipher", "DEFAULT:NULL-SHA")
 	}
-	if hasComponent(suite.name, "ECDHE-PSK") && hasComponent(suite.name, "GCM") {
-		// ECDHE_PSK AES_GCM ciphers must be explicitly enabled
-		// for now.
-		flags = append(flags, "-cipher", suite.name)
-	}
 
 	var shouldServerFail, shouldClientFail bool
 	if hasComponent(suite.name, "ECDHE") && ver.version == VersionSSL30 {
@@ -2558,6 +2553,13 @@ func addTestForCipherSuite(suite testCipherSuite, ver tlsVersion, protocol proto
 		sendCipherSuite = suite.id
 	}
 
+	// For cipher suites and versions where exporters are defined, verify
+	// that they interoperate.
+	var exportKeyingMaterial int
+	if ver.version > VersionSSL30 {
+		exportKeyingMaterial = 1024
+	}
+
 	testCases = append(testCases, testCase{
 		testType: serverTest,
 		protocol: protocol,
@@ -2573,12 +2575,13 @@ func addTestForCipherSuite(suite testCipherSuite, ver tlsVersion, protocol proto
 				AdvertiseAllConfiguredCiphers: true,
 			},
 		},
-		certFile:      certFile,
-		keyFile:       keyFile,
-		flags:         flags,
-		resumeSession: true,
-		shouldFail:    shouldServerFail,
-		expectedError: expectedServerError,
+		certFile:             certFile,
+		keyFile:              keyFile,
+		flags:                flags,
+		resumeSession:        true,
+		shouldFail:           shouldServerFail,
+		expectedError:        expectedServerError,
+		exportKeyingMaterial: exportKeyingMaterial,
 	})
 
 	testCases = append(testCases, testCase{
@@ -2597,10 +2600,11 @@ func addTestForCipherSuite(suite testCipherSuite, ver tlsVersion, protocol proto
 				SendCipherSuite:             sendCipherSuite,
 			},
 		},
-		flags:         flags,
-		resumeSession: true,
-		shouldFail:    shouldClientFail,
-		expectedError: expectedClientError,
+		flags:                flags,
+		resumeSession:        true,
+		shouldFail:           shouldClientFail,
+		expectedError:        expectedClientError,
+		exportKeyingMaterial: exportKeyingMaterial,
 	})
 
 	if shouldClientFail {
