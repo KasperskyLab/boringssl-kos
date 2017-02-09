@@ -34,8 +34,8 @@ ssl_sources = [
     "src/ssl/ssl_ecdh.c",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
-    "src/ssl/ssl_rsa.c",
-    "src/ssl/ssl_rsa_cc.cc",
+    "src/ssl/ssl_privkey.c",
+    "src/ssl/ssl_privkey_cc.cc",
     "src/ssl/ssl_session.c",
     "src/ssl/ssl_stat.c",
     "src/ssl/ssl_x509.c",
@@ -72,7 +72,7 @@ ssl_c_sources = [
     "src/ssl/ssl_ecdh.c",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
-    "src/ssl/ssl_rsa.c",
+    "src/ssl/ssl_privkey.c",
     "src/ssl/ssl_session.c",
     "src/ssl/ssl_stat.c",
     "src/ssl/ssl_x509.c",
@@ -87,7 +87,7 @@ ssl_c_sources = [
 ]
 
 ssl_cc_sources = [
-    "src/ssl/ssl_rsa_cc.cc",
+    "src/ssl/ssl_privkey_cc.cc",
 ]
 
 crypto_headers = [
