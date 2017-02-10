@@ -555,14 +555,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "err_test",
-      size = "small",
-      srcs = ["src/crypto/err/err_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "evp_extra_test",
       size = "small",
       srcs = ["src/crypto/evp/evp_extra_test.cc"] + test_support_sources,
