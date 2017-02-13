@@ -190,21 +190,15 @@ static int ssl3_get_new_session_ticket(SSL_HANDSHAKE *hs);
 int ssl3_connect(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
   int ret = -1;
-  int state, skip = 0;
 
   assert(ssl->handshake_func == ssl3_connect);
   assert(!ssl->server);
 
   for (;;) {
-    state = hs->state;
+    int state = hs->state;
 
     switch (hs->state) {
       case SSL_ST_INIT:
-        hs->state = SSL_ST_CONNECT;
-        skip = 1;
-        break;
-
-      case SSL_ST_CONNECT:
         ssl_do_info_callback(ssl, SSL_CB_HANDSHAKE_START, 1);
         hs->state = SSL3_ST_CW_CLNT_HELLO_A;
         break;
@@ -259,8 +253,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CR_CERT_STATUS_A;
         break;
@@ -271,8 +263,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_VERIFY_SERVER_CERT;
         break;
@@ -283,8 +273,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CR_KEY_EXCH_A;
         break;
@@ -303,8 +291,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CR_SRVR_DONE_A;
         break;
@@ -324,8 +310,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CW_KEY_EXCH_A;
         break;
@@ -345,8 +329,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CW_CHANGE;
         break;
@@ -367,8 +349,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CW_CHANNEL_ID_A;
         break;
@@ -379,8 +359,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CW_FINISHED_A;
         break;
@@ -393,7 +371,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         hs->state = SSL3_ST_CW_FLUSH;
 
         if (ssl->session != NULL) {
-          hs->next_state = SSL_ST_OK;
+          hs->next_state = SSL3_ST_FINISH_CLIENT_HANDSHAKE;
         } else {
           /* This is a non-resumption handshake. If it involves ChannelID, then
            * record the handshake hashes at this point in the session so that
@@ -427,8 +405,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_CR_CHANGE;
         break;
@@ -456,7 +432,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         if (ssl->session != NULL) {
           hs->state = SSL3_ST_CW_CHANGE;
         } else {
-          hs->state = SSL_ST_OK;
+          hs->state = SSL3_ST_FINISH_CLIENT_HANDSHAKE;
         }
         break;
 
@@ -466,7 +442,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           goto end;
         }
         hs->state = hs->next_state;
-        if (hs->state != SSL_ST_OK) {
+        if (hs->state != SSL3_ST_FINISH_CLIENT_HANDSHAKE) {
           ssl->method->expect_flight(ssl);
         }
         break;
@@ -476,10 +452,10 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         if (ret <= 0) {
           goto end;
         }
-        hs->state = SSL_ST_OK;
+        hs->state = SSL3_ST_FINISH_CLIENT_HANDSHAKE;
         break;
 
-      case SSL_ST_OK:
+      case SSL3_ST_FINISH_CLIENT_HANDSHAKE:
         ssl->method->release_current_message(ssl, 1 /* free_buffer */);
 
         SSL_SESSION_free(ssl->s3->established_session);
@@ -493,10 +469,6 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           ssl->s3->established_session =
               SSL_SESSION_dup(ssl->s3->new_session, SSL_SESSION_DUP_ALL);
           if (ssl->s3->established_session == NULL) {
-            /* Do not stay in SSL_ST_OK, to avoid confusing |SSL_in_init|
-             * callers. */
-            hs->state = SSL_ST_ERROR;
-            skip = 1;
             ret = -1;
             goto end;
           }
@@ -506,6 +478,10 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
           ssl->s3->new_session = NULL;
         }
 
+        hs->state = SSL_ST_OK;
+        break;
+
+      case SSL_ST_OK: {
         const int is_initial_handshake = !ssl->s3->initial_handshake_complete;
         ssl->s3->initial_handshake_complete = 1;
         if (is_initial_handshake) {
@@ -516,11 +492,7 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         ret = 1;
         ssl_do_info_callback(ssl, SSL_CB_HANDSHAKE_DONE, 1);
         goto end;
-
-      case SSL_ST_ERROR:
-        OPENSSL_PUT_ERROR(SSL, SSL_R_SSL_HANDSHAKE_FAILURE);
-        ret = -1;
-        goto end;
+      }
 
       default:
         OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_STATE);
@@ -528,13 +500,9 @@ int ssl3_connect(SSL_HANDSHAKE *hs) {
         goto end;
     }
 
-    if (!ssl->s3->tmp.reuse_message && !skip && hs->state != state) {
-      int new_state = hs->state;
-      hs->state = state;
+    if (hs->state != state) {
       ssl_do_info_callback(ssl, SSL_CB_CONNECT_LOOP, 1);
-      hs->state = new_state;
     }
-    skip = 0;
   }
 
 end:

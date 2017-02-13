@@ -202,21 +202,15 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
   uint32_t alg_a;
   int ret = -1;
-  int state, skip = 0;
 
   assert(ssl->handshake_func == ssl3_accept);
   assert(ssl->server);
 
   for (;;) {
-    state = hs->state;
+    int state = hs->state;
 
     switch (hs->state) {
       case SSL_ST_INIT:
-        hs->state = SSL_ST_ACCEPT;
-        skip = 1;
-        break;
-
-      case SSL_ST_ACCEPT:
         ssl_do_info_callback(ssl, SSL_CB_HANDSHAKE_START, 1);
         hs->state = SSL3_ST_SR_CLNT_HELLO_A;
         break;
@@ -274,8 +268,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SW_CERT_STATUS_A;
         break;
@@ -286,8 +278,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SW_KEY_EXCH_A;
         break;
@@ -303,8 +293,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
 
         hs->state = SSL3_ST_SW_CERT_REQ_A;
@@ -316,8 +304,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SW_SRVR_DONE_A;
         break;
@@ -379,8 +365,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SR_CHANNEL_ID_A;
         break;
@@ -391,8 +375,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SR_FINISHED_A;
         break;
@@ -427,8 +409,6 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
           if (ret <= 0) {
             goto end;
           }
-        } else {
-          skip = 1;
         }
         hs->state = SSL3_ST_SW_CHANGE;
         break;
@@ -518,13 +498,9 @@ int ssl3_accept(SSL_HANDSHAKE *hs) {
         goto end;
     }
 
-    if (!ssl->s3->tmp.reuse_message && !skip && hs->state != state) {
-      int new_state = hs->state;
-      hs->state = state;
+    if (hs->state != state) {
       ssl_do_info_callback(ssl, SSL_CB_ACCEPT_LOOP, 1);
-      hs->state = new_state;
     }
-    skip = 0;
   }
 
 end:
