@@ -28,6 +28,10 @@ $L$sigma:
 DB	101,120,112,97,110,100,32,51,50,45,98,121,116,101,32,107
 DB	0
 ALIGN	64
+$L$zeroz:
+	DD	0,0,0,0,1,0,0,0,2,0,0,0,3,0,0,0
+$L$fourz:
+	DD	4,0,0,0,4,0,0,0,4,0,0,0,4,0,0,0
 $L$incz:
 	DD	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 $L$sixteen:
@@ -353,7 +357,7 @@ $L$do_sse3_after_all:
 	movdqa	XMMWORD[16+rsp],xmm1
 	movdqa	XMMWORD[32+rsp],xmm2
 	movdqa	XMMWORD[48+rsp],xmm3
-	mov	ebp,10
+	mov	r8,10
 	jmp	NEAR $L$oop_ssse3
 
 ALIGN	32
@@ -363,7 +367,7 @@ $L$oop_outer_ssse3:
 	movdqa	xmm1,XMMWORD[16+rsp]
 	movdqa	xmm2,XMMWORD[32+rsp]
 	paddd	xmm3,XMMWORD[48+rsp]
-	mov	ebp,10
+	mov	r8,10
 	movdqa	XMMWORD[48+rsp],xmm3
 	jmp	NEAR $L$oop_ssse3
 
@@ -412,7 +416,7 @@ DB	102,15,56,0,223
 	pshufd	xmm2,xmm2,78
 	pshufd	xmm1,xmm1,147
 	pshufd	xmm3,xmm3,57
-	dec	ebp
+	dec	r8
 	jnz	NEAR $L$oop_ssse3
 	paddd	xmm0,XMMWORD[rsp]
 	paddd	xmm1,XMMWORD[16+rsp]
@@ -449,27 +453,21 @@ $L$tail_ssse3:
 	movdqa	XMMWORD[16+rsp],xmm1
 	movdqa	XMMWORD[32+rsp],xmm2
 	movdqa	XMMWORD[48+rsp],xmm3
-	xor	rbx,rbx
+	xor	r8,r8
 
 $L$oop_tail_ssse3:
-	movzx	eax,BYTE[rbx*1+rsi]
-	movzx	ecx,BYTE[rbx*1+rsp]
-	lea	rbx,[1+rbx]
+	movzx	eax,BYTE[r8*1+rsi]
+	movzx	ecx,BYTE[r8*1+rsp]
+	lea	r8,[1+r8]
 	xor	eax,ecx
-	mov	BYTE[((-1))+rbx*1+rdi],al
+	mov	BYTE[((-1))+r8*1+rdi],al
 	dec	rdx
 	jnz	NEAR $L$oop_tail_ssse3
 
 $L$done_ssse3:
 	movaps	xmm6,XMMWORD[((64+32))+rsp]
 	movaps	xmm7,XMMWORD[((64+48))+rsp]
-	add	rsp,64+72
-	pop	r15
-	pop	r14
-	pop	r13
-	pop	r12
-	pop	rbp
-	pop	rbx
+	add	rsp,64+72+48
 	mov	rdi,QWORD[8+rsp]	;WIN64 epilogue
 	mov	rsi,QWORD[16+rsp]
 	DB	0F3h,0C3h		;repret
@@ -1675,7 +1673,7 @@ $L$oop_tail8x:
 	jnz	NEAR $L$oop_tail8x
 
 $L$done8x:
-	vzeroupper
+	vzeroall
 	lea	r11,[((656+48))+rsp]
 	movaps	xmm6,XMMWORD[((-48))+r11]
 	movaps	xmm7,XMMWORD[((-32))+r11]

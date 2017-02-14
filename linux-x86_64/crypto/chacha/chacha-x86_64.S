@@ -24,6 +24,10 @@
 .Lsigma:
 .byte	101,120,112,97,110,100,32,51,50,45,98,121,116,101,32,107,0
 .align	64
+.Lzeroz:
+.long	0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0
+.Lfourz:
+.long	4,0,0,0, 4,0,0,0, 4,0,0,0, 4,0,0,0
 .Lincz:
 .long	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 .Lsixteen:
@@ -321,7 +325,7 @@ ChaCha20_ssse3:
 	movdqa	%xmm1,16(%rsp)
 	movdqa	%xmm2,32(%rsp)
 	movdqa	%xmm3,48(%rsp)
-	movl	$10,%ebp
+	movq	$10,%r8
 	jmp	.Loop_ssse3
 
 .align	32
@@ -331,7 +335,7 @@ ChaCha20_ssse3:
 	movdqa	16(%rsp),%xmm1
 	movdqa	32(%rsp),%xmm2
 	paddd	48(%rsp),%xmm3
-	movl	$10,%ebp
+	movq	$10,%r8
 	movdqa	%xmm3,48(%rsp)
 	jmp	.Loop_ssse3
 
@@ -380,7 +384,7 @@ ChaCha20_ssse3:
 	pshufd	$78,%xmm2,%xmm2
 	pshufd	$147,%xmm1,%xmm1
 	pshufd	$57,%xmm3,%xmm3
-	decl	%ebp
+	decq	%r8
 	jnz	.Loop_ssse3
 	paddd	0(%rsp),%xmm0
 	paddd	16(%rsp),%xmm1
@@ -417,25 +421,19 @@ ChaCha20_ssse3:
 	movdqa	%xmm1,16(%rsp)
 	movdqa	%xmm2,32(%rsp)
 	movdqa	%xmm3,48(%rsp)
-	xorq	%rbx,%rbx
+	xorq	%r8,%r8
 
 .Loop_tail_ssse3:
-	movzbl	(%rsi,%rbx,1),%eax
-	movzbl	(%rsp,%rbx,1),%ecx
-	leaq	1(%rbx),%rbx
+	movzbl	(%rsi,%r8,1),%eax
+	movzbl	(%rsp,%r8,1),%ecx
+	leaq	1(%r8),%r8
 	xorl	%ecx,%eax
-	movb	%al,-1(%rdi,%rbx,1)
+	movb	%al,-1(%rdi,%r8,1)
 	decq	%rdx
 	jnz	.Loop_tail_ssse3
 
 .Ldone_ssse3:
-	addq	$64+24,%rsp
-	popq	%r15
-	popq	%r14
-	popq	%r13
-	popq	%r12
-	popq	%rbp
-	popq	%rbx
+	addq	$64+24+48,%rsp
 	.byte	0xf3,0xc3
 .size	ChaCha20_ssse3,.-ChaCha20_ssse3
 .type	ChaCha20_4x,@function
@@ -1583,7 +1581,7 @@ ChaCha20_8x:
 	jnz	.Loop_tail8x
 
 .Ldone8x:
-	vzeroupper
+	vzeroall
 	movq	640(%rsp),%rsp
 	.byte	0xf3,0xc3
 .size	ChaCha20_8x,.-ChaCha20_8x

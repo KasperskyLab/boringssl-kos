@@ -23,6 +23,10 @@ L$rot24:
 L$sigma:
 .byte	101,120,112,97,110,100,32,51,50,45,98,121,116,101,32,107,0
 .p2align	6
+L$zeroz:
+.long	0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0
+L$fourz:
+.long	4,0,0,0, 4,0,0,0, 4,0,0,0, 4,0,0,0
 L$incz:
 .long	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 L$sixteen:
@@ -320,7 +324,7 @@ L$do_sse3_after_all:
 	movdqa	%xmm1,16(%rsp)
 	movdqa	%xmm2,32(%rsp)
 	movdqa	%xmm3,48(%rsp)
-	movl	$10,%ebp
+	movq	$10,%r8
 	jmp	L$oop_ssse3
 
 .p2align	5
@@ -330,7 +334,7 @@ L$oop_outer_ssse3:
 	movdqa	16(%rsp),%xmm1
 	movdqa	32(%rsp),%xmm2
 	paddd	48(%rsp),%xmm3
-	movl	$10,%ebp
+	movq	$10,%r8
 	movdqa	%xmm3,48(%rsp)
 	jmp	L$oop_ssse3
 
@@ -379,7 +383,7 @@ L$oop_ssse3:
 	pshufd	$78,%xmm2,%xmm2
 	pshufd	$147,%xmm1,%xmm1
 	pshufd	$57,%xmm3,%xmm3
-	decl	%ebp
+	decq	%r8
 	jnz	L$oop_ssse3
 	paddd	0(%rsp),%xmm0
 	paddd	16(%rsp),%xmm1
@@ -416,25 +420,19 @@ L$tail_ssse3:
 	movdqa	%xmm1,16(%rsp)
 	movdqa	%xmm2,32(%rsp)
 	movdqa	%xmm3,48(%rsp)
-	xorq	%rbx,%rbx
+	xorq	%r8,%r8
 
 L$oop_tail_ssse3:
-	movzbl	(%rsi,%rbx,1),%eax
-	movzbl	(%rsp,%rbx,1),%ecx
-	leaq	1(%rbx),%rbx
+	movzbl	(%rsi,%r8,1),%eax
+	movzbl	(%rsp,%r8,1),%ecx
+	leaq	1(%r8),%r8
 	xorl	%ecx,%eax
-	movb	%al,-1(%rdi,%rbx,1)
+	movb	%al,-1(%rdi,%r8,1)
 	decq	%rdx
 	jnz	L$oop_tail_ssse3
 
 L$done_ssse3:
-	addq	$64+24,%rsp
-	popq	%r15
-	popq	%r14
-	popq	%r13
-	popq	%r12
-	popq	%rbp
-	popq	%rbx
+	addq	$64+24+48,%rsp
 	.byte	0xf3,0xc3
 
 
@@ -1582,7 +1580,7 @@ L$oop_tail8x:
 	jnz	L$oop_tail8x
 
 L$done8x:
-	vzeroupper
+	vzeroall
 	movq	640(%rsp),%rsp
 	.byte	0xf3,0xc3
 
