@@ -410,16 +410,17 @@ $L$sub:	sbb	rax,QWORD[r14*8+rcx]
 
 	sbb	rax,0
 	xor	r14,r14
+	and	rsi,rax
+	not	rax
+	mov	rcx,rdi
+	and	rcx,rax
 	mov	r15,r9
+	or	rsi,rcx
 ALIGN	16
 $L$copy:
-	mov	rsi,QWORD[r14*8+rsp]
-	mov	rcx,QWORD[r14*8+rdi]
-	xor	rsi,rcx
-	and	rsi,rax
-	xor	rsi,rcx
+	mov	rax,QWORD[r14*8+rsi]
 	mov	QWORD[r14*8+rsp],r14
-	mov	QWORD[r14*8+rdi],rsi
+	mov	QWORD[r14*8+rdi],rax
 	lea	r14,[1+r14]
 	sub	r15,1
 	jnz	NEAR $L$copy

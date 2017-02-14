@@ -211,16 +211,17 @@ L$sub:	sbbq	(%rcx,%r14,8),%rax
 
 	sbbq	$0,%rax
 	xorq	%r14,%r14
+	andq	%rax,%rsi
+	notq	%rax
+	movq	%rdi,%rcx
+	andq	%rax,%rcx
 	movq	%r9,%r15
+	orq	%rcx,%rsi
 .p2align	4
 L$copy:
-	movq	(%rsp,%r14,8),%rsi
-	movq	(%rdi,%r14,8),%rcx
-	xorq	%rcx,%rsi
-	andq	%rax,%rsi
-	xorq	%rcx,%rsi
+	movq	(%rsi,%r14,8),%rax
 	movq	%r14,(%rsp,%r14,8)
-	movq	%rsi,(%rdi,%r14,8)
+	movq	%rax,(%rdi,%r14,8)
 	leaq	1(%r14),%r14
 	subq	$1,%r15
 	jnz	L$copy
@@ -572,6 +573,7 @@ L$inner4x:
 	jb	L$outer4x
 	movq	16(%rsp,%r9,8),%rdi
 	movq	0(%rsp),%rax
+	pxor	%xmm0,%xmm0
 	movq	8(%rsp),%rdx
 	shrq	$2,%r9
 	leaq	(%rsp),%rsi
@@ -609,36 +611,35 @@ L$sub4x:
 	movq	%rbx,16(%rdi,%r14,8)
 
 	sbbq	$0,%rax
-	movq	%rax,%xmm0
-	punpcklqdq	%xmm0,%xmm0
 	movq	%rbp,24(%rdi,%r14,8)
 	xorq	%r14,%r14
+	andq	%rax,%rsi
+	notq	%rax
+	movq	%rdi,%rcx
+	andq	%rax,%rcx
+	leaq	-1(%r9),%r15
+	orq	%rcx,%rsi
 
-	movq	%r9,%r15
-	pxor	%xmm5,%xmm5
+	movdqu	(%rsi),%xmm1
+	movdqa	%xmm0,(%rsp)
+	movdqu	%xmm1,(%rdi)
 	jmp	L$copy4x
 .p2align	4
 L$copy4x:
-	movdqu	(%rsp,%r14,1),%xmm2
-	movdqu	16(%rsp,%r14,1),%xmm4
-	movdqu	(%rdi,%r14,1),%xmm1
-	movdqu	16(%rdi,%r14,1),%xmm3
-	pxor	%xmm1,%xmm2
-	pxor	%xmm3,%xmm4
-	pand	%xmm0,%xmm2
-	pand	%xmm0,%xmm4
-	pxor	%xmm1,%xmm2
-	pxor	%xmm3,%xmm4
-	movdqu	%xmm2,(%rdi,%r14,1)
-	movdqu	%xmm4,16(%rdi,%r14,1)
-	movdqa	%xmm5,(%rsp,%r14,1)
-	movdqa	%xmm5,16(%rsp,%r14,1)
-
+	movdqu	16(%rsi,%r14,1),%xmm2
+	movdqu	32(%rsi,%r14,1),%xmm1
+	movdqa	%xmm0,16(%rsp,%r14,1)
+	movdqu	%xmm2,16(%rdi,%r14,1)
+	movdqa	%xmm0,32(%rsp,%r14,1)
+	movdqu	%xmm1,32(%rdi,%r14,1)
 	leaq	32(%r14),%r14
 	decq	%r15
 	jnz	L$copy4x
 
 	shlq	$2,%r9
+	movdqu	16(%rsi,%r14,1),%xmm2
+	movdqa	%xmm0,16(%rsp,%r14,1)
+	movdqu	%xmm2,16(%rdi,%r14,1)
 	movq	8(%rsp,%r9,8),%rsi
 	movq	$1,%rax
 	movq	-48(%rsi),%r15

@@ -396,16 +396,17 @@ bn_mul_mont_gather5:
 
 	sbbq	$0,%rax
 	xorq	%r14,%r14
+	andq	%rax,%rsi
+	notq	%rax
+	movq	%rdi,%rcx
+	andq	%rax,%rcx
 	movq	%r9,%r15
+	orq	%rcx,%rsi
 .align	16
 .Lcopy:
-	movq	(%rsp,%r14,8),%rsi
-	movq	(%rdi,%r14,8),%rcx
-	xorq	%rcx,%rsi
-	andq	%rax,%rsi
-	xorq	%rcx,%rsi
+	movq	(%rsi,%r14,8),%rax
 	movq	%r14,(%rsp,%r14,8)
-	movq	%rsi,(%rdi,%r14,8)
+	movq	%rax,(%rdi,%r14,8)
 	leaq	1(%r14),%r14
 	subq	$1,%r15
 	jnz	.Lcopy
