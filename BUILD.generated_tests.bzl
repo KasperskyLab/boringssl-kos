@@ -43,6 +43,7 @@ test_support_sources = [
 
 
 crypto_test_sources = [
+    "src/crypto/chacha/chacha_test.cc",
     "src/crypto/dh/dh_test.cc",
     "src/crypto/dsa/dsa_test.cc",
     "src/crypto/err/err_test.cc",
@@ -110,14 +111,6 @@ def create_tests(copts, crypto, ssl):
       name = "bytestring_test",
       size = "small",
       srcs = ["src/crypto/bytestring/bytestring_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "chacha_test",
-      size = "small",
-      srcs = ["src/crypto/chacha/chacha_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
