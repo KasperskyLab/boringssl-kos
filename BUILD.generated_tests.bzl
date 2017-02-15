@@ -45,6 +45,7 @@ test_support_sources = [
 crypto_test_sources = [
     "src/crypto/dh/dh_test.cc",
     "src/crypto/dsa/dsa_test.cc",
+    "src/crypto/err/err_test.cc",
     "src/crypto/test/gtest_main.cc",
 ]
 
