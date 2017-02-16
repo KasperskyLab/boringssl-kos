@@ -601,10 +601,11 @@ $L$inner4x:
 	cmp	r14,r9
 	jb	NEAR $L$outer4x
 	mov	rdi,QWORD[16+r9*8+rsp]
+	lea	r15,[((-4))+r9]
 	mov	rax,QWORD[rsp]
 	pxor	xmm0,xmm0
 	mov	rdx,QWORD[8+rsp]
-	shr	r9,2
+	shr	r15,2
 	lea	rsi,[rsp]
 	xor	r14,r14
 
@@ -612,7 +613,6 @@ $L$inner4x:
 	mov	rbx,QWORD[16+rsi]
 	mov	rbp,QWORD[24+rsi]
 	sbb	rdx,QWORD[8+rcx]
-	lea	r15,[((-1))+r9]
 	jmp	NEAR $L$sub4x
 ALIGN	16
 $L$sub4x:
@@ -646,8 +646,9 @@ $L$sub4x:
 	not	rax
 	mov	rcx,rdi
 	and	rcx,rax
-	lea	r15,[((-1))+r9]
+	lea	r15,[((-4))+r9]
 	or	rsi,rcx
+	shr	r15,2
 
 	movdqu	xmm1,XMMWORD[rsi]
 	movdqa	XMMWORD[rsp],xmm0
@@ -665,7 +666,6 @@ $L$copy4x:
 	dec	r15
 	jnz	NEAR $L$copy4x
 
-	shl	r9,2
 	movdqu	xmm2,XMMWORD[16+r14*1+rsi]
 	movdqa	XMMWORD[16+r14*1+rsp],xmm0
 	movdqu	XMMWORD[16+r14*1+rdi],xmm2

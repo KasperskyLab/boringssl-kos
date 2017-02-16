@@ -572,10 +572,11 @@ L$inner4x:
 	cmpq	%r9,%r14
 	jb	L$outer4x
 	movq	16(%rsp,%r9,8),%rdi
+	leaq	-4(%r9),%r15
 	movq	0(%rsp),%rax
 	pxor	%xmm0,%xmm0
 	movq	8(%rsp),%rdx
-	shrq	$2,%r9
+	shrq	$2,%r15
 	leaq	(%rsp),%rsi
 	xorq	%r14,%r14
 
@@ -583,7 +584,6 @@ L$inner4x:
 	movq	16(%rsi),%rbx
 	movq	24(%rsi),%rbp
 	sbbq	8(%rcx),%rdx
-	leaq	-1(%r9),%r15
 	jmp	L$sub4x
 .p2align	4
 L$sub4x:
@@ -617,8 +617,9 @@ L$sub4x:
 	notq	%rax
 	movq	%rdi,%rcx
 	andq	%rax,%rcx
-	leaq	-1(%r9),%r15
+	leaq	-4(%r9),%r15
 	orq	%rcx,%rsi
+	shrq	$2,%r15
 
 	movdqu	(%rsi),%xmm1
 	movdqa	%xmm0,(%rsp)
@@ -636,7 +637,6 @@ L$copy4x:
 	decq	%r15
 	jnz	L$copy4x
 
-	shlq	$2,%r9
 	movdqu	16(%rsi,%r14,1),%xmm2
 	movdqa	%xmm0,16(%rsp,%r14,1)
 	movdqu	%xmm2,16(%rdi,%r14,1)

@@ -573,10 +573,11 @@ bn_mul4x_mont:
 	cmpq	%r9,%r14
 	jb	.Louter4x
 	movq	16(%rsp,%r9,8),%rdi
+	leaq	-4(%r9),%r15
 	movq	0(%rsp),%rax
 	pxor	%xmm0,%xmm0
 	movq	8(%rsp),%rdx
-	shrq	$2,%r9
+	shrq	$2,%r15
 	leaq	(%rsp),%rsi
 	xorq	%r14,%r14
 
@@ -584,7 +585,6 @@ bn_mul4x_mont:
 	movq	16(%rsi),%rbx
 	movq	24(%rsi),%rbp
 	sbbq	8(%rcx),%rdx
-	leaq	-1(%r9),%r15
 	jmp	.Lsub4x
 .align	16
 .Lsub4x:
@@ -618,8 +618,9 @@ bn_mul4x_mont:
 	notq	%rax
 	movq	%rdi,%rcx
 	andq	%rax,%rcx
-	leaq	-1(%r9),%r15
+	leaq	-4(%r9),%r15
 	orq	%rcx,%rsi
+	shrq	$2,%r15
 
 	movdqu	(%rsi),%xmm1
 	movdqa	%xmm0,(%rsp)
@@ -637,7 +638,6 @@ bn_mul4x_mont:
 	decq	%r15
 	jnz	.Lcopy4x
 
-	shlq	$2,%r9
 	movdqu	16(%rsi,%r14,1),%xmm2
 	movdqa	%xmm0,16(%rsp,%r14,1)
 	movdqu	%xmm2,16(%rdi,%r14,1)
