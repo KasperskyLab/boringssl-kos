@@ -605,6 +605,8 @@ my %globals;
 	foreach my $token (split(/,\s*/,$line)) {
 	    if ($token =~ /^%r/) {
 		push @ret,reg($token);
+	    } elsif ($token =~ /((?:0x)?[0-9a-f]+)\((%r\w+)\)/) {
+		push @ret,reg("$2+$1");
 	    } elsif ($token =~ /(\w+):(\-?(?:0x)?[0-9a-f]+)(U?)/i) {
 		my $i = 1*eval($2);
 		push @ret,$DW_OP_complex{$1}, ($3 ? uleb128($i) : sleb128($i));
@@ -628,7 +630,7 @@ my %globals;
 	my	$self = {};
 	my	$ret;
 
-	if ($$line =~ s/^\s*\.cfi_(\w+)\s+//) {
+	if ($$line =~ s/^\s*\.cfi_(\w+)\s*//) {
 	    bless $self,$class;
 	    $ret = $self;
 	    undef $self->{value};
@@ -651,7 +653,7 @@ my %globals;
 			&& do {	$cfa_rsp -= 1*eval($$line) if ($cfa_reg eq "%rsp");
 				last;
 			      };
-	    /def_cfa/	&& do {	if ($$line =~ /(%r\w+)\s*,\s*(\.+)/) {
+	    /def_cfa/	&& do {	if ($$line =~ /(%r\w+)\s*,\s*(.+)/) {
 				    $cfa_reg = $1;
 				    $cfa_rsp = -1*eval($2) if ($cfa_reg eq "%rsp");
 				}

@@ -47,6 +47,7 @@ crypto_test_sources = [
     "src/crypto/dh/dh_test.cc",
     "src/crypto/dsa/dsa_test.cc",
     "src/crypto/err/err_test.cc",
+    "src/crypto/rsa/rsa_test.cc",
     "src/crypto/test/gtest_main.cc",
 ]
 
@@ -666,14 +667,6 @@ def create_tests(copts, crypto, ssl):
       name = "refcount_test",
       size = "small",
       srcs = ["src/crypto/refcount_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "rsa_test",
-      size = "small",
-      srcs = ["src/crypto/rsa/rsa_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
