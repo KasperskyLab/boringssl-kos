@@ -48,6 +48,7 @@ crypto_test_sources = [
     "src/crypto/dsa/dsa_test.cc",
     "src/crypto/ec/ec_test.cc",
     "src/crypto/err/err_test.cc",
+    "src/crypto/evp/evp_extra_test.cc",
     "src/crypto/rsa/rsa_test.cc",
     "src/crypto/test/gtest_main.cc",
 ]
@@ -539,14 +540,6 @@ def create_tests(copts, crypto, ssl):
       data = [
           "src/crypto/ecdsa/ecdsa_verify_tests.txt",
       ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "evp_extra_test",
-      size = "small",
-      srcs = ["src/crypto/evp/evp_extra_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
