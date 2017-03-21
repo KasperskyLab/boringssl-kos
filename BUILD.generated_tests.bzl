@@ -44,6 +44,7 @@ test_support_sources = [
 
 crypto_test_sources = [
     "src/crypto/asn1/asn1_test.cc",
+    "src/crypto/bio/bio_test.cc",
     "src/crypto/chacha/chacha_test.cc",
     "src/crypto/curve25519/x25519_test.cc",
     "src/crypto/dh/dh_test.cc",
@@ -78,14 +79,6 @@ def create_tests(copts, crypto, ssl):
       name = "base64_test",
       size = "small",
       srcs = ["src/crypto/base64/base64_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "bio_test",
-      size = "small",
-      srcs = ["src/crypto/bio/bio_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
