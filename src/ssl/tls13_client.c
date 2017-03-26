@@ -365,6 +365,10 @@ static enum ssl_hs_wait_t do_process_encrypted_extensions(SSL_HANDSHAKE *hs) {
       OPENSSL_PUT_ERROR(SSL, SSL_R_ALPN_MISMATCH_ON_EARLY_DATA);
       return ssl_hs_error;
     }
+    if (ssl->s3->tlsext_channel_id_valid) {
+      OPENSSL_PUT_ERROR(SSL, SSL_R_CHANNEL_ID_ON_EARLY_DATA);
+      return ssl_hs_error;
+    }
   }
 
   /* Release offered session now that it is no longer needed. */
@@ -466,7 +470,7 @@ static enum ssl_hs_wait_t do_process_server_certificate_verify(
 static enum ssl_hs_wait_t do_process_server_finished(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
   if (!ssl_check_message_type(ssl, SSL3_MT_FINISHED) ||
-      !tls13_process_finished(hs) ||
+      !tls13_process_finished(hs, 0 /* don't use saved value */) ||
       !ssl_hash_current_message(hs) ||
       /* Update the secret to the master secret and derive traffic keys. */
       !tls13_advance_key_schedule(hs, kZeroes, hs->hash_len) ||
