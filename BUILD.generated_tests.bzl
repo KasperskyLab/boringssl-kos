@@ -46,6 +46,7 @@ crypto_test_sources = [
     "src/crypto/asn1/asn1_test.cc",
     "src/crypto/bio/bio_test.cc",
     "src/crypto/chacha/chacha_test.cc",
+    "src/crypto/constant_time_test.cc",
     "src/crypto/curve25519/x25519_test.cc",
     "src/crypto/dh/dh_test.cc",
     "src/crypto/dsa/dsa_test.cc",
@@ -408,14 +409,6 @@ def create_tests(copts, crypto, ssl):
       name = "cmac_test",
       size = "small",
       srcs = ["src/crypto/cmac/cmac_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "constant_time_test",
-      size = "small",
-      srcs = ["src/crypto/constant_time_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
