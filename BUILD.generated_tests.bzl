@@ -38,7 +38,6 @@ test_support_sources = [
     "src/ssl/internal.h",
     "src/ssl/test/async_bio.h",
     "src/ssl/test/packeted_bio.h",
-    "src/ssl/test/runner/curve25519/const_amd64.h",
     "src/ssl/test/test_config.h",
 ]
 
