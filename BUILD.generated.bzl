@@ -322,6 +322,8 @@ crypto_sources = [
     "src/crypto/evp/p_dsa_asn1.c",
     "src/crypto/evp/p_ec.c",
     "src/crypto/evp/p_ec_asn1.c",
+    "src/crypto/evp/p_ed25519.c",
+    "src/crypto/evp/p_ed25519_asn1.c",
     "src/crypto/evp/p_rsa.c",
     "src/crypto/evp/p_rsa_asn1.c",
     "src/crypto/evp/pbkdf.c",
