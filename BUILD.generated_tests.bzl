@@ -12,12 +12,14 @@ test_support_sources = [
     "src/crypto/conf/internal.h",
     "src/crypto/curve25519/internal.h",
     "src/crypto/des/internal.h",
-    "src/crypto/digest/internal.h",
-    "src/crypto/digest/md32_common.h",
+    "src/crypto/digest_extra/internal.h",
     "src/crypto/ec/internal.h",
     "src/crypto/ec/p256-x86_64-table.h",
     "src/crypto/ec/p256-x86_64.h",
     "src/crypto/evp/internal.h",
+    "src/crypto/fipsmodule/delocate.h",
+    "src/crypto/fipsmodule/digest/internal.h",
+    "src/crypto/fipsmodule/digest/md32_common.h",
     "src/crypto/internal.h",
     "src/crypto/modes/internal.h",
     "src/crypto/obj/obj_dat.h",
@@ -438,7 +440,7 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "digest_test",
       size = "small",
-      srcs = ["src/crypto/digest/digest_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/digest_extra/digest_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
@@ -548,13 +550,13 @@ def create_tests(copts, crypto, ssl):
   native.cc_test(
       name = "hmac_test",
       size = "small",
-      srcs = ["src/crypto/hmac/hmac_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/hmac_extra/hmac_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/hmac/hmac_tests.txt)",
+          "$(location src/crypto/hmac_extra/hmac_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/hmac/hmac_tests.txt",
+          "src/crypto/hmac_extra/hmac_tests.txt",
       ],
       deps = [crypto],
   )
