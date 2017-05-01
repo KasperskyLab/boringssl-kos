@@ -879,10 +879,6 @@ type ProtocolBugs struct {
 	// BadFinished, if true, causes the Finished hash to be broken.
 	BadFinished bool
 
-	// DHGroupPrime, if not nil, is used to define the (finite field)
-	// Diffie-Hellman group. The generator used is always two.
-	DHGroupPrime *big.Int
-
 	// PackHandshakeFragments, if true, causes handshake fragments in DTLS
 	// to be packed into individual handshake records, up to the specified
 	// record size.
@@ -1004,11 +1000,6 @@ type ProtocolBugs struct {
 	// HelloRequest handshake message to be sent before each handshake
 	// message. This only makes sense for a server.
 	SendHelloRequestBeforeEveryHandshakeMessage bool
-
-	// RequireDHPublicValueLen causes a fatal error if the length (in
-	// bytes) of the server's Diffie-Hellman public value is not equal to
-	// this.
-	RequireDHPublicValueLen int
 
 	// BadChangeCipherSpec, if not nil, is the body to be sent in
 	// ChangeCipherSpec records instead of {1}.
@@ -1331,6 +1322,14 @@ type ProtocolBugs struct {
 	// to use when signing in TLS 1.1 and earlier where algorithms are not
 	// negotiated.
 	UseLegacySigningAlgorithm signatureAlgorithm
+
+	// SendServerHelloAsHelloRetryRequest, if true, causes the server to
+	// send ServerHello messages with a HelloRetryRequest type field.
+	SendServerHelloAsHelloRetryRequest bool
+
+	// RejectUnsolicitedKeyUpdate, if true, causes all unsolicited
+	// KeyUpdates from the peer to be rejected.
+	RejectUnsolicitedKeyUpdate bool
 }
 
 func (c *Config) serverInit() {

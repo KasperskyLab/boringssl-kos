@@ -515,12 +515,20 @@ void SSL_CTX_set_ed25519_enabled(SSL_CTX *ctx, int enabled) {
 }
 
 int tls12_add_verify_sigalgs(const SSL *ssl, CBB *out) {
-  for (size_t i = 0; i < OPENSSL_ARRAY_SIZE(kVerifySignatureAlgorithms); i++) {
-    if (kVerifySignatureAlgorithms[i] == SSL_SIGN_ED25519 &&
+  const uint16_t *sigalgs = kVerifySignatureAlgorithms;
+  size_t num_sigalgs = OPENSSL_ARRAY_SIZE(kVerifySignatureAlgorithms);
+  if (ssl->ctx->num_verify_sigalgs != 0) {
+    sigalgs = ssl->ctx->verify_sigalgs;
+    num_sigalgs = ssl->ctx->num_verify_sigalgs;
+  }
+
+  for (size_t i = 0; i < num_sigalgs; i++) {
+    if (sigalgs == kVerifySignatureAlgorithms &&
+        sigalgs[i] == SSL_SIGN_ED25519 &&
         !ssl->ctx->ed25519_enabled) {
       continue;
     }
-    if (!CBB_add_u16(out, kVerifySignatureAlgorithms[i])) {
+    if (!CBB_add_u16(out, sigalgs[i])) {
       return 0;
     }
   }
@@ -529,12 +537,20 @@ int tls12_add_verify_sigalgs(const SSL *ssl, CBB *out) {
 }
 
 int tls12_check_peer_sigalg(SSL *ssl, int *out_alert, uint16_t sigalg) {
-  for (size_t i = 0; i < OPENSSL_ARRAY_SIZE(kVerifySignatureAlgorithms); i++) {
-    if (kVerifySignatureAlgorithms[i] == SSL_SIGN_ED25519 &&
+  const uint16_t *sigalgs = kVerifySignatureAlgorithms;
+  size_t num_sigalgs = OPENSSL_ARRAY_SIZE(kVerifySignatureAlgorithms);
+  if (ssl->ctx->num_verify_sigalgs != 0) {
+    sigalgs = ssl->ctx->verify_sigalgs;
+    num_sigalgs = ssl->ctx->num_verify_sigalgs;
+  }
+
+  for (size_t i = 0; i < num_sigalgs; i++) {
+    if (sigalgs == kVerifySignatureAlgorithms &&
+        sigalgs[i] == SSL_SIGN_ED25519 &&
         !ssl->ctx->ed25519_enabled) {
       continue;
     }
-    if (sigalg == kVerifySignatureAlgorithms[i]) {
+    if (sigalg == sigalgs[i]) {
       return 1;
     }
   }
@@ -3312,24 +3328,31 @@ int tls1_parse_peer_sigalgs(SSL_HANDSHAKE *hs, const CBS *in_sigalgs) {
   return 1;
 }
 
+int tls1_get_legacy_signature_algorithm(uint16_t *out, const EVP_PKEY *pkey) {
+  switch (EVP_PKEY_id(pkey)) {
+    case EVP_PKEY_RSA:
+      *out = SSL_SIGN_RSA_PKCS1_MD5_SHA1;
+      return 1;
+    case EVP_PKEY_EC:
+      *out = SSL_SIGN_ECDSA_SHA1;
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 int tls1_choose_signature_algorithm(SSL_HANDSHAKE *hs, uint16_t *out) {
   SSL *const ssl = hs->ssl;
   CERT *cert = ssl->cert;
 
   /* Before TLS 1.2, the signature algorithm isn't negotiated as part of the
-   * handshake. It is fixed at MD5-SHA1 for RSA and SHA1 for ECDSA. */
+   * handshake. */
   if (ssl3_protocol_version(ssl) < TLS1_2_VERSION) {
-    switch (EVP_PKEY_id(hs->local_pubkey)) {
-      case EVP_PKEY_RSA:
-        *out = SSL_SIGN_RSA_PKCS1_MD5_SHA1;
-        return 1;
-      case EVP_PKEY_EC:
-        *out = SSL_SIGN_ECDSA_SHA1;
-        return 1;
-      default:
-        OPENSSL_PUT_ERROR(SSL, SSL_R_NO_COMMON_SIGNATURE_ALGORITHMS);
-        return 0;
+    if (!tls1_get_legacy_signature_algorithm(out, hs->local_pubkey)) {
+      OPENSSL_PUT_ERROR(SSL, SSL_R_NO_COMMON_SIGNATURE_ALGORITHMS);
+      return 0;
     }
+    return 1;
   }
 
   const uint16_t *sigalgs = cert->sigalgs;

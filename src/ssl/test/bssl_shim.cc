@@ -46,7 +46,6 @@ OPENSSL_MSVC_PRAGMA(comment(lib, "Ws2_32.lib"))
 #include <openssl/bytestring.h>
 #include <openssl/cipher.h>
 #include <openssl/crypto.h>
-#include <openssl/dh.h>
 #include <openssl/digest.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -1038,9 +1037,10 @@ static bssl::UniquePtr<SSL_CTX> SetupCtx(const TestConfig *config) {
 
   SSL_CTX_set0_buffer_pool(ssl_ctx.get(), g_pool);
 
-  // Enable TLS 1.3 for tests.
+  // Enable SSL 3.0 and TLS 1.3 for tests.
   if (!config->is_dtls &&
-      !SSL_CTX_set_max_proto_version(ssl_ctx.get(), TLS1_3_VERSION)) {
+      (!SSL_CTX_set_min_proto_version(ssl_ctx.get(), SSL3_VERSION) ||
+       !SSL_CTX_set_max_proto_version(ssl_ctx.get(), TLS1_3_VERSION))) {
     return nullptr;
   }
 
@@ -1050,34 +1050,6 @@ static bssl::UniquePtr<SSL_CTX> SetupCtx(const TestConfig *config) {
     SSL_CTX_set_options(ssl_ctx.get(), SSL_OP_CIPHER_SERVER_PREFERENCE);
   }
   if (!SSL_CTX_set_strict_cipher_list(ssl_ctx.get(), cipher_list.c_str())) {
-    return nullptr;
-  }
-
-  bssl::UniquePtr<DH> dh(DH_get_2048_256(NULL));
-  if (!dh) {
-    return nullptr;
-  }
-
-  if (config->use_sparse_dh_prime) {
-    // This prime number is 2^1024 + 643 – a value just above a power of two.
-    // Because of its form, values modulo it are essentially certain to be one
-    // byte shorter. This is used to test padding of these values.
-    if (BN_hex2bn(
-            &dh->p,
-            "1000000000000000000000000000000000000000000000000000000000000000"
-            "0000000000000000000000000000000000000000000000000000000000000000"
-            "0000000000000000000000000000000000000000000000000000000000000000"
-            "0000000000000000000000000000000000000000000000000000000000000028"
-            "3") == 0 ||
-        !BN_set_word(dh->g, 2)) {
-      return nullptr;
-    }
-    BN_free(dh->q);
-    dh->q = NULL;
-    dh->priv_length = 0;
-  }
-
-  if (!SSL_CTX_set_tmp_dh(ssl_ctx.get(), dh.get())) {
     return nullptr;
   }
 
@@ -1183,6 +1155,15 @@ static bssl::UniquePtr<SSL_CTX> SetupCtx(const TestConfig *config) {
 
   if (config->enable_ed25519) {
     SSL_CTX_set_ed25519_enabled(ssl_ctx.get(), 1);
+  }
+
+  if (!config->verify_prefs.empty()) {
+    std::vector<uint16_t> u16s(config->verify_prefs.begin(),
+                               config->verify_prefs.end());
+    if (!SSL_CTX_set_verify_algorithm_prefs(ssl_ctx.get(), u16s.data(),
+                                            u16s.size())) {
+      return nullptr;
+    }
   }
 
   return ssl_ctx;
@@ -1305,7 +1286,8 @@ static int DoRead(SSL *ssl, uint8_t *out, size_t max_out) {
 
 // WriteAll writes |in_len| bytes from |in| to |ssl|, resolving any asynchronous
 // operations. It returns the result of the final |SSL_write| call.
-static int WriteAll(SSL *ssl, const uint8_t *in, size_t in_len) {
+static int WriteAll(SSL *ssl, const void *in_, size_t in_len) {
+  const uint8_t *in = reinterpret_cast<const uint8_t *>(in_);
   const TestConfig *config = GetTestConfig(ssl);
   int ret;
   do {
@@ -1969,22 +1951,23 @@ static bool DoExchange(bssl::UniquePtr<SSL_SESSION> *out_session,
       }
     }
   } else {
+    static const char kInitialWrite[] = "hello";
+    bool pending_initial_write = false;
     if (config->read_with_unfinished_write) {
       if (!config->async) {
         fprintf(stderr, "-read-with-unfinished-write requires -async.\n");
         return false;
       }
 
-      int write_ret = SSL_write(ssl.get(),
-                          reinterpret_cast<const uint8_t *>("unfinished"), 10);
+      int write_ret =
+          SSL_write(ssl.get(), kInitialWrite, strlen(kInitialWrite));
       if (SSL_get_error(ssl.get(), write_ret) != SSL_ERROR_WANT_WRITE) {
         fprintf(stderr, "Failed to leave unfinished write.\n");
         return false;
       }
-    }
-    if (config->shim_writes_first) {
-      if (WriteAll(ssl.get(), reinterpret_cast<const uint8_t *>("hello"),
-                   5) < 0) {
+      pending_initial_write = true;
+    } else if (config->shim_writes_first) {
+      if (WriteAll(ssl.get(), kInitialWrite, strlen(kInitialWrite)) < 0) {
         return false;
       }
     }
@@ -2027,6 +2010,14 @@ static bool DoExchange(bssl::UniquePtr<SSL_SESSION> *out_session,
             !SSL_early_data_accepted(ssl.get())) {
           fprintf(stderr, "handshake was not completed after SSL_read\n");
           return false;
+        }
+
+        // Clear the initial write, if unfinished.
+        if (pending_initial_write) {
+          if (WriteAll(ssl.get(), kInitialWrite, strlen(kInitialWrite)) < 0) {
+            return false;
+          }
+          pending_initial_write = false;
         }
 
         for (int i = 0; i < n; i++) {

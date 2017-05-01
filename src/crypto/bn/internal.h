@@ -138,10 +138,6 @@ OPENSSL_MSVC_PRAGMA(warning(pop))
 extern "C" {
 #endif
 
-/* bn_expand acts the same as |bn_wexpand|, but takes a number of bits rather
- * than a number of words. */
-BIGNUM *bn_expand(BIGNUM *bn, size_t bits);
-
 #if defined(OPENSSL_64_BIT)
 
 #if !defined(_MSC_VER)
@@ -199,6 +195,19 @@ BIGNUM *bn_expand(BIGNUM *bn, size_t bits);
 #define Hw(t) (((BN_ULONG)((t)>>BN_BITS2))&BN_MASK2)
 #endif
 
+/* bn_correct_top decrements |bn->top| until |bn->d[top-1]| is non-zero or
+ * until |top| is zero. If |bn| is zero, |bn->neg| is set to zero. */
+void bn_correct_top(BIGNUM *bn);
+
+/* bn_wexpand ensures that |bn| has at least |words| works of space without
+ * altering its value. It returns one on success or zero on allocation
+ * failure. */
+int bn_wexpand(BIGNUM *bn, size_t words);
+
+/* bn_expand acts the same as |bn_wexpand|, but takes a number of bits rather
+ * than a number of words. */
+int bn_expand(BIGNUM *bn, size_t bits);
+
 /* bn_set_words sets |bn| to the value encoded in the |num| words in |words|,
  * least significant word first. */
 int bn_set_words(BIGNUM *bn, const BN_ULONG *words, size_t num);
@@ -249,6 +258,10 @@ int bn_mod_inverse_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
  * protecting the exponent. */
 int bn_mod_inverse_secret_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
                                 BN_CTX *ctx, const BN_MONT_CTX *mont_p);
+
+/* bn_jacobi returns the Jacobi symbol of |a| and |b| (which is -1, 0 or 1), or
+ * -2 on error. */
+int bn_jacobi(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
 
 
 #if defined(__cplusplus)

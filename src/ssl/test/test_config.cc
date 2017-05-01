@@ -102,7 +102,6 @@ const Flag<bool> kBoolFlags[] = {
   { "-renegotiate-ignore", &TestConfig::renegotiate_ignore },
   { "-p384-only", &TestConfig::p384_only },
   { "-enable-all-curves", &TestConfig::enable_all_curves },
-  { "-use-sparse-dh-prime", &TestConfig::use_sparse_dh_prime },
   { "-use-old-client-cert-callback",
     &TestConfig::use_old_client_cert_callback },
   { "-send-alert", &TestConfig::send_alert },
@@ -196,6 +195,7 @@ const Flag<int> kIntFlags[] = {
 
 const Flag<std::vector<int>> kIntVectorFlags[] = {
   { "-signing-prefs", &TestConfig::signing_prefs },
+  { "-verify-prefs", &TestConfig::verify_prefs },
 };
 
 }  // namespace

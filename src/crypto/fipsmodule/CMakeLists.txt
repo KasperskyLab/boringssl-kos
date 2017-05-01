@@ -4,10 +4,17 @@ if (${ARCH} STREQUAL "x86_64")
   set(
     BCM_ASM_SOURCES
 
+    aesni-gcm-x86_64.${ASM_EXT}
+    aesni-x86_64.${ASM_EXT}
+    aes-x86_64.${ASM_EXT}
+    bsaes-x86_64.${ASM_EXT}
+    ghash-x86_64.${ASM_EXT}
     md5-x86_64.${ASM_EXT}
+    rdrand-x86_64.${ASM_EXT}
     sha1-x86_64.${ASM_EXT}
     sha256-x86_64.${ASM_EXT}
     sha512-x86_64.${ASM_EXT}
+    vpaes-x86_64.${ASM_EXT}
   )
 endif()
 
@@ -15,10 +22,14 @@ if (${ARCH} STREQUAL "x86")
   set(
     BCM_ASM_SOURCES
 
+    aes-586.${ASM_EXT}
+    aesni-x86.${ASM_EXT}
+    ghash-x86.${ASM_EXT}
     md5-586.${ASM_EXT}
     sha1-586.${ASM_EXT}
     sha256-586.${ASM_EXT}
     sha512-586.${ASM_EXT}
+    vpaes-x86.${ASM_EXT}
   )
 endif()
 
@@ -26,6 +37,11 @@ if (${ARCH} STREQUAL "arm")
   set(
     BCM_ASM_SOURCES
 
+    aes-armv4.${ASM_EXT}
+    aesv8-armx.${ASM_EXT}
+    bsaes-armv7.${ASM_EXT}
+    ghash-armv4.${ASM_EXT}
+    ghashv8-armx.${ASM_EXT}
     sha1-armv4-large.${ASM_EXT}
     sha256-armv4.${ASM_EXT}
     sha512-armv4.${ASM_EXT}
@@ -36,14 +52,41 @@ if (${ARCH} STREQUAL "aarch64")
   set(
     BCM_ASM_SOURCES
 
+    aesv8-armx.${ASM_EXT}
+    ghashv8-armx.${ASM_EXT}
     sha1-armv8.${ASM_EXT}
     sha256-armv8.${ASM_EXT}
     sha512-armv8.${ASM_EXT}
   )
 endif()
 
+if (${ARCH} STREQUAL "ppc64le")
+  set(
+    AES_ARCH_SOURCES
+
+    aesp8-ppc.${ASM_EXT}
+    ghashp8-ppc.${ASM_EXT}
+  )
+endif()
+
+perlasm(aes-586.${ASM_EXT} aes/asm/aes-586.pl)
+perlasm(aes-armv4.${ASM_EXT} aes/asm/aes-armv4.pl)
+perlasm(aesni-gcm-x86_64.${ASM_EXT} modes/asm/aesni-gcm-x86_64.pl)
+perlasm(aesni-x86_64.${ASM_EXT} aes/asm/aesni-x86_64.pl)
+perlasm(aesni-x86.${ASM_EXT} aes/asm/aesni-x86.pl)
+perlasm(aesp8-ppc.${ASM_EXT} aes/asm/aesp8-ppc.pl)
+perlasm(aesv8-armx.${ASM_EXT} aes/asm/aesv8-armx.pl)
+perlasm(aes-x86_64.${ASM_EXT} aes/asm/aes-x86_64.pl)
+perlasm(bsaes-armv7.${ASM_EXT} aes/asm/bsaes-armv7.pl)
+perlasm(bsaes-x86_64.${ASM_EXT} aes/asm/bsaes-x86_64.pl)
+perlasm(ghash-armv4.${ASM_EXT} modes/asm/ghash-armv4.pl)
+perlasm(ghashp8-ppc.${ASM_EXT} modes/asm/ghashp8-ppc.pl)
+perlasm(ghashv8-armx.${ASM_EXT} modes/asm/ghashv8-armx.pl)
+perlasm(ghash-x86_64.${ASM_EXT} modes/asm/ghash-x86_64.pl)
+perlasm(ghash-x86.${ASM_EXT} modes/asm/ghash-x86.pl)
 perlasm(md5-586.${ASM_EXT} md5/asm/md5-586.pl)
 perlasm(md5-x86_64.${ASM_EXT} md5/asm/md5-x86_64.pl)
+perlasm(rdrand-x86_64.${ASM_EXT} rand/asm/rdrand-x86_64.pl)
 perlasm(sha1-586.${ASM_EXT} sha/asm/sha1-586.pl)
 perlasm(sha1-armv4-large.${ASM_EXT} sha/asm/sha1-armv4-large.pl)
 perlasm(sha1-armv8.${ASM_EXT} sha/asm/sha1-armv8.pl)
@@ -56,6 +99,8 @@ perlasm(sha512-586.${ASM_EXT} sha/asm/sha512-586.pl)
 perlasm(sha512-armv4.${ASM_EXT} sha/asm/sha512-armv4.pl)
 perlasm(sha512-armv8.${ASM_EXT} sha/asm/sha512-armv8.pl)
 perlasm(sha512-x86_64.${ASM_EXT} sha/asm/sha512-x86_64.pl)
+perlasm(vpaes-x86_64.${ASM_EXT} aes/asm/vpaes-x86_64.pl)
+perlasm(vpaes-x86.${ASM_EXT} aes/asm/vpaes-x86.pl)
 
 if(FIPS)
   add_library(
@@ -66,20 +111,23 @@ if(FIPS)
     bcm.c
   )
 
-  SET_TARGET_PROPERTIES(bcm_c_generated_asm PROPERTIES COMPILE_OPTIONS "-S")
-  SET_TARGET_PROPERTIES(bcm_c_generated_asm PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(bcm_c_generated_asm PROPERTIES COMPILE_OPTIONS "-S")
+  set_target_properties(bcm_c_generated_asm PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-  function(JOIN VALUES GLUE OUTPUT)
-    string (REPLACE ";" "${GLUE}" _TMP_STR "${VALUES}")
-    set (${OUTPUT} "${_TMP_STR}" PARENT_SCOPE)
+  function(prepend_path values prefix output)
+    set(result)
+    foreach(value ${values})
+      list(APPEND result "${prefix}/${value}")
+    endforeach(value)
+    set(${output} ${result} PARENT_SCOPE)
   endfunction()
 
-  JOIN("${BCM_ASM_SOURCES}" ",${CMAKE_CURRENT_BINARY_DIR}/" BCM_ASM_SOURCES_COMMA_SEP)
+  prepend_path("${BCM_ASM_SOURCES}" "${CMAKE_CURRENT_BINARY_DIR}" DELOCATE_ASM_ARGS)
 
   add_custom_command(
     OUTPUT bcm-delocated.S
-    COMMAND ${GO_EXECUTABLE} run crypto/fipsmodule/delocate.go crypto/fipsmodule/ar.go -a $<TARGET_FILE:bcm_c_generated_asm> -as ${CMAKE_CURRENT_BINARY_DIR}/${BCM_ASM_SOURCES_COMMA_SEP} -o ${CMAKE_CURRENT_BINARY_DIR}/bcm-delocated.S
-    DEPENDS bcm_c_generated_asm ${BCM_ASM_SOURCES} delocate.go ar.go
+    COMMAND ${GO_EXECUTABLE} run crypto/fipsmodule/delocate.go crypto/fipsmodule/ar.go crypto/fipsmodule/const.go -a $<TARGET_FILE:bcm_c_generated_asm> -o ${CMAKE_CURRENT_BINARY_DIR}/bcm-delocated.S ${DELOCATE_ASM_ARGS}
+    DEPENDS bcm_c_generated_asm ${BCM_ASM_SOURCES} delocate.go ar.go const.go
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
@@ -94,60 +142,10 @@ if(FIPS)
   set_target_properties(bcm_hashunset PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set_target_properties(bcm_hashunset PROPERTIES LINKER_LANGUAGE C)
 
-  add_executable(
-    bcm_hashunset_test
-
-    bcm_hashunset_test.c
-
-    $<TARGET_OBJECTS:crypto_base>
-    $<TARGET_OBJECTS:stack>
-    $<TARGET_OBJECTS:lhash>
-    $<TARGET_OBJECTS:err>
-    $<TARGET_OBJECTS:base64>
-    $<TARGET_OBJECTS:bytestring>
-    $<TARGET_OBJECTS:pool>
-    $<TARGET_OBJECTS:digest_extra>
-    $<TARGET_OBJECTS:cipher>
-    $<TARGET_OBJECTS:modes>
-    $<TARGET_OBJECTS:aes>
-    $<TARGET_OBJECTS:des>
-    $<TARGET_OBJECTS:rc4>
-    $<TARGET_OBJECTS:conf>
-    $<TARGET_OBJECTS:chacha>
-    $<TARGET_OBJECTS:poly1305>
-    $<TARGET_OBJECTS:curve25519>
-    $<TARGET_OBJECTS:buf>
-    $<TARGET_OBJECTS:bn>
-    $<TARGET_OBJECTS:bio>
-    $<TARGET_OBJECTS:rand>
-    $<TARGET_OBJECTS:obj>
-    $<TARGET_OBJECTS:asn1>
-    $<TARGET_OBJECTS:engine>
-    $<TARGET_OBJECTS:dh>
-    $<TARGET_OBJECTS:dsa>
-    $<TARGET_OBJECTS:rsa>
-    $<TARGET_OBJECTS:ec>
-    $<TARGET_OBJECTS:ecdh>
-    $<TARGET_OBJECTS:ecdsa>
-    $<TARGET_OBJECTS:cmac>
-    $<TARGET_OBJECTS:evp>
-    $<TARGET_OBJECTS:hkdf>
-    $<TARGET_OBJECTS:pem>
-    $<TARGET_OBJECTS:x509>
-    $<TARGET_OBJECTS:x509v3>
-    $<TARGET_OBJECTS:pkcs8_lib>
-  )
-
-  target_link_libraries(bcm_hashunset_test bcm_hashunset)
-
-  if(NOT MSVC AND NOT ANDROID)
-    target_link_libraries(bcm_hashunset_test pthread)
-  endif()
-
   add_custom_command(
     OUTPUT bcm.o
-    COMMAND ${GO_EXECUTABLE} run crypto/fipsmodule/inject-hash.go crypto/fipsmodule/ar.go -o ${CMAKE_CURRENT_BINARY_DIR}/bcm.o -in $<TARGET_FILE:bcm_hashunset> -bin $<TARGET_FILE:bcm_hashunset_test>
-    DEPENDS bcm_hashunset_test bcm_hashunset inject-hash.go ar.go
+    COMMAND ${GO_EXECUTABLE} run crypto/fipsmodule/inject-hash.go crypto/fipsmodule/ar.go crypto/fipsmodule/const.go -o ${CMAKE_CURRENT_BINARY_DIR}/bcm.o -in-archive $<TARGET_FILE:bcm_hashunset>
+    DEPENDS bcm_hashunset inject-hash.go ar.go const.go
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
@@ -177,3 +175,35 @@ else()
     ${BCM_ASM_SOURCES}
   )
 endif()
+
+add_executable(
+  aes_test
+
+  aes/aes_test.cc
+  $<TARGET_OBJECTS:test_support>
+)
+
+target_link_libraries(aes_test crypto)
+add_dependencies(all_tests aes_test)
+
+add_executable(
+  gcm_test
+
+  modes/gcm_test.cc
+
+  $<TARGET_OBJECTS:test_support>
+)
+
+target_link_libraries(gcm_test crypto)
+add_dependencies(all_tests gcm_test)
+
+add_executable(
+  ctrdrbg_vector_test
+
+  rand/ctrdrbg_vector_test.cc
+
+  $<TARGET_OBJECTS:test_support>
+)
+
+target_link_libraries(ctrdrbg_vector_test crypto)
+add_dependencies(all_tests ctrdrbg_vector_test)

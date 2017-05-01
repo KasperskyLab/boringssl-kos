@@ -12,104 +12,161 @@
 // OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 // CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-// inject-hash runs a binary compiled against a FIPS module that hasn't had the
-// correct hash injected. That binary will fail the power-on integrity check
-// and write the calcualted hash value to stderr. This script parses that and
-// injects the calcualted value into the given object file.
+// inject-hash parses an archive containing a file object file. It finds a FIPS
+// module inside that object, calculates its hash and replaces the default hash
+// value in the object with the calculated value.
 package main
 
 import (
 	"bytes"
-	"encoding/hex"
+	"crypto/hmac"
+	"crypto/sha256"
+	"debug/elf"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"strings"
 )
 
-// uninitHashValue is the default hash value that we inject into the module.
-// This value need only be distinct, i.e. so that we can safely
-// search-and-replace it in an object file. This must match the value in bcm.c.
-var uninitHashValue = [32]byte{
-	0x5f, 0x30, 0xd1, 0x80, 0xe7, 0x9e, 0x8f, 0x8f, 0xdf, 0x8b, 0x93, 0xd4, 0x96, 0x36, 0x30, 0xcc, 0x30, 0xea, 0x38, 0x0f, 0x75, 0x56, 0x9a, 0x1b, 0x23, 0x2f, 0x7c, 0x79, 0xff, 0x1b, 0x2b, 0xca,
-}
+func do(outPath, oInput string, arInput string) error {
+	var objectBytes []byte
+	if len(arInput) > 0 {
+		if len(oInput) > 0 {
+			return fmt.Errorf("-in-archive and -in-object are mutually exclusive")
+		}
 
-func do(outPath, arInput, binPath string) error {
-	cmd := exec.Command(binPath)
-	out, err := cmd.CombinedOutput()
+		arFile, err := os.Open(arInput)
+		if err != nil {
+			return err
+		}
+		defer arFile.Close()
 
-	if err == nil {
-		return errors.New("binary did not fail self test")
+		ar, err := ParseAR(arFile)
+		if err != nil {
+			return err
+		}
+
+		if len(ar) != 1 {
+			return fmt.Errorf("expected one file in archive, but found %d", len(ar))
+		}
+
+		for _, contents := range ar {
+			objectBytes = contents
+		}
+	} else if len(oInput) > 0 {
+		var err error
+		if objectBytes, err = ioutil.ReadFile(oInput); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("exactly one of -in-archive or -in-object is required")
 	}
 
-	lines := strings.Split(string(out), "\n")
-	if len(lines) < 3 {
-		return fmt.Errorf("too few lines in output: %q", out)
-	}
-
-	calculatedLine := lines[2]
-	if !strings.HasPrefix(calculatedLine, "Calculated: ") {
-		return errors.New("bad prefix of 3rd line: " + calculatedLine)
-	}
-	calculatedLine = calculatedLine[12:]
-	calculated, err := hex.DecodeString(calculatedLine)
+	object, err := elf.NewFile(bytes.NewReader(objectBytes))
 	if err != nil {
-		return err
+		return errors.New("failed to parse object: " + err.Error())
 	}
 
-	if len(calculated) != len(uninitHashValue) {
-		return fmt.Errorf("unexpected length of calculated hash: got %d, want %d", len(calculated), len(uninitHashValue))
+	// Find the .text section.
+
+	var textSection *elf.Section
+	var textSectionIndex elf.SectionIndex
+	for i, section := range object.Sections {
+		if section.Name == ".text" {
+			textSectionIndex = elf.SectionIndex(i)
+			textSection = section
+			break
+		}
 	}
 
-	arFile, err := os.Open(arInput)
+	if textSection == nil {
+		return errors.New("failed to find .text section in object")
+	}
+
+	// Find the starting and ending symbols for the module.
+
+	var startSeen, endSeen bool
+	var start, end uint64
+
+	symbols, err := object.Symbols()
 	if err != nil {
-		return err
-	}
-	defer arFile.Close()
-
-	ar, err := ParseAR(arFile)
-	if err != nil {
-		return err
+		return errors.New("failed to parse symbols: " + err.Error())
 	}
 
-	if len(ar) != 1 {
-		return fmt.Errorf("expected one file in archive, but found %d", len(ar))
+	for _, symbol := range symbols {
+		if symbol.Section != textSectionIndex {
+			continue
+		}
+
+		switch symbol.Name {
+		case "BORINGSSL_bcm_text_start":
+			if startSeen {
+				return errors.New("duplicate start symbol found")
+			}
+			startSeen = true
+			start = symbol.Value
+		case "BORINGSSL_bcm_text_end":
+			if endSeen {
+				return errors.New("duplicate end symbol found")
+			}
+			endSeen = true
+			end = symbol.Value
+		default:
+			continue
+		}
 	}
 
-	var object []byte
-	for _, contents := range ar {
-		object = contents
+	if !startSeen || !endSeen {
+		return errors.New("could not find module boundaries in object")
 	}
 
-	offset := bytes.Index(object, uninitHashValue[:])
+	if max := textSection.Size; start > max || start > end || end > max {
+		return fmt.Errorf("invalid module boundaries: start: %x, end: %x, max: %x", start, end, max)
+	}
+
+	// Extract the module from the .text section and hash it.
+
+	text := textSection.Open()
+	if _, err := text.Seek(int64(start), 0); err != nil {
+		return errors.New("failed to seek to module start in .text: " + err.Error())
+	}
+	moduleText := make([]byte, end-start)
+	if _, err := io.ReadFull(text, moduleText); err != nil {
+		return errors.New("failed to read .text: " + err.Error())
+	}
+
+	var zeroKey [32]byte
+	mac := hmac.New(sha256.New, zeroKey[:])
+	mac.Write(moduleText)
+	calculated := mac.Sum(nil)
+
+	// Replace the default hash value in the object with the calculated
+	// value and write it out.
+
+	offset := bytes.Index(objectBytes, uninitHashValue[:])
 	if offset < 0 {
 		return errors.New("did not find uninitialised hash value in object file")
 	}
 
-	if bytes.Index(object[offset+1:], uninitHashValue[:]) >= 0 {
+	if bytes.Index(objectBytes[offset+1:], uninitHashValue[:]) >= 0 {
 		return errors.New("found two occurrences of uninitialised hash value in object file")
 	}
 
-	copy(object[offset:], calculated)
+	copy(objectBytes[offset:], calculated)
 
-	if err := ioutil.WriteFile(outPath, object, 0644); err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(outPath, objectBytes, 0644)
 }
 
 func main() {
-	arInput := flag.String("in", "", "Path to a .a file")
+	arInput := flag.String("in-archive", "", "Path to a .a file")
+	oInput := flag.String("in-object", "", "Path to a .o file")
 	outPath := flag.String("o", "", "Path to output object")
-	bin := flag.String("bin", "", "Binary compiled with the FIPS module")
 
 	flag.Parse()
 
-	if err := do(*outPath, *arInput, *bin); err != nil {
+	if err := do(*outPath, *oInput, *arInput); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
