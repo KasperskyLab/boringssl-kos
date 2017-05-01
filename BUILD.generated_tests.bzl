@@ -3,8 +3,6 @@
 test_support_sources = [
     "src/crypto/asn1/asn1_locl.h",
     "src/crypto/bio/internal.h",
-    "src/crypto/bn/internal.h",
-    "src/crypto/bn/rsaz_exp.h",
     "src/crypto/bytestring/internal.h",
     "src/crypto/cipher/internal.h",
     "src/crypto/conf/conf_def.h",
@@ -16,6 +14,8 @@ test_support_sources = [
     "src/crypto/ec/p256-x86_64-table.h",
     "src/crypto/ec/p256-x86_64.h",
     "src/crypto/evp/internal.h",
+    "src/crypto/fipsmodule/bn/internal.h",
+    "src/crypto/fipsmodule/bn/rsaz_exp.h",
     "src/crypto/fipsmodule/delocate.h",
     "src/crypto/fipsmodule/digest/internal.h",
     "src/crypto/fipsmodule/digest/md32_common.h",
@@ -71,20 +71,6 @@ ssl_test_sources = [
     "src/ssl/ssl_test.cc",
 ]
 def create_tests(copts, crypto, ssl):
-  native.cc_test(
-      name = "bn_test",
-      size = "small",
-      srcs = ["src/crypto/bn/bn_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/bn/bn_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/bn/bn_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
   native.cc_test(
       name = "aead_test_aes_128_cbc_sha1_ssl3",
       size = "small",
@@ -682,6 +668,20 @@ def create_tests(copts, crypto, ssl):
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/fipsmodule/aes/aes_tests.txt",
+      ],
+      deps = [crypto],
+  )
+
+  native.cc_test(
+      name = "bn_test",
+      size = "small",
+      srcs = ["src/crypto/fipsmodule/bn/bn_test.cc"] + test_support_sources,
+      args = [
+          "$(location src/crypto/fipsmodule/bn/bn_tests.txt)",
+      ],
+      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      data = [
+          "src/crypto/fipsmodule/bn/bn_tests.txt",
       ],
       deps = [crypto],
   )
