@@ -60,11 +60,14 @@
 #include <string.h>
 
 #include <openssl/bn.h>
+#include <openssl/digest.h>
 #include <openssl/engine.h>
 #include <openssl/err.h>
 #include <openssl/ex_data.h>
+#include <openssl/md5.h>
 #include <openssl/mem.h>
 #include <openssl/nid.h>
+#include <openssl/sha.h>
 #include <openssl/thread.h>
 
 #include "internal.h"
@@ -323,6 +326,8 @@ static const unsigned SSL_SIG_LENGTH = 36;
 struct pkcs1_sig_prefix {
   /* nid identifies the hash function. */
   int nid;
+  /* hash_len is the expected length of the hash function. */
+  uint8_t hash_len;
   /* len is the number of bytes of |bytes| which are valid. */
   uint8_t len;
   /* bytes contains the DER bytes. */
@@ -334,42 +339,48 @@ struct pkcs1_sig_prefix {
 static const struct pkcs1_sig_prefix kPKCS1SigPrefixes[] = {
     {
      NID_md5,
+     MD5_DIGEST_LENGTH,
      18,
      {0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,
       0x02, 0x05, 0x05, 0x00, 0x04, 0x10},
     },
     {
      NID_sha1,
+     SHA_DIGEST_LENGTH,
      15,
      {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05,
       0x00, 0x04, 0x14},
     },
     {
      NID_sha224,
+     SHA224_DIGEST_LENGTH,
      19,
      {0x30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03,
       0x04, 0x02, 0x04, 0x05, 0x00, 0x04, 0x1c},
     },
     {
      NID_sha256,
+     SHA256_DIGEST_LENGTH,
      19,
      {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03,
       0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20},
     },
     {
      NID_sha384,
+     SHA384_DIGEST_LENGTH,
      19,
      {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03,
       0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30},
     },
     {
      NID_sha512,
+     SHA512_DIGEST_LENGTH,
      19,
      {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03,
       0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40},
     },
     {
-     NID_undef, 0, {0},
+     NID_undef, 0, 0, {0},
     },
 };
 
@@ -395,6 +406,11 @@ int RSA_add_pkcs1_prefix(uint8_t **out_msg, size_t *out_msg_len,
     const struct pkcs1_sig_prefix *sig_prefix = &kPKCS1SigPrefixes[i];
     if (sig_prefix->nid != hash_nid) {
       continue;
+    }
+
+    if (msg_len != sig_prefix->hash_len) {
+      OPENSSL_PUT_ERROR(RSA, RSA_R_INVALID_MESSAGE_LENGTH);
+      return 0;
     }
 
     const uint8_t* prefix = sig_prefix->bytes;
@@ -458,6 +474,29 @@ err:
   return ret;
 }
 
+int RSA_sign_pss_mgf1(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
+                      const uint8_t *in, size_t in_len, const EVP_MD *md,
+                      const EVP_MD *mgf1_md, int salt_len) {
+  if (in_len != EVP_MD_size(md)) {
+    OPENSSL_PUT_ERROR(RSA, RSA_R_INVALID_MESSAGE_LENGTH);
+    return 0;
+  }
+
+  size_t padded_len = RSA_size(rsa);
+  uint8_t *padded = OPENSSL_malloc(padded_len);
+  if (padded == NULL) {
+    OPENSSL_PUT_ERROR(RSA, ERR_R_MALLOC_FAILURE);
+    return 0;
+  }
+
+  int ret =
+      RSA_padding_add_PKCS1_PSS_mgf1(rsa, padded, in, md, mgf1_md, salt_len) &&
+      RSA_sign_raw(rsa, out_len, out, max_out, padded, padded_len,
+                   RSA_NO_PADDING);
+  OPENSSL_free(padded);
+  return ret;
+}
+
 int RSA_verify(int hash_nid, const uint8_t *msg, size_t msg_len,
                const uint8_t *sig, size_t sig_len, RSA *rsa) {
   if (rsa->n == NULL || rsa->e == NULL) {
@@ -507,6 +546,38 @@ out:
   if (signed_msg_is_alloced) {
     OPENSSL_free(signed_msg);
   }
+  return ret;
+}
+
+int RSA_verify_pss_mgf1(RSA *rsa, const uint8_t *msg, size_t msg_len,
+                        const EVP_MD *md, const EVP_MD *mgf1_md, int salt_len,
+                        const uint8_t *sig, size_t sig_len) {
+  if (msg_len != EVP_MD_size(md)) {
+    OPENSSL_PUT_ERROR(RSA, RSA_R_INVALID_MESSAGE_LENGTH);
+    return 0;
+  }
+
+  size_t em_len = RSA_size(rsa);
+  uint8_t *em = OPENSSL_malloc(em_len);
+  if (em == NULL) {
+    OPENSSL_PUT_ERROR(RSA, ERR_R_MALLOC_FAILURE);
+    return 0;
+  }
+
+  int ret = 0;
+  if (!RSA_verify_raw(rsa, &em_len, em, em_len, sig, sig_len, RSA_NO_PADDING)) {
+    goto err;
+  }
+
+  if (em_len != RSA_size(rsa)) {
+    OPENSSL_PUT_ERROR(RSA, ERR_R_INTERNAL_ERROR);
+    goto err;
+  }
+
+  ret = RSA_verify_PKCS1_PSS_mgf1(rsa, msg, md, mgf1_md, em, salt_len);
+
+err:
+  OPENSSL_free(em);
   return ret;
 }
 
