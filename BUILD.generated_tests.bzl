@@ -21,13 +21,13 @@ test_support_sources = [
     "src/crypto/fipsmodule/ec/p256-x86_64.h",
     "src/crypto/fipsmodule/modes/internal.h",
     "src/crypto/fipsmodule/rand/internal.h",
+    "src/crypto/fipsmodule/rsa/internal.h",
     "src/crypto/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/pkcs7/internal.h",
     "src/crypto/pkcs8/internal.h",
     "src/crypto/poly1305/internal.h",
     "src/crypto/pool/internal.h",
-    "src/crypto/rsa/internal.h",
     "src/crypto/test/file_test.cc",
     "src/crypto/test/file_test.h",
     "src/crypto/test/gtest_main.h",
@@ -62,7 +62,7 @@ crypto_test_sources = [
     "src/crypto/evp/evp_extra_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",
     "src/crypto/fipsmodule/rand/ctrdrbg_test.cc",
-    "src/crypto/rsa/rsa_test.cc",
+    "src/crypto/rsa_extra/rsa_test.cc",
     "src/crypto/test/gtest_main.cc",
 ]
 
