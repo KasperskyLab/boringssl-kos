@@ -563,6 +563,7 @@ crypto_sources_linux_x86 = [
 
 crypto_sources_linux_x86_64 = [
     "linux-x86_64/crypto/chacha/chacha-x86_64.S",
+    "linux-x86_64/crypto/cipher/aes128gcmsiv-x86_64.S",
     "linux-x86_64/crypto/cipher/chacha20_poly1305_x86_64.S",
     "linux-x86_64/crypto/fipsmodule/aes-x86_64.S",
     "linux-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.S",
@@ -599,6 +600,7 @@ crypto_sources_mac_x86 = [
 
 crypto_sources_mac_x86_64 = [
     "mac-x86_64/crypto/chacha/chacha-x86_64.S",
+    "mac-x86_64/crypto/cipher/aes128gcmsiv-x86_64.S",
     "mac-x86_64/crypto/cipher/chacha20_poly1305_x86_64.S",
     "mac-x86_64/crypto/fipsmodule/aes-x86_64.S",
     "mac-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.S",
@@ -635,6 +637,7 @@ crypto_sources_win_x86 = [
 
 crypto_sources_win_x86_64 = [
     "win-x86_64/crypto/chacha/chacha-x86_64.asm",
+    "win-x86_64/crypto/cipher/aes128gcmsiv-x86_64.asm",
     "win-x86_64/crypto/cipher/chacha20_poly1305_x86_64.asm",
     "win-x86_64/crypto/fipsmodule/aes-x86_64.asm",
     "win-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.asm",
