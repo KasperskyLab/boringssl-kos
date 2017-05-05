@@ -4,14 +4,16 @@ test_support_sources = [
     "src/crypto/asn1/asn1_locl.h",
     "src/crypto/bio/internal.h",
     "src/crypto/bytestring/internal.h",
-    "src/crypto/cipher/internal.h",
+    "src/crypto/cipher_extra/internal.h",
     "src/crypto/conf/conf_def.h",
     "src/crypto/conf/internal.h",
     "src/crypto/curve25519/internal.h",
     "src/crypto/digest_extra/internal.h",
     "src/crypto/evp/internal.h",
+    "src/crypto/fipsmodule/aes/internal.h",
     "src/crypto/fipsmodule/bn/internal.h",
     "src/crypto/fipsmodule/bn/rsaz_exp.h",
+    "src/crypto/fipsmodule/cipher/internal.h",
     "src/crypto/fipsmodule/delocate.h",
     "src/crypto/fipsmodule/des/internal.h",
     "src/crypto/fipsmodule/digest/internal.h",
@@ -72,472 +74,472 @@ ssl_test_sources = [
 ]
 def create_tests(copts, crypto, ssl):
   native.cc_test(
-      name = "aead_test_aes_128_cbc_sha1_ssl3",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_cbc_sha1_ssl3",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-cbc-sha1-ssl3",
-          "$(location src/crypto/cipher/test/aes_128_cbc_sha1_ssl3_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_cbc_sha1_ssl3_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_cbc_sha1_ssl3_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_cbc_sha1_ssl3_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_cbc_sha1_tls",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_cbc_sha1_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-cbc-sha1-tls",
-          "$(location src/crypto/cipher/test/aes_128_cbc_sha1_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_cbc_sha1_tls_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_cbc_sha1_tls_implicit_iv",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_cbc_sha1_tls_implicit_iv",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-cbc-sha1-tls-implicit-iv",
-          "$(location src/crypto/cipher/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_cbc_sha256_tls",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_cbc_sha256_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-cbc-sha256-tls",
-          "$(location src/crypto/cipher/test/aes_128_cbc_sha256_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_cbc_sha256_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_cbc_sha256_tls_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_cbc_sha256_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_ctr_hmac_sha256",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_ctr_hmac_sha256",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-ctr-hmac-sha256",
-          "$(location src/crypto/cipher/test/aes_128_ctr_hmac_sha256.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_ctr_hmac_sha256.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_ctr_hmac_sha256.txt",
+          "src/crypto/cipher_extra/test/aes_128_ctr_hmac_sha256.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_gcm",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_gcm",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-gcm",
-          "$(location src/crypto/cipher/test/aes_128_gcm_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_gcm_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_gcm_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_gcm_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_nist_cavp_aes_128_gcm",
+      name = "aead_test_crypto_cipher_extra_test_nist_cavp_aes_128_gcm",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-gcm",
-          "$(location src/crypto/cipher/test/nist_cavp/aes_128_gcm.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_128_gcm.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_128_gcm.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_128_gcm.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_gcm_fips_testonly",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_gcm_fips_testonly",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-gcm-fips-testonly",
-          "$(location src/crypto/cipher/test/aes_128_gcm_fips_testonly_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_gcm_fips_testonly_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_gcm_fips_testonly_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_gcm_fips_testonly_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_128_gcm_siv",
+      name = "aead_test_crypto_cipher_extra_test_aes_128_gcm_siv",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-128-gcm-siv",
-          "$(location src/crypto/cipher/test/aes_128_gcm_siv_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_128_gcm_siv_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_128_gcm_siv_tests.txt",
+          "src/crypto/cipher_extra/test/aes_128_gcm_siv_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_cbc_sha1_ssl3",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_cbc_sha1_ssl3",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-cbc-sha1-ssl3",
-          "$(location src/crypto/cipher/test/aes_256_cbc_sha1_ssl3_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_cbc_sha1_ssl3_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_cbc_sha1_ssl3_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_cbc_sha1_ssl3_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_cbc_sha1_tls",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_cbc_sha1_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-cbc-sha1-tls",
-          "$(location src/crypto/cipher/test/aes_256_cbc_sha1_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_cbc_sha1_tls_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_cbc_sha1_tls_implicit_iv",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_cbc_sha1_tls_implicit_iv",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-cbc-sha1-tls-implicit-iv",
-          "$(location src/crypto/cipher/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_cbc_sha256_tls",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_cbc_sha256_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-cbc-sha256-tls",
-          "$(location src/crypto/cipher/test/aes_256_cbc_sha256_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_cbc_sha256_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_cbc_sha256_tls_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_cbc_sha256_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_cbc_sha384_tls",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_cbc_sha384_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-cbc-sha384-tls",
-          "$(location src/crypto/cipher/test/aes_256_cbc_sha384_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_cbc_sha384_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_cbc_sha384_tls_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_cbc_sha384_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_ctr_hmac_sha256",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_ctr_hmac_sha256",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-ctr-hmac-sha256",
-          "$(location src/crypto/cipher/test/aes_256_ctr_hmac_sha256.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_ctr_hmac_sha256.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_ctr_hmac_sha256.txt",
+          "src/crypto/cipher_extra/test/aes_256_ctr_hmac_sha256.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_gcm",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_gcm",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-gcm",
-          "$(location src/crypto/cipher/test/aes_256_gcm_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_gcm_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_gcm_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_gcm_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_nist_cavp_aes_256_gcm",
+      name = "aead_test_crypto_cipher_extra_test_nist_cavp_aes_256_gcm",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-gcm",
-          "$(location src/crypto/cipher/test/nist_cavp/aes_256_gcm.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_256_gcm.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_256_gcm.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_256_gcm.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_gcm_fips_testonly",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_gcm_fips_testonly",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-gcm-fips-testonly",
-          "$(location src/crypto/cipher/test/aes_256_gcm_fips_testonly_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_gcm_fips_testonly_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_gcm_fips_testonly_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_gcm_fips_testonly_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_aes_256_gcm_siv",
+      name = "aead_test_crypto_cipher_extra_test_aes_256_gcm_siv",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "aes-256-gcm-siv",
-          "$(location src/crypto/cipher/test/aes_256_gcm_siv_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/aes_256_gcm_siv_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/aes_256_gcm_siv_tests.txt",
+          "src/crypto/cipher_extra/test/aes_256_gcm_siv_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_chacha20_poly1305",
+      name = "aead_test_crypto_cipher_extra_test_chacha20_poly1305",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "chacha20-poly1305",
-          "$(location src/crypto/cipher/test/chacha20_poly1305_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/chacha20_poly1305_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/chacha20_poly1305_tests.txt",
+          "src/crypto/cipher_extra/test/chacha20_poly1305_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_des_ede3_cbc_sha1_ssl3",
+      name = "aead_test_crypto_cipher_extra_test_des_ede3_cbc_sha1_ssl3",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "des-ede3-cbc-sha1-ssl3",
-          "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_ssl3_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/des_ede3_cbc_sha1_ssl3_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/des_ede3_cbc_sha1_ssl3_tests.txt",
+          "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_ssl3_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_des_ede3_cbc_sha1_tls",
+      name = "aead_test_crypto_cipher_extra_test_des_ede3_cbc_sha1_tls",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "des-ede3-cbc-sha1-tls",
-          "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_tls_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/des_ede3_cbc_sha1_tls_tests.txt",
+          "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "aead_test_des_ede3_cbc_sha1_tls_implicit_iv",
+      name = "aead_test_crypto_cipher_extra_test_des_ede3_cbc_sha1_tls_implicit_iv",
       size = "small",
-      srcs = ["src/crypto/cipher/aead_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
       args = [
           "des-ede3-cbc-sha1-tls-implicit-iv",
-          "$(location src/crypto/cipher/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt",
+          "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_cipher",
+      name = "cipher_test_crypto_cipher_extra_test_cipher",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/cipher_tests.txt)",
+          "$(location src/crypto/cipher_extra/test/cipher_tests.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/cipher_tests.txt",
+          "src/crypto/cipher_extra/test/cipher_tests.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_128_cbc",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_128_cbc",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_128_cbc.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_128_cbc.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_128_cbc.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_128_cbc.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_128_ctr",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_128_ctr",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_128_ctr.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_128_ctr.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_128_ctr.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_128_ctr.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_192_cbc",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_192_cbc",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_192_cbc.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_192_cbc.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_192_cbc.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_192_cbc.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_192_ctr",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_192_ctr",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_192_ctr.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_192_ctr.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_192_ctr.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_192_ctr.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_256_cbc",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_256_cbc",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_256_cbc.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_256_cbc.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_256_cbc.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_256_cbc.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_aes_256_ctr",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_aes_256_ctr",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/aes_256_ctr.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/aes_256_ctr.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/aes_256_ctr.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/aes_256_ctr.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_tdes_cbc",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_tdes_cbc",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/tdes_cbc.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/tdes_cbc.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/tdes_cbc.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/tdes_cbc.txt",
       ],
       deps = [crypto],
   )
 
   native.cc_test(
-      name = "cipher_test_nist_cavp_tdes_ecb",
+      name = "cipher_test_crypto_cipher_extra_test_nist_cavp_tdes_ecb",
       size = "small",
-      srcs = ["src/crypto/cipher/cipher_test.cc"] + test_support_sources,
+      srcs = ["src/crypto/cipher_extra/cipher_test.cc"] + test_support_sources,
       args = [
-          "$(location src/crypto/cipher/test/nist_cavp/tdes_ecb.txt)",
+          "$(location src/crypto/cipher_extra/test/nist_cavp/tdes_ecb.txt)",
       ],
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
-          "src/crypto/cipher/test/nist_cavp/tdes_ecb.txt",
+          "src/crypto/cipher_extra/test/nist_cavp/tdes_ecb.txt",
       ],
       deps = [crypto],
   )
