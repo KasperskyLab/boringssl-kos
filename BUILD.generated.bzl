@@ -217,7 +217,6 @@ crypto_headers = [
     "src/include/openssl/sha.h",
     "src/include/openssl/srtp.h",
     "src/include/openssl/stack.h",
-    "src/include/openssl/stack_macros.h",
     "src/include/openssl/thread.h",
     "src/include/openssl/type_check.h",
     "src/include/openssl/x509.h",
