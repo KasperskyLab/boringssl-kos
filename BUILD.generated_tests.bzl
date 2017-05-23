@@ -54,6 +54,7 @@ crypto_test_sources = [
     "src/crypto/bio/bio_test.cc",
     "src/crypto/bytestring/bytestring_test.cc",
     "src/crypto/chacha/chacha_test.cc",
+    "src/crypto/cipher_extra/aead_extra_test.cc",
     "src/crypto/cmac/cmac_test.cc",
     "src/crypto/compiler_test.cc",
     "src/crypto/constant_time_test.cc",
