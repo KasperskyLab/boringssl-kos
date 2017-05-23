@@ -48,6 +48,7 @@ test_support_sources = [
 
 
 crypto_test_sources = [
+    "crypto_test_data.cc",
     "src/crypto/asn1/asn1_test.cc",
     "src/crypto/base64/base64_test.cc",
     "src/crypto/bio/bio_test.cc",
@@ -56,6 +57,7 @@ crypto_test_sources = [
     "src/crypto/cmac/cmac_test.cc",
     "src/crypto/compiler_test.cc",
     "src/crypto/constant_time_test.cc",
+    "src/crypto/curve25519/ed25519_test.cc",
     "src/crypto/curve25519/spake25519_test.cc",
     "src/crypto/curve25519/x25519_test.cc",
     "src/crypto/dh/dh_test.cc",
@@ -63,9 +65,16 @@ crypto_test_sources = [
     "src/crypto/dsa/dsa_test.cc",
     "src/crypto/err/err_test.cc",
     "src/crypto/evp/evp_extra_test.cc",
+    "src/crypto/evp/pbkdf_test.cc",
+    "src/crypto/fipsmodule/aes/aes_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",
     "src/crypto/fipsmodule/rand/ctrdrbg_test.cc",
+    "src/crypto/hkdf/hkdf_test.cc",
+    "src/crypto/lhash/lhash_test.cc",
+    "src/crypto/pool/pool_test.cc",
+    "src/crypto/refcount_test.cc",
     "src/crypto/rsa_extra/rsa_test.cc",
+    "src/crypto/test/file_test_gtest.cc",
     "src/crypto/test/gtest_main.cc",
 ]
 
@@ -546,20 +555,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "ed25519_test",
-      size = "small",
-      srcs = ["src/crypto/curve25519/ed25519_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/curve25519/ed25519_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/curve25519/ed25519_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "ecdh_test",
       size = "small",
       srcs = ["src/crypto/ecdh/ecdh_test.cc"] + test_support_sources,
@@ -583,28 +578,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/evp/evp_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "pbkdf_test",
-      size = "small",
-      srcs = ["src/crypto/evp/pbkdf_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aes_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/aes/aes_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/fipsmodule/aes/aes_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/fipsmodule/aes/aes_tests.txt",
       ],
       deps = [crypto],
   )
@@ -704,14 +677,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "hkdf_test",
-      size = "small",
-      srcs = ["src/crypto/hkdf/hkdf_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "hmac_test",
       size = "small",
       srcs = ["src/crypto/hmac_extra/hmac_test.cc"] + test_support_sources,
@@ -722,14 +687,6 @@ def create_tests(copts, crypto, ssl):
       data = [
           "src/crypto/hmac_extra/hmac_tests.txt",
       ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "lhash_test",
-      size = "small",
-      srcs = ["src/crypto/lhash/lhash_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
@@ -776,22 +733,6 @@ def create_tests(copts, crypto, ssl):
       data = [
           "src/crypto/poly1305/poly1305_tests.txt",
       ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "pool_test",
-      size = "small",
-      srcs = ["src/crypto/pool/pool_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "refcount_test",
-      size = "small",
-      srcs = ["src/crypto/refcount_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
 
