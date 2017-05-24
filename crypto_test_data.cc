@@ -17,6 +17,8 @@
  *       crypto/curve25519/ed25519_tests.txt \
  *       crypto/fipsmodule/aes/aes_tests.txt */
 
+/* clang-format off */
+
 #include <stdlib.h>
 #include <string.h>
 
