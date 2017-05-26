@@ -190,21 +190,6 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "aead_test_crypto_cipher_extra_test_aes_128_gcm_fips_testonly",
-      size = "small",
-      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
-      args = [
-          "aes-128-gcm-fips-testonly",
-          "$(location src/crypto/cipher_extra/test/aes_128_gcm_fips_testonly_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/cipher_extra/test/aes_128_gcm_fips_testonly_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "aead_test_crypto_cipher_extra_test_aes_128_gcm_siv",
       size = "small",
       srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
@@ -335,21 +320,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/cipher_extra/test/nist_cavp/aes_256_gcm.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "aead_test_crypto_cipher_extra_test_aes_256_gcm_fips_testonly",
-      size = "small",
-      srcs = ["src/crypto/cipher_extra/aead_test.cc"] + test_support_sources,
-      args = [
-          "aes-256-gcm-fips-testonly",
-          "$(location src/crypto/cipher_extra/test/aes_256_gcm_fips_testonly_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/cipher_extra/test/aes_256_gcm_fips_testonly_tests.txt",
       ],
       deps = [crypto],
   )
