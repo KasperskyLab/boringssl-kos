@@ -76,6 +76,8 @@ crypto_test_sources = [
     "src/crypto/hkdf/hkdf_test.cc",
     "src/crypto/hmac_extra/hmac_test.cc",
     "src/crypto/lhash/lhash_test.cc",
+    "src/crypto/pkcs7/pkcs7_test.cc",
+    "src/crypto/pkcs8/pkcs8_test.cc",
     "src/crypto/poly1305/poly1305_test.cc",
     "src/crypto/pool/pool_test.cc",
     "src/crypto/refcount_test.cc",
@@ -184,25 +186,9 @@ def create_tests(copts, crypto, ssl):
   )
 
   native.cc_test(
-      name = "pkcs7_test",
-      size = "small",
-      srcs = ["src/crypto/pkcs7/pkcs7_test.c"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
       name = "pkcs12_test",
       size = "small",
       srcs = ["src/crypto/pkcs8/pkcs12_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "pkcs8_test",
-      size = "small",
-      srcs = ["src/crypto/pkcs8/pkcs8_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
