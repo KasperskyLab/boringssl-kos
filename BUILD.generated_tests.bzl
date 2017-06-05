@@ -85,6 +85,7 @@ crypto_test_sources = [
     "src/crypto/rsa_extra/rsa_test.cc",
     "src/crypto/test/file_test_gtest.cc",
     "src/crypto/test/gtest_main.cc",
+    "src/crypto/thread_test.cc",
 ]
 
 ssl_test_sources = [
@@ -176,14 +177,6 @@ def create_tests(copts, crypto, ssl):
       name = "pkcs12_test",
       size = "small",
       srcs = ["src/crypto/pkcs8/pkcs12_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "thread_test",
-      size = "small",
-      srcs = ["src/crypto/thread_test.c"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
