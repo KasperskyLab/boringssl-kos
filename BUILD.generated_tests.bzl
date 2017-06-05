@@ -70,6 +70,7 @@ crypto_test_sources = [
     "src/crypto/evp/evp_extra_test.cc",
     "src/crypto/evp/pbkdf_test.cc",
     "src/crypto/fipsmodule/aes/aes_test.cc",
+    "src/crypto/fipsmodule/bn/bn_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",
     "src/crypto/fipsmodule/modes/gcm_test.cc",
     "src/crypto/fipsmodule/rand/ctrdrbg_test.cc",
@@ -101,20 +102,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/evp/evp_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "bn_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/bn/bn_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/fipsmodule/bn/bn_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/fipsmodule/bn/bn_tests.txt",
       ],
       deps = [crypto],
   )
