@@ -88,6 +88,7 @@ crypto_test_sources = [
     "src/crypto/test/file_test_gtest.cc",
     "src/crypto/test/gtest_main.cc",
     "src/crypto/thread_test.cc",
+    "src/crypto/x509/x509_test.cc",
 ]
 
 ssl_test_sources = [
@@ -179,14 +180,6 @@ def create_tests(copts, crypto, ssl):
       name = "v3name_test",
       size = "small",
       srcs = ["src/crypto/x509v3/v3name_test.c"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "x509_test",
-      size = "small",
-      srcs = ["src/crypto/x509/x509_test.cc"] + test_support_sources,
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       deps = [crypto],
   )
