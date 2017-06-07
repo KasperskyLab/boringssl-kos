@@ -72,6 +72,7 @@ crypto_test_sources = [
     "src/crypto/fipsmodule/aes/aes_test.cc",
     "src/crypto/fipsmodule/bn/bn_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",
+    "src/crypto/fipsmodule/ecdsa/ecdsa_test.cc",
     "src/crypto/fipsmodule/modes/gcm_test.cc",
     "src/crypto/fipsmodule/rand/ctrdrbg_test.cc",
     "src/crypto/hkdf/hkdf_test.cc",
@@ -106,42 +107,6 @@ def create_tests(copts, crypto, ssl):
       copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
       data = [
           "src/crypto/evp/evp_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "ecdsa_sign_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/ecdsa/ecdsa_sign_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/fipsmodule/ecdsa/ecdsa_sign_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/fipsmodule/ecdsa/ecdsa_sign_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "ecdsa_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/ecdsa/ecdsa_test.cc"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "ecdsa_verify_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/ecdsa/ecdsa_verify_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/fipsmodule/ecdsa/ecdsa_verify_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/fipsmodule/ecdsa/ecdsa_verify_tests.txt",
       ],
       deps = [crypto],
   )
