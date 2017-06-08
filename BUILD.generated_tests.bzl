@@ -68,6 +68,7 @@ crypto_test_sources = [
     "src/crypto/ecdh/ecdh_test.cc",
     "src/crypto/err/err_test.cc",
     "src/crypto/evp/evp_extra_test.cc",
+    "src/crypto/evp/evp_test.cc",
     "src/crypto/evp/pbkdf_test.cc",
     "src/crypto/fipsmodule/aes/aes_test.cc",
     "src/crypto/fipsmodule/bn/bn_test.cc",
@@ -97,20 +98,6 @@ ssl_test_sources = [
     "src/ssl/ssl_test.cc",
 ]
 def create_tests(copts, crypto, ssl):
-  native.cc_test(
-      name = "evp_test",
-      size = "small",
-      srcs = ["src/crypto/evp/evp_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/evp/evp_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/evp/evp_tests.txt",
-      ],
-      deps = [crypto],
-  )
-
   native.cc_test(
       name = "example_mul",
       size = "small",
