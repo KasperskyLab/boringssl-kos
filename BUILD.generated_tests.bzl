@@ -73,6 +73,7 @@ crypto_test_sources = [
     "src/crypto/fipsmodule/aes/aes_test.cc",
     "src/crypto/fipsmodule/bn/bn_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",
+    "src/crypto/fipsmodule/ec/p256-x86_64_test.cc",
     "src/crypto/fipsmodule/ecdsa/ecdsa_test.cc",
     "src/crypto/fipsmodule/modes/gcm_test.cc",
     "src/crypto/fipsmodule/rand/ctrdrbg_test.cc",
@@ -102,21 +103,7 @@ def create_tests(copts, crypto, ssl):
       name = "example_mul",
       size = "small",
       srcs = ["src/crypto/fipsmodule/ec/example_mul.c"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "p256-x86_64_test",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/ec/p256-x86_64_test.cc"] + test_support_sources,
-      args = [
-          "$(location src/crypto/fipsmodule/ec/p256-x86_64_tests.txt)",
-      ],
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
-      data = [
-          "src/crypto/fipsmodule/ec/p256-x86_64_tests.txt",
-      ],
+      copts = copts,
       deps = [crypto],
   )
 
@@ -124,7 +111,7 @@ def create_tests(copts, crypto, ssl):
       name = "tab_test",
       size = "small",
       srcs = ["src/crypto/x509v3/tab_test.c"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      copts = copts,
       deps = [crypto],
   )
 
@@ -132,6 +119,6 @@ def create_tests(copts, crypto, ssl):
       name = "v3name_test",
       size = "small",
       srcs = ["src/crypto/x509v3/v3name_test.c"] + test_support_sources,
-      copts = copts + ["-DBORINGSSL_SHARED_LIBRARY"],
+      copts = copts,
       deps = [crypto],
   )
