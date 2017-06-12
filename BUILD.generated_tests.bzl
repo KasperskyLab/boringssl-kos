@@ -70,6 +70,7 @@ crypto_test_sources = [
     "src/crypto/evp/evp_extra_test.cc",
     "src/crypto/evp/evp_test.cc",
     "src/crypto/evp/pbkdf_test.cc",
+    "src/crypto/evp/scrypt_test.cc",
     "src/crypto/fipsmodule/aes/aes_test.cc",
     "src/crypto/fipsmodule/bn/bn_test.cc",
     "src/crypto/fipsmodule/ec/ec_test.cc",

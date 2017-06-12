@@ -359,6 +359,7 @@ crypto_sources = [
     "src/crypto/evp/p_rsa_asn1.c",
     "src/crypto/evp/pbkdf.c",
     "src/crypto/evp/print.c",
+    "src/crypto/evp/scrypt.c",
     "src/crypto/evp/sign.c",
     "src/crypto/ex_data.c",
     "src/crypto/fipsmodule/bcm.c",
