@@ -1044,7 +1044,7 @@ func (hs *serverHandshakeState) processClientHello() (isResume bool, err error) 
 		isDTLS:            c.isDTLS,
 		vers:              c.wireVersion,
 		versOverride:      config.Bugs.SendServerHelloVersion,
-		compressionMethod: compressionNone,
+		compressionMethod: config.Bugs.SendCompressionMethod,
 	}
 
 	hs.hello.random = make([]byte, 32)
@@ -1160,6 +1160,9 @@ func (hs *serverHandshakeState) processClientExtensions(serverExtensions *server
 			serverExtensions.secureRenegotiation = append(serverExtensions.secureRenegotiation, c.serverVerify...)
 			if c.config.Bugs.BadRenegotiationInfo {
 				serverExtensions.secureRenegotiation[0] ^= 0x80
+			}
+			if c.config.Bugs.BadRenegotiationInfoEnd {
+				serverExtensions.secureRenegotiation[len(serverExtensions.secureRenegotiation)-1] ^= 0x80
 			}
 		} else {
 			serverExtensions.secureRenegotiation = hs.clientHello.secureRenegotiation

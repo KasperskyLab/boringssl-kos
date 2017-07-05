@@ -582,12 +582,6 @@ static void ssl_get_compatible_server_ciphers(SSL_HANDSHAKE *hs,
                                               uint32_t *out_mask_k,
                                               uint32_t *out_mask_a) {
   SSL *const ssl = hs->ssl;
-  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
-    *out_mask_k = SSL_kGENERIC;
-    *out_mask_a = SSL_aGENERIC;
-    return;
-  }
-
   uint32_t mask_k = 0;
   uint32_t mask_a = 0;
 
@@ -1054,7 +1048,7 @@ static int ssl3_send_server_certificate(SSL_HANDSHAKE *hs) {
       /* Determine the group to use. */
       uint16_t group_id;
       if (!tls1_get_shared_group(hs, &group_id)) {
-        OPENSSL_PUT_ERROR(SSL, SSL_R_MISSING_TMP_ECDH_KEY);
+        OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
         ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_HANDSHAKE_FAILURE);
         goto err;
       }
@@ -1449,7 +1443,7 @@ static int ssl3_get_client_key_exchange(SSL_HANDSHAKE *hs) {
     /* The key exchange state may now be discarded. */
     SSL_ECDH_CTX_cleanup(&hs->ecdh_ctx);
   } else if (!(alg_k & SSL_kPSK)) {
-    OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_CIPHER_TYPE);
+    OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
     ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_HANDSHAKE_FAILURE);
     goto err;
   }
@@ -1458,7 +1452,7 @@ static int ssl3_get_client_key_exchange(SSL_HANDSHAKE *hs) {
    * pre-shared key. */
   if (alg_a & SSL_aPSK) {
     if (ssl->psk_server_callback == NULL) {
-      OPENSSL_PUT_ERROR(SSL, SSL_R_PSK_NO_SERVER_CB);
+      OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
       ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_INTERNAL_ERROR);
       goto err;
     }
