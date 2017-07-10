@@ -103,10 +103,3 @@ ssl_test_sources = [
     "src/ssl/ssl_test.cc",
 ]
 def create_tests(copts, crypto, ssl):
-  native.cc_test(
-      name = "example_mul",
-      size = "small",
-      srcs = ["src/crypto/fipsmodule/ec/example_mul.c"] + test_support_sources,
-      copts = copts,
-      deps = [crypto],
-  )
