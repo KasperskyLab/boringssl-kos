@@ -102,4 +102,3 @@ ssl_test_sources = [
     "src/crypto/test/gtest_main.cc",
     "src/ssl/ssl_test.cc",
 ]
-def create_tests(copts, crypto, ssl):
