@@ -94,6 +94,8 @@ crypto_test_sources = [
     "src/crypto/test/gtest_main.cc",
     "src/crypto/thread_test.cc",
     "src/crypto/x509/x509_test.cc",
+    "src/crypto/x509v3/tab_test.cc",
+    "src/crypto/x509v3/v3name_test.cc",
 ]
 
 ssl_test_sources = [
@@ -105,22 +107,6 @@ def create_tests(copts, crypto, ssl):
       name = "example_mul",
       size = "small",
       srcs = ["src/crypto/fipsmodule/ec/example_mul.c"] + test_support_sources,
-      copts = copts,
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "tab_test",
-      size = "small",
-      srcs = ["src/crypto/x509v3/tab_test.c"] + test_support_sources,
-      copts = copts,
-      deps = [crypto],
-  )
-
-  native.cc_test(
-      name = "v3name_test",
-      size = "small",
-      srcs = ["src/crypto/x509v3/v3name_test.c"] + test_support_sources,
       copts = copts,
       deps = [crypto],
   )
