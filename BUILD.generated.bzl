@@ -83,8 +83,8 @@ ssl_sources = [
     "src/ssl/d1_srtp.cc",
     "src/ssl/dtls_method.cc",
     "src/ssl/dtls_record.cc",
-    "src/ssl/handshake_client.c",
-    "src/ssl/handshake_server.c",
+    "src/ssl/handshake_client.cc",
+    "src/ssl/handshake_server.cc",
     "src/ssl/s3_both.cc",
     "src/ssl/s3_lib.cc",
     "src/ssl/s3_pkt.cc",
@@ -114,8 +114,6 @@ ssl_sources = [
 ]
 
 ssl_c_sources = [
-    "src/ssl/handshake_client.c",
-    "src/ssl/handshake_server.c",
     "src/ssl/ssl_aead_ctx.c",
     "src/ssl/ssl_buffer.c",
     "src/ssl/ssl_cert.c",
@@ -147,6 +145,8 @@ ssl_cc_sources = [
     "src/ssl/d1_srtp.cc",
     "src/ssl/dtls_method.cc",
     "src/ssl/dtls_record.cc",
+    "src/ssl/handshake_client.cc",
+    "src/ssl/handshake_server.cc",
     "src/ssl/s3_both.cc",
     "src/ssl/s3_lib.cc",
     "src/ssl/s3_pkt.cc",
