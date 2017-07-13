@@ -16,24 +16,23 @@ add_library(
   s3_both.cc
   s3_lib.cc
   s3_pkt.cc
-  ssl_aead_ctx.c
+  ssl_aead_ctx.cc
   ssl_asn1.cc
   ssl_buffer.cc
   ssl_cert.cc
   ssl_cipher.cc
   ssl_ecdh.cc
-  ssl_file.c
-  ssl_lib.c
-  ssl_privkey.c
-  ssl_privkey_cc.cc
-  ssl_session.c
-  ssl_stat.c
-  ssl_transcript.c
-  ssl_versions.c
+  ssl_file.cc
+  ssl_lib.cc
+  ssl_privkey.cc
+  ssl_session.cc
+  ssl_stat.cc
+  ssl_transcript.cc
+  ssl_versions.cc
   ssl_x509.cc
-  t1_enc.c
+  t1_enc.cc
   t1_lib.c
-  tls_method.c
+  tls_method.cc
   tls_record.c
   tls13_both.c
   tls13_client.c
