@@ -93,7 +93,7 @@ ssl_sources = [
     "src/ssl/ssl_buffer.cc",
     "src/ssl/ssl_cert.cc",
     "src/ssl/ssl_cipher.cc",
-    "src/ssl/ssl_ecdh.c",
+    "src/ssl/ssl_ecdh.cc",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
     "src/ssl/ssl_privkey.c",
@@ -115,7 +115,6 @@ ssl_sources = [
 
 ssl_c_sources = [
     "src/ssl/ssl_aead_ctx.c",
-    "src/ssl/ssl_ecdh.c",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
     "src/ssl/ssl_privkey.c",
@@ -151,6 +150,7 @@ ssl_cc_sources = [
     "src/ssl/ssl_buffer.cc",
     "src/ssl/ssl_cert.cc",
     "src/ssl/ssl_cipher.cc",
+    "src/ssl/ssl_ecdh.cc",
     "src/ssl/ssl_privkey_cc.cc",
     "src/ssl/ssl_x509.cc",
 ]
