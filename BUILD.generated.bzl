@@ -90,9 +90,9 @@ ssl_sources = [
     "src/ssl/s3_pkt.cc",
     "src/ssl/ssl_aead_ctx.c",
     "src/ssl/ssl_asn1.cc",
-    "src/ssl/ssl_buffer.c",
-    "src/ssl/ssl_cert.c",
-    "src/ssl/ssl_cipher.c",
+    "src/ssl/ssl_buffer.cc",
+    "src/ssl/ssl_cert.cc",
+    "src/ssl/ssl_cipher.cc",
     "src/ssl/ssl_ecdh.c",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
@@ -115,9 +115,6 @@ ssl_sources = [
 
 ssl_c_sources = [
     "src/ssl/ssl_aead_ctx.c",
-    "src/ssl/ssl_buffer.c",
-    "src/ssl/ssl_cert.c",
-    "src/ssl/ssl_cipher.c",
     "src/ssl/ssl_ecdh.c",
     "src/ssl/ssl_file.c",
     "src/ssl/ssl_lib.c",
@@ -151,6 +148,9 @@ ssl_cc_sources = [
     "src/ssl/s3_lib.cc",
     "src/ssl/s3_pkt.cc",
     "src/ssl/ssl_asn1.cc",
+    "src/ssl/ssl_buffer.cc",
+    "src/ssl/ssl_cert.cc",
+    "src/ssl/ssl_cipher.cc",
     "src/ssl/ssl_privkey_cc.cc",
     "src/ssl/ssl_x509.cc",
 ]
