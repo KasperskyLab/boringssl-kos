@@ -174,6 +174,7 @@ crypto_headers = [
     "src/include/openssl/rsa.h",
     "src/include/openssl/safestack.h",
     "src/include/openssl/sha.h",
+    "src/include/openssl/span.h",
     "src/include/openssl/srtp.h",
     "src/include/openssl/stack.h",
     "src/include/openssl/thread.h",
