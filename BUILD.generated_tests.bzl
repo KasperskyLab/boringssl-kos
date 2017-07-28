@@ -47,7 +47,6 @@ test_support_sources = [
     "src/ssl/test/test_config.h",
 ]
 
-
 crypto_test_sources = [
     "crypto_test_data.cc",
     "src/crypto/asn1/asn1_test.cc",
