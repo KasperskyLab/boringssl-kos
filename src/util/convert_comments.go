@@ -165,12 +165,10 @@ func convertComments(in []byte) []byte {
 
 			endIdx := indexFrom(line, "*/", idx)
 			if endIdx < 0 {
+				// The comment is, so far, eligible for conversion.
 				inComment = true
-				if allSpaces(line[:idx]) {
-					// The comment is, so far, eligible for conversion.
-					column = idx
-					comment = []string{line}
-				}
+				column = idx
+				comment = []string{line}
 				break
 			}
 
@@ -186,7 +184,7 @@ func convertComments(in []byte) []byte {
 			// comment if it is on the same line as code,
 			// but clang-format has been placing one space
 			// for block comments. Fix this.
-			if !allSpaces(line[:idx]) {
+			if !allSpaces(line[:idx]) && line[idx-1] != '(' {
 				if line[idx-1] != ' ' {
 					out.WriteString("  ")
 				} else if line[idx-2] != ' ' {
