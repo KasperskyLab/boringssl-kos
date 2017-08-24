@@ -573,6 +573,10 @@ type ProtocolBugs struct {
 	// end_of_early_data alert.
 	SkipEndOfEarlyData bool
 
+	// SkipCertificateVerify, if true causes peer to skip sending a
+	// CertificateVerify message after the Certificate message.
+	SkipCertificateVerify bool
+
 	// EarlyChangeCipherSpec causes the client to send an early
 	// ChangeCipherSpec message before the ClientKeyExchange. A value of
 	// zero disables this behavior. One and two configure variants for 0.9.8
@@ -882,6 +886,10 @@ type ProtocolBugs struct {
 	// and include a copy of the full one.
 	MixCompleteMessageWithFragments bool
 
+	// RetransmitFinished, if true, causes the DTLS Finished message to be
+	// sent twice.
+	RetransmitFinished bool
+
 	// SendInvalidRecordType, if true, causes a record with an invalid
 	// content type to be sent immediately following the handshake.
 	SendInvalidRecordType bool
@@ -1077,10 +1085,18 @@ type ProtocolBugs struct {
 	// supplied SCT list in resumption handshakes.
 	SendSCTListOnResume []byte
 
+	// SendSCTListOnRenegotiation, if not nil, causes the server to send the
+	// supplied SCT list on renegotiation.
+	SendSCTListOnRenegotiation []byte
+
 	// SendOCSPResponseOnResume, if not nil, causes the server to advertise
 	// OCSP stapling in resumption handshakes and, if applicable, send the
 	// supplied stapled response.
 	SendOCSPResponseOnResume []byte
+
+	// SendOCSPResponseOnResume, if not nil, causes the server to send the
+	// supplied OCSP response on renegotiation.
+	SendOCSPResponseOnRenegotiation []byte
 
 	// SendExtensionOnCertificate, if not nil, causes the runner to send the
 	// supplied bytes in the extensions on the Certificate message.
