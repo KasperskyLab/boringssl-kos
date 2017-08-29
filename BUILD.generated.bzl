@@ -83,6 +83,7 @@ ssl_sources = [
     "src/ssl/d1_srtp.cc",
     "src/ssl/dtls_method.cc",
     "src/ssl/dtls_record.cc",
+    "src/ssl/handshake.cc",
     "src/ssl/handshake_client.cc",
     "src/ssl/handshake_server.cc",
     "src/ssl/s3_both.cc",
