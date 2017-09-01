@@ -154,7 +154,7 @@ int tls13_process_certificate(SSL_HANDSHAKE *hs, const SSLMessage &msg,
     }
 
     // Parse out the extensions.
-    int have_status_request = 0, have_sct = 0;
+    bool have_status_request = false, have_sct = false;
     CBS status_request, sct;
     const SSL_EXTENSION_TYPE ext_types[] = {
         {TLSEXT_TYPE_status_request, &have_status_request, &status_request},
@@ -520,7 +520,7 @@ static int tls13_receive_key_update(SSL *ssl, const SSLMessage &msg) {
     // wire. This prevents us from accumulating write obligations when read and
     // write progress at different rates. See draft-ietf-tls-tls13-18, section
     // 4.5.3.
-    ssl->s3->key_update_pending = 1;
+    ssl->s3->key_update_pending = true;
   }
 
   return 1;

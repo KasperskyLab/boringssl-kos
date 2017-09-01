@@ -74,7 +74,7 @@ static enum ssl_hs_wait_t do_read_hello_retry_request(SSL_HANDSHAKE *hs) {
     return ssl_hs_error;
   }
 
-  int have_cookie, have_key_share;
+  bool have_cookie, have_key_share;
   CBS cookie, key_share;
   const SSL_EXTENSION_TYPE ext_types[] = {
       {TLSEXT_TYPE_key_share, &have_key_share, &key_share},
@@ -147,7 +147,7 @@ static enum ssl_hs_wait_t do_read_hello_retry_request(SSL_HANDSHAKE *hs) {
   }
 
   ssl->method->next_message(ssl);
-  hs->received_hello_retry_request = 1;
+  hs->received_hello_retry_request = true;
   hs->tls13_state = state_send_second_client_hello;
   // 0-RTT is rejected if we receive a HelloRetryRequest.
   if (hs->in_early_data) {
@@ -226,7 +226,8 @@ static enum ssl_hs_wait_t do_read_server_hello(SSL_HANDSHAKE *hs) {
   }
 
   // Parse out the extensions.
-  int have_key_share = 0, have_pre_shared_key = 0, have_supported_versions = 0;
+  bool have_key_share = false, have_pre_shared_key = false,
+       have_supported_versions = false;
   CBS key_share, pre_shared_key, supported_versions;
   const SSL_EXTENSION_TYPE ext_types[] = {
       {TLSEXT_TYPE_key_share, &have_key_share, &key_share},
@@ -285,7 +286,7 @@ static enum ssl_hs_wait_t do_read_server_hello(SSL_HANDSHAKE *hs) {
       return ssl_hs_error;
     }
 
-    ssl->s3->session_reused = 1;
+    ssl->s3->session_reused = true;
     // Only authentication information carries over in TLS 1.3.
     hs->new_session = SSL_SESSION_dup(ssl->session, SSL_SESSION_DUP_AUTH_ONLY);
     if (!hs->new_session) {
@@ -483,7 +484,7 @@ static enum ssl_hs_wait_t do_read_certificate_request(SSL_HANDSHAKE *hs) {
     return ssl_hs_error;
   }
 
-  hs->cert_request = 1;
+  hs->cert_request = true;
   hs->ca_names = std::move(ca_names);
   ssl->ctx->x509_method->hs_flush_cached_ca_names(hs);
 
@@ -565,7 +566,7 @@ static enum ssl_hs_wait_t do_send_end_of_early_data(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
 
   if (ssl->early_data_accepted) {
-    hs->can_early_write = 0;
+    hs->can_early_write = false;
     if (!ssl->method->add_alert(ssl, SSL3_AL_WARNING,
                                 TLS1_AD_END_OF_EARLY_DATA)) {
       return ssl_hs_error;
@@ -811,7 +812,7 @@ int tls13_process_new_session_ticket(SSL *ssl, const SSLMessage &msg) {
   }
 
   // Parse out the extensions.
-  int have_early_data_info = 0;
+  bool have_early_data_info = false;
   CBS early_data_info;
   const SSL_EXTENSION_TYPE ext_types[] = {
       {TLSEXT_TYPE_ticket_early_data_info, &have_early_data_info,

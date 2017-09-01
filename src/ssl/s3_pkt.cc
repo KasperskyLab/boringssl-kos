@@ -191,12 +191,12 @@ again:
   return -1;
 }
 
-int ssl3_write_app_data(SSL *ssl, int *out_needs_handshake, const uint8_t *buf,
+int ssl3_write_app_data(SSL *ssl, bool *out_needs_handshake, const uint8_t *buf,
                         int len) {
   assert(ssl_can_write(ssl));
   assert(!ssl->s3->aead_write_ctx->is_null_cipher());
 
-  *out_needs_handshake = 0;
+  *out_needs_handshake = false;
 
   unsigned tot, n, nw;
 
@@ -228,8 +228,8 @@ int ssl3_write_app_data(SSL *ssl, int *out_needs_handshake, const uint8_t *buf,
       max = ssl->session->ticket_max_early_data - ssl->s3->hs->early_data_written;
       if (max == 0) {
         ssl->s3->wnum = tot;
-        ssl->s3->hs->can_early_write = 0;
-        *out_needs_handshake = 1;
+        ssl->s3->hs->can_early_write = false;
+        *out_needs_handshake = true;
         return -1;
       }
     }
@@ -273,7 +273,7 @@ static int ssl3_write_pending(SSL *ssl, int type, const uint8_t *buf,
   if (ret <= 0) {
     return ret;
   }
-  ssl->s3->wpend_pending = 0;
+  ssl->s3->wpend_pending = false;
   return ssl->s3->wpend_ret;
 }
 
@@ -333,7 +333,7 @@ static int do_ssl3_write(SSL *ssl, int type, const uint8_t *buf, unsigned len) {
 
   // Now that we've made progress on the connection, uncork KeyUpdate
   // acknowledgments.
-  ssl->s3->key_update_pending = 0;
+  ssl->s3->key_update_pending = false;
 
   // Memorize arguments so that ssl3_write_pending can detect bad write retries
   // later.
@@ -341,7 +341,7 @@ static int do_ssl3_write(SSL *ssl, int type, const uint8_t *buf, unsigned len) {
   ssl->s3->wpend_buf = buf;
   ssl->s3->wpend_type = type;
   ssl->s3->wpend_ret = len;
-  ssl->s3->wpend_pending = 1;
+  ssl->s3->wpend_pending = true;
 
   // We now just need to write the buffer.
   return ssl3_write_pending(ssl, type, buf, len);
@@ -370,11 +370,11 @@ static int consume_record(SSL *ssl, uint8_t *out, int len, int peek) {
   return len;
 }
 
-int ssl3_read_app_data(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
+int ssl3_read_app_data(SSL *ssl, bool *out_got_handshake, uint8_t *buf, int len,
                        int peek) {
   assert(ssl_can_read(ssl));
   assert(!ssl->s3->aead_read_ctx->is_null_cipher());
-  *out_got_handshake = 0;
+  *out_got_handshake = false;
 
   SSL3_RECORD *rr = &ssl->s3->rrec;
 
@@ -414,7 +414,7 @@ int ssl3_read_app_data(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
       if (ret <= 0) {
         return ret;
       }
-      *out_got_handshake = 1;
+      *out_got_handshake = true;
       return -1;
     }
 
@@ -433,8 +433,8 @@ int ssl3_read_app_data(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
       rr->length = 0;
       ssl_read_buffer_discard(ssl);
       // Stop accepting early data.
-      ssl->s3->hs->can_early_read = 0;
-      *out_got_handshake = 1;
+      ssl->s3->hs->can_early_read = false;
+      *out_got_handshake = true;
       return -1;
     }
 

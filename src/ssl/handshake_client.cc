@@ -188,8 +188,6 @@ enum ssl_client_hs_state_t {
   state_send_client_certificate,
   state_send_client_key_exchange,
   state_send_client_certificate_verify,
-  state_send_second_client_flight,
-  state_send_channel_id,
   state_send_client_finished,
   state_finish_flight,
   state_read_session_ticket,
@@ -403,7 +401,7 @@ static int parse_server_version(SSL_HANDSHAKE *hs, uint16_t *out,
     return 0;
   }
 
-  int have_supported_versions;
+  bool have_supported_versions;
   CBS supported_versions;
   const SSL_EXTENSION_TYPE ext_types[] = {
     {TLSEXT_TYPE_supported_versions, &have_supported_versions,
@@ -507,10 +505,10 @@ static enum ssl_hs_wait_t do_enter_early_data(SSL_HANDSHAKE *hs) {
 
   // Stash the early data session, so connection properties may be queried out
   // of it.
-  hs->in_early_data = 1;
+  hs->in_early_data = true;
   SSL_SESSION_up_ref(ssl->session);
   hs->early_session.reset(ssl->session);
-  hs->can_early_write = 1;
+  hs->can_early_write = true;
 
   hs->state = state_read_server_hello;
   return ssl_hs_early_return;
@@ -583,7 +581,7 @@ static enum ssl_hs_wait_t do_read_server_hello(SSL_HANDSHAKE *hs) {
     ssl->version = server_version;
     // At this point, the connection's version is known and ssl->version is
     // fixed. Begin enforcing the record-layer version.
-    ssl->s3->have_version = 1;
+    ssl->s3->have_version = true;
   } else if (server_version != ssl->version) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_WRONG_SSL_VERSION);
     ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_PROTOCOL_VERSION);
@@ -632,7 +630,7 @@ static enum ssl_hs_wait_t do_read_server_hello(SSL_HANDSHAKE *hs) {
       ssl->session->session_id_length != 0 &&
       CBS_mem_equal(&session_id, ssl->session->session_id,
                     ssl->session->session_id_length)) {
-    ssl->s3->session_reused = 1;
+    ssl->s3->session_reused = true;
   } else {
     // The session wasn't resumed. Create a fresh SSL_SESSION to
     // fill out.
@@ -1129,7 +1127,7 @@ static enum ssl_hs_wait_t do_read_certificate_request(SSL_HANDSHAKE *hs) {
     return ssl_hs_error;
   }
 
-  hs->cert_request = 1;
+  hs->cert_request = true;
   hs->ca_names = std::move(ca_names);
   ssl->ctx->x509_method->hs_flush_cached_ca_names(hs);
 
@@ -1397,7 +1395,7 @@ static enum ssl_hs_wait_t do_send_client_certificate_verify(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
 
   if (!hs->cert_request || !ssl_has_certificate(ssl)) {
-    hs->state = state_send_second_client_flight;
+    hs->state = state_send_client_finished;
     return ssl_hs_ok;
   }
 
@@ -1473,12 +1471,23 @@ static enum ssl_hs_wait_t do_send_client_certificate_verify(SSL_HANDSHAKE *hs) {
   // The handshake buffer is no longer necessary.
   hs->transcript.FreeBuffer();
 
-  hs->state = state_send_second_client_flight;
+  hs->state = state_send_client_finished;
   return ssl_hs_ok;
 }
 
-static enum ssl_hs_wait_t do_send_second_client_flight(SSL_HANDSHAKE *hs) {
+static enum ssl_hs_wait_t do_send_client_finished(SSL_HANDSHAKE *hs) {
   SSL *const ssl = hs->ssl;
+  // Resolve Channel ID first, before any non-idempotent operations.
+  if (ssl->s3->tlsext_channel_id_valid) {
+    if (!ssl_do_channel_id_callback(ssl)) {
+      return ssl_hs_error;
+    }
+
+    if (ssl->tlsext_channel_id_private == NULL) {
+      hs->state = state_send_client_finished;
+      return ssl_hs_channel_id_lookup;
+    }
+  }
 
   if (!ssl->method->add_change_cipher_spec(ssl) ||
       !tls1_change_cipher_state(hs, SSL3_CHANGE_CIPHER_CLIENT_WRITE)) {
@@ -1503,41 +1512,17 @@ static enum ssl_hs_wait_t do_send_second_client_flight(SSL_HANDSHAKE *hs) {
     }
   }
 
-  hs->state = state_send_channel_id;
-  return ssl_hs_ok;
-}
-
-static enum ssl_hs_wait_t do_send_channel_id(SSL_HANDSHAKE *hs) {
-  SSL *const ssl = hs->ssl;
-
-  if (!ssl->s3->tlsext_channel_id_valid) {
-    hs->state = state_send_client_finished;
-    return ssl_hs_ok;
+  if (ssl->s3->tlsext_channel_id_valid) {
+    ScopedCBB cbb;
+    CBB body;
+    if (!ssl->method->init_message(ssl, cbb.get(), &body, SSL3_MT_CHANNEL_ID) ||
+        !tls1_write_channel_id(hs, &body) ||
+        !ssl_add_message_cbb(ssl, cbb.get())) {
+      OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
+      return ssl_hs_error;
+    }
   }
 
-  if (!ssl_do_channel_id_callback(ssl)) {
-    return ssl_hs_error;
-  }
-
-  if (ssl->tlsext_channel_id_private == NULL) {
-    hs->state = state_send_channel_id;
-    return ssl_hs_channel_id_lookup;
-  }
-
-  ScopedCBB cbb;
-  CBB body;
-  if (!ssl->method->init_message(ssl, cbb.get(), &body, SSL3_MT_CHANNEL_ID) ||
-      !tls1_write_channel_id(hs, &body) ||
-      !ssl_add_message_cbb(ssl, cbb.get())) {
-    OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
-    return ssl_hs_error;
-  }
-
-  hs->state = state_send_client_finished;
-  return ssl_hs_ok;
-}
-
-static enum ssl_hs_wait_t do_send_client_finished(SSL_HANDSHAKE *hs) {
   if (!ssl3_send_finished(hs)) {
     return ssl_hs_error;
   }
@@ -1566,8 +1551,8 @@ static enum ssl_hs_wait_t do_finish_flight(SSL_HANDSHAKE *hs) {
       ssl3_can_false_start(ssl) &&
       // No False Start on renegotiation (would complicate the state machine).
       !ssl->s3->initial_handshake_complete) {
-    hs->in_false_start = 1;
-    hs->can_early_write = 1;
+    hs->in_false_start = true;
+    hs->can_early_write = true;
     return ssl_hs_early_return;
   }
 
@@ -1606,7 +1591,7 @@ static enum ssl_hs_wait_t do_read_session_ticket(SSL_HANDSHAKE *hs) {
     // RFC 5077 allows a server to change its mind and send no ticket after
     // negotiating the extension. The value of |ticket_expected| is checked in
     // |ssl_update_cache| so is cleared here to avoid an unnecessary update.
-    hs->ticket_expected = 0;
+    hs->ticket_expected = false;
     ssl->method->next_message(ssl);
     hs->state = state_process_change_cipher_spec;
     return ssl_hs_read_change_cipher_spec;
@@ -1674,7 +1659,7 @@ static enum ssl_hs_wait_t do_read_server_finished(SSL_HANDSHAKE *hs) {
   }
 
   if (ssl->session != NULL) {
-    hs->state = state_send_second_client_flight;
+    hs->state = state_send_client_finished;
     return ssl_hs_ok;
   }
 
@@ -1709,8 +1694,8 @@ static enum ssl_hs_wait_t do_finish_client_handshake(SSL_HANDSHAKE *hs) {
     hs->new_session.reset();
   }
 
-  hs->handshake_finalized = 1;
-  ssl->s3->initial_handshake_complete = 1;
+  hs->handshake_finalized = true;
+  ssl->s3->initial_handshake_complete = true;
   ssl_update_cache(hs, SSL_SESS_CACHE_CLIENT);
 
   hs->state = state_done;
@@ -1764,12 +1749,6 @@ enum ssl_hs_wait_t ssl_client_handshake(SSL_HANDSHAKE *hs) {
         break;
       case state_send_client_certificate_verify:
         ret = do_send_client_certificate_verify(hs);
-        break;
-      case state_send_second_client_flight:
-        ret = do_send_second_client_flight(hs);
-        break;
-      case state_send_channel_id:
-        ret = do_send_channel_id(hs);
         break;
       case state_send_client_finished:
         ret = do_send_client_finished(hs);
@@ -1839,10 +1818,6 @@ const char *ssl_client_handshake_state(SSL_HANDSHAKE *hs) {
       return "TLS client send_client_key_exchange";
     case state_send_client_certificate_verify:
       return "TLS client send_client_certificate_verify";
-    case state_send_second_client_flight:
-      return "TLS client send_second_client_flight";
-    case state_send_channel_id:
-      return "TLS client send_channel_id";
     case state_send_client_finished:
       return "TLS client send_client_finished";
     case state_finish_flight:
