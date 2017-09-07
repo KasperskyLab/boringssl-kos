@@ -43,6 +43,7 @@ test_support_sources = [
     "src/ssl/internal.h",
     "src/ssl/test/async_bio.h",
     "src/ssl/test/fuzzer.h",
+    "src/ssl/test/fuzzer_tags.h",
     "src/ssl/test/packeted_bio.h",
     "src/ssl/test/test_config.h",
 ]
