@@ -153,6 +153,7 @@
 
 #include <openssl/aead.h>
 #include <openssl/err.h>
+#include <openssl/lhash.h>
 #include <openssl/mem.h>
 #include <openssl/ssl.h>
 #include <openssl/span.h>
@@ -387,9 +388,9 @@ bool ssl_add_supported_versions(SSL_HANDSHAKE *hs, CBB *cbb);
 bool ssl_negotiate_version(SSL_HANDSHAKE *hs, uint8_t *out_alert,
                            uint16_t *out_version, const CBS *peer_versions);
 
-// ssl3_protocol_version returns |ssl|'s protocol version. It is an error to
+// ssl_protocol_version returns |ssl|'s protocol version. It is an error to
 // call this function before the version is determined.
-uint16_t ssl3_protocol_version(const SSL *ssl);
+uint16_t ssl_protocol_version(const SSL *ssl);
 
 // ssl_is_resumption_experiment returns whether the version corresponds to a
 // TLS 1.3 resumption experiment.
@@ -1563,6 +1564,10 @@ int ssl_parse_extensions(const CBS *cbs, uint8_t *out_alert,
 // ssl_verify_peer_cert verifies the peer certificate for |hs|.
 enum ssl_verify_result_t ssl_verify_peer_cert(SSL_HANDSHAKE *hs);
 
+enum ssl_hs_wait_t ssl_get_finished(SSL_HANDSHAKE *hs);
+bool ssl_send_finished(SSL_HANDSHAKE *hs);
+bool ssl_output_cert_chain(SSL *ssl);
+
 
 // SSLKEYLOGFILE functions.
 
@@ -1820,6 +1825,12 @@ struct tlsext_ticket_key {
   // rotated.
   uint64_t next_rotation_tv_sec;
 };
+
+}  // namespace bssl
+
+DECLARE_LHASH_OF(SSL_SESSION)
+
+namespace bssl {
 
 // SSLContext backs the public |SSL_CTX| type. Due to compatibility constraints,
 // it is a base class for |ssl_ctx_st|.
@@ -2665,13 +2676,11 @@ const struct ssl_cipher_preference_list_st *ssl_get_cipher_preferences(
 
 void ssl_update_cache(SSL_HANDSHAKE *hs, int mode);
 
-enum ssl_hs_wait_t ssl_get_finished(SSL_HANDSHAKE *hs);
-int ssl3_send_alert(SSL *ssl, int level, int desc);
+int ssl_send_alert(SSL *ssl, int level, int desc);
 bool ssl3_get_message(SSL *ssl, SSLMessage *out);
 int ssl3_read_message(SSL *ssl);
 void ssl3_next_message(SSL *ssl);
 
-int ssl3_send_finished(SSL_HANDSHAKE *hs);
 int ssl3_dispatch_alert(SSL *ssl);
 int ssl3_read_app_data(SSL *ssl, bool *out_got_handshake, uint8_t *buf, int len,
                        int peek);
@@ -2680,7 +2689,6 @@ void ssl3_read_close_notify(SSL *ssl);
 int ssl3_read_handshake_bytes(SSL *ssl, uint8_t *buf, int len);
 int ssl3_write_app_data(SSL *ssl, bool *out_needs_handshake, const uint8_t *buf,
                         int len);
-int ssl3_output_cert_chain(SSL *ssl);
 
 int ssl3_new(SSL *ssl);
 void ssl3_free(SSL *ssl);
@@ -2827,10 +2835,6 @@ int tls1_record_handshake_hashes_for_channel_id(SSL_HANDSHAKE *hs);
 // success, |ssl->tlsext_channel_id_private| may be unset, in which case the
 // operation should be retried later.
 int ssl_do_channel_id_callback(SSL *ssl);
-
-// ssl3_can_false_start returns one if |ssl| is allowed to False Start and zero
-// otherwise.
-int ssl3_can_false_start(const SSL *ssl);
 
 // ssl_can_write returns one if |ssl| is allowed to write and zero otherwise.
 int ssl_can_write(const SSL *ssl);

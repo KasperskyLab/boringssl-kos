@@ -317,19 +317,6 @@ int ssl_log_secret(const SSL *ssl, const char *label, const uint8_t *secret,
   return 1;
 }
 
-int ssl3_can_false_start(const SSL *ssl) {
-  const SSL_CIPHER *const cipher = SSL_get_current_cipher(ssl);
-
-  // False Start only for TLS 1.2 with an ECDHE+AEAD cipher and ALPN or NPN.
-  return !SSL_is_dtls(ssl) &&
-      SSL_version(ssl) == TLS1_2_VERSION &&
-      (ssl->s3->alpn_selected != NULL ||
-       ssl->s3->next_proto_negotiated != NULL) &&
-      cipher != NULL &&
-      cipher->algorithm_mkey == SSL_kECDHE &&
-      cipher->algorithm_mac == SSL_AEAD;
-}
-
 void ssl_do_info_callback(const SSL *ssl, int type, int value) {
   void (*cb)(const SSL *ssl, int type, int value) = NULL;
   if (ssl->info_callback != NULL) {
@@ -852,7 +839,7 @@ int SSL_accept(SSL *ssl) {
 }
 
 static int ssl_do_post_handshake(SSL *ssl, const SSLMessage &msg) {
-  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+  if (ssl_protocol_version(ssl) >= TLS1_3_VERSION) {
     return tls13_post_handshake(ssl, msg);
   }
 
@@ -864,7 +851,7 @@ static int ssl_do_post_handshake(SSL *ssl, const SSLMessage &msg) {
   }
 
   if (msg.type != SSL3_MT_HELLO_REQUEST || CBS_len(&msg.body) != 0) {
-    ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
+    ssl_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
     OPENSSL_PUT_ERROR(SSL, SSL_R_BAD_HELLO_REQUEST);
     return 0;
   }
@@ -909,7 +896,7 @@ static int ssl_do_post_handshake(SSL *ssl, const SSLMessage &msg) {
   return 1;
 
 no_renegotiation:
-  ssl3_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_NO_RENEGOTIATION);
+  ssl_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_NO_RENEGOTIATION);
   OPENSSL_PUT_ERROR(SSL, SSL_R_NO_RENEGOTIATION);
   return 0;
 }
@@ -1032,7 +1019,7 @@ int SSL_shutdown(SSL *ssl) {
 
   if (ssl->s3->write_shutdown != ssl_shutdown_close_notify) {
     // Send a close_notify.
-    if (ssl3_send_alert(ssl, SSL3_AL_WARNING, SSL_AD_CLOSE_NOTIFY) <= 0) {
+    if (ssl_send_alert(ssl, SSL3_AL_WARNING, SSL_AD_CLOSE_NOTIFY) <= 0) {
       return -1;
     }
   } else if (ssl->s3->alert_dispatch) {
@@ -1063,7 +1050,7 @@ int SSL_send_fatal_alert(SSL *ssl, uint8_t alert) {
     return ssl->method->dispatch_alert(ssl);
   }
 
-  return ssl3_send_alert(ssl, SSL3_AL_FATAL, alert);
+  return ssl_send_alert(ssl, SSL3_AL_FATAL, alert);
 }
 
 void SSL_CTX_set_early_data_enabled(SSL_CTX *ctx, int enabled) {
@@ -1272,8 +1259,8 @@ int SSL_get_tls_unique(const SSL *ssl, uint8_t *out, size_t *out_len,
 
   // tls-unique is not defined for SSL 3.0 or TLS 1.3.
   if (!ssl->s3->initial_handshake_complete ||
-      ssl3_protocol_version(ssl) < TLS1_VERSION ||
-      ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+      ssl_protocol_version(ssl) < TLS1_VERSION ||
+      ssl_protocol_version(ssl) >= TLS1_3_VERSION) {
     return 0;
   }
 
@@ -1411,8 +1398,8 @@ static size_t copy_finished(void *out, size_t out_len, const uint8_t *in,
 
 size_t SSL_get_finished(const SSL *ssl, void *buf, size_t count) {
   if (!ssl->s3->initial_handshake_complete ||
-      ssl3_protocol_version(ssl) < TLS1_VERSION ||
-      ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+      ssl_protocol_version(ssl) < TLS1_VERSION ||
+      ssl_protocol_version(ssl) >= TLS1_3_VERSION) {
     return 0;
   }
 
@@ -1427,8 +1414,8 @@ size_t SSL_get_finished(const SSL *ssl, void *buf, size_t count) {
 
 size_t SSL_get_peer_finished(const SSL *ssl, void *buf, size_t count) {
   if (!ssl->s3->initial_handshake_complete ||
-      ssl3_protocol_version(ssl) < TLS1_VERSION ||
-      ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+      ssl_protocol_version(ssl) < TLS1_VERSION ||
+      ssl_protocol_version(ssl) >= TLS1_3_VERSION) {
     return 0;
   }
 
@@ -1449,7 +1436,7 @@ int SSL_get_extms_support(const SSL *ssl) {
   if (!ssl->s3->have_version) {
     return 0;
   }
-  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+  if (ssl_protocol_version(ssl) >= TLS1_3_VERSION) {
     return 1;
   }
 
@@ -1567,7 +1554,7 @@ int SSL_get_secure_renegotiation_support(const SSL *ssl) {
   if (!ssl->s3->have_version) {
     return 0;
   }
-  return ssl3_protocol_version(ssl) >= TLS1_3_VERSION ||
+  return ssl_protocol_version(ssl) >= TLS1_3_VERSION ||
          ssl->s3->send_connection_binding;
 }
 
