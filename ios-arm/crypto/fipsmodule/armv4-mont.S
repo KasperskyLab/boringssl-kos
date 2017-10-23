@@ -958,5 +958,4 @@ LNEON_copy_n_zap:
 OPENSSL_armcap_P:
 .indirect_symbol	_OPENSSL_armcap_P
 .long	0
-.private_extern	_OPENSSL_armcap_P
 #endif

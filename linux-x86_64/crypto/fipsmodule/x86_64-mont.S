@@ -1,8 +1,7 @@
 #if defined(__x86_64__) && !defined(OPENSSL_NO_ASM)
 .text	
 
-.extern	OPENSSL_ia32cap_P
-.hidden OPENSSL_ia32cap_P
+
 
 .globl	bn_mul_mont
 .hidden bn_mul_mont
@@ -690,8 +689,7 @@ bn_mul4x_mont:
 	.byte	0xf3,0xc3
 .cfi_endproc	
 .size	bn_mul4x_mont,.-bn_mul4x_mont
-.extern	bn_sqr8x_internal
-.hidden bn_sqr8x_internal
+
 
 .type	bn_sqr8x_mont,@function
 .align	32
