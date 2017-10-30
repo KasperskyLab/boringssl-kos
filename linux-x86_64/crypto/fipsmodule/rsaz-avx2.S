@@ -1714,7 +1714,8 @@ rsaz_1024_gather5_avx2:
 .cfi_endproc	
 .LSEH_end_rsaz_1024_gather5:
 .size	rsaz_1024_gather5_avx2,.-rsaz_1024_gather5_avx2
-
+.extern	OPENSSL_ia32cap_P
+.hidden OPENSSL_ia32cap_P
 .globl	rsaz_avx2_eligible
 .hidden rsaz_avx2_eligible
 .type	rsaz_avx2_eligible,@function

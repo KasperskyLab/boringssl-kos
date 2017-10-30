@@ -1876,4 +1876,5 @@ L16_79_neon:
 OPENSSL_armcap_P:
 .indirect_symbol	_OPENSSL_armcap_P
 .long	0
+.private_extern	_OPENSSL_armcap_P
 #endif
