@@ -192,7 +192,6 @@ crypto_internal_headers = [
     "src/crypto/cipher_extra/internal.h",
     "src/crypto/conf/conf_def.h",
     "src/crypto/conf/internal.h",
-    "src/crypto/curve25519/internal.h",
     "src/crypto/err/internal.h",
     "src/crypto/evp/internal.h",
     "src/crypto/fipsmodule/aes/internal.h",
@@ -220,6 +219,7 @@ crypto_internal_headers = [
     "src/crypto/x509/vpm_int.h",
     "src/crypto/x509v3/ext_dat.h",
     "src/crypto/x509v3/pcy_int.h",
+    "src/third_party/fiat/internal.h",
 ]
 
 crypto_sources = [
@@ -292,7 +292,6 @@ crypto_sources = [
     "src/crypto/cpu-intel.c",
     "src/crypto/cpu-ppc64le.c",
     "src/crypto/crypto.c",
-    "src/crypto/curve25519/curve25519.c",
     "src/crypto/curve25519/spake25519.c",
     "src/crypto/curve25519/x25519-x86_64.c",
     "src/crypto/dh/check.c",
@@ -442,6 +441,7 @@ crypto_sources = [
     "src/crypto/x509v3/v3_skey.c",
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
+    "src/third_party/fiat/curve25519.c",
 ]
 
 tool_sources = [
