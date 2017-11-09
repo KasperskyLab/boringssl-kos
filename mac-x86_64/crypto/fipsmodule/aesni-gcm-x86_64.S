@@ -334,6 +334,7 @@ L$6x_done:
 
 .p2align	5
 _aesni_gcm_decrypt:
+
 	xorq	%r10,%r10
 
 
@@ -342,12 +343,19 @@ _aesni_gcm_decrypt:
 	jb	L$gcm_dec_abort
 
 	leaq	(%rsp),%rax
+
 	pushq	%rbx
+
 	pushq	%rbp
+
 	pushq	%r12
+
 	pushq	%r13
+
 	pushq	%r14
+
 	pushq	%r15
+
 	vzeroupper
 
 	vmovdqu	(%r8),%xmm1
@@ -417,15 +425,23 @@ L$dec_no_key_aliasing:
 
 	vzeroupper
 	movq	-48(%rax),%r15
+
 	movq	-40(%rax),%r14
+
 	movq	-32(%rax),%r13
+
 	movq	-24(%rax),%r12
+
 	movq	-16(%rax),%rbp
+
 	movq	-8(%rax),%rbx
+
 	leaq	(%rax),%rsp
+
 L$gcm_dec_abort:
 	movq	%r10,%rax
 	.byte	0xf3,0xc3
+
 
 
 .p2align	5
@@ -523,6 +539,7 @@ L$handle_ctr32_2:
 
 .p2align	5
 _aesni_gcm_encrypt:
+
 	xorq	%r10,%r10
 
 
@@ -532,12 +549,19 @@ _aesni_gcm_encrypt:
 	jb	L$gcm_enc_abort
 
 	leaq	(%rsp),%rax
+
 	pushq	%rbx
+
 	pushq	%rbp
+
 	pushq	%r12
+
 	pushq	%r13
+
 	pushq	%r14
+
 	pushq	%r15
+
 	vzeroupper
 
 	vmovdqu	(%r8),%xmm1
@@ -772,15 +796,23 @@ L$enc_no_key_aliasing:
 
 	vzeroupper
 	movq	-48(%rax),%r15
+
 	movq	-40(%rax),%r14
+
 	movq	-32(%rax),%r13
+
 	movq	-24(%rax),%r12
+
 	movq	-16(%rax),%rbp
+
 	movq	-8(%rax),%rbx
+
 	leaq	(%rax),%rsp
+
 L$gcm_enc_abort:
 	movq	%r10,%rax
 	.byte	0xf3,0xc3
+
 
 .p2align	6
 L$bswap_mask:
