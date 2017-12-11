@@ -42,10 +42,9 @@ fips_fragments = [
     "src/crypto/fipsmodule/ec/ec_montgomery.c",
     "src/crypto/fipsmodule/ec/oct.c",
     "src/crypto/fipsmodule/ec/p224-64.c",
-    "src/crypto/fipsmodule/ec/p256-64.c",
     "src/crypto/fipsmodule/ec/p256-x86_64.c",
     "src/crypto/fipsmodule/ec/simple.c",
-    "src/crypto/fipsmodule/ec/util-64.c",
+    "src/crypto/fipsmodule/ec/util.c",
     "src/crypto/fipsmodule/ec/wnaf.c",
     "src/crypto/fipsmodule/ecdsa/ecdsa.c",
     "src/crypto/fipsmodule/hmac/hmac.c",
@@ -442,6 +441,7 @@ crypto_sources = [
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
+    "src/third_party/fiat/p256.c",
 ]
 
 tool_sources = [
