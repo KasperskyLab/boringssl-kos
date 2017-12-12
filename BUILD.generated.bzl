@@ -67,6 +67,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/sha/sha1.c",
     "src/crypto/fipsmodule/sha/sha256.c",
     "src/crypto/fipsmodule/sha/sha512.c",
+    "src/third_party/fiat/p256.c",
 ]
 
 ssl_internal_headers = [
@@ -441,7 +442,6 @@ crypto_sources = [
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
-    "src/third_party/fiat/p256.c",
 ]
 
 tool_sources = [
