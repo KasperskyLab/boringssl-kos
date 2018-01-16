@@ -23,6 +23,7 @@ test_support_sources = [
     "src/crypto/fipsmodule/modes/internal.h",
     "src/crypto/fipsmodule/rand/internal.h",
     "src/crypto/fipsmodule/rsa/internal.h",
+    "src/crypto/fipsmodule/tls/internal.h",
     "src/crypto/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/pkcs7/internal.h",

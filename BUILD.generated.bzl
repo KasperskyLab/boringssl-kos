@@ -67,6 +67,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/sha/sha1.c",
     "src/crypto/fipsmodule/sha/sha256.c",
     "src/crypto/fipsmodule/sha/sha512.c",
+    "src/crypto/fipsmodule/tls/kdf.c",
     "src/third_party/fiat/p256.c",
 ]
 
@@ -208,6 +209,7 @@ crypto_internal_headers = [
     "src/crypto/fipsmodule/modes/internal.h",
     "src/crypto/fipsmodule/rand/internal.h",
     "src/crypto/fipsmodule/rsa/internal.h",
+    "src/crypto/fipsmodule/tls/internal.h",
     "src/crypto/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/pkcs7/internal.h",
