@@ -63,6 +63,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/rsa/padding.c",
     "src/crypto/fipsmodule/rsa/rsa.c",
     "src/crypto/fipsmodule/rsa/rsa_impl.c",
+    "src/crypto/fipsmodule/self_check/self_check.c",
     "src/crypto/fipsmodule/sha/sha1-altivec.c",
     "src/crypto/fipsmodule/sha/sha1.c",
     "src/crypto/fipsmodule/sha/sha256.c",
