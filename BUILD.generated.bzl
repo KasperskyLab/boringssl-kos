@@ -222,6 +222,7 @@ crypto_internal_headers = [
     "src/crypto/x509/vpm_int.h",
     "src/crypto/x509v3/ext_dat.h",
     "src/crypto/x509v3/pcy_int.h",
+    "src/third_party/fiat/curve25519_tables.h",
     "src/third_party/fiat/internal.h",
 ]
 
