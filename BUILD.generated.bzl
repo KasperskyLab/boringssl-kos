@@ -298,7 +298,6 @@ crypto_sources = [
     "src/crypto/cpu-ppc64le.c",
     "src/crypto/crypto.c",
     "src/crypto/curve25519/spake25519.c",
-    "src/crypto/curve25519/x25519-x86_64.c",
     "src/crypto/dh/check.c",
     "src/crypto/dh/dh.c",
     "src/crypto/dh/dh_asn1.c",
@@ -559,7 +558,6 @@ crypto_sources_linux_x86_64 = [
     "linux-x86_64/crypto/fipsmodule/vpaes-x86_64.S",
     "linux-x86_64/crypto/fipsmodule/x86_64-mont.S",
     "linux-x86_64/crypto/fipsmodule/x86_64-mont5.S",
-    "src/crypto/curve25519/asm/x25519-asm-x86_64.S",
 ]
 
 crypto_sources_mac_x86 = [
@@ -596,7 +594,6 @@ crypto_sources_mac_x86_64 = [
     "mac-x86_64/crypto/fipsmodule/vpaes-x86_64.S",
     "mac-x86_64/crypto/fipsmodule/x86_64-mont.S",
     "mac-x86_64/crypto/fipsmodule/x86_64-mont5.S",
-    "src/crypto/curve25519/asm/x25519-asm-x86_64.S",
 ]
 
 crypto_sources_win_x86 = [
