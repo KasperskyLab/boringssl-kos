@@ -126,10 +126,6 @@
 #define OPENSSL_BN_ASM_MONT
 #endif
 
-static int bn_mod_mul_montgomery_fallback(BIGNUM *r, const BIGNUM *a,
-                                          const BIGNUM *b,
-                                          const BN_MONT_CTX *mont, BN_CTX *ctx);
-
 
 BN_MONT_CTX *BN_MONT_CTX_new(void) {
   BN_MONT_CTX *ret = OPENSSL_malloc(sizeof(BN_MONT_CTX));
@@ -304,6 +300,11 @@ static int bn_from_montgomery_in_place(BN_ULONG *r, size_t num_r, BN_ULONG *a,
 
 static int BN_from_montgomery_word(BIGNUM *ret, BIGNUM *r,
                                    const BN_MONT_CTX *mont) {
+  if (r->neg) {
+    OPENSSL_PUT_ERROR(BN, BN_R_NEGATIVE_NUMBER);
+    return 0;
+  }
+
   const BIGNUM *n = &mont->N;
   if (n->top == 0) {
     ret->top = 0;
@@ -325,7 +326,7 @@ static int BN_from_montgomery_word(BIGNUM *ret, BIGNUM *r,
   if (!bn_from_montgomery_in_place(ret->d, ret->top, r->d, r->top, mont)) {
     return 0;
   }
-  ret->neg = r->neg;
+  ret->neg = 0;
 
   bn_correct_top(r);
   bn_correct_top(ret);
@@ -352,35 +353,27 @@ err:
   return ret;
 }
 
-int BN_mod_mul_montgomery(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
-                          const BN_MONT_CTX *mont, BN_CTX *ctx) {
-#if !defined(OPENSSL_BN_ASM_MONT)
-  return bn_mod_mul_montgomery_fallback(r, a, b, mont, ctx);
-#else
-  int num = mont->N.top;
-
-  // |bn_mul_mont| requires at least 128 bits of limbs, at least for x86.
-  if (num < (128 / BN_BITS2) ||
-      a->top != num ||
-      b->top != num) {
-    return bn_mod_mul_montgomery_fallback(r, a, b, mont, ctx);
+int bn_one_to_montgomery(BIGNUM *r, const BN_MONT_CTX *mont, BN_CTX *ctx) {
+  // If the high bit of |n| is set, R = 2^(top*BN_BITS2) < 2 * |n|, so we
+  // compute R - |n| rather than perform Montgomery reduction.
+  const BIGNUM *n = &mont->N;
+  if (n->top > 0 && (n->d[n->top - 1] >> (BN_BITS2 - 1)) != 0) {
+    if (!bn_wexpand(r, n->top)) {
+      return 0;
+    }
+    r->d[0] = 0 - n->d[0];
+    for (int i = 1; i < n->top; i++) {
+      r->d[i] = ~n->d[i];
+    }
+    r->top = n->top;
+    r->neg = 0;
+    // The upper words will be zero if the corresponding words of |n| were
+    // 0xfff[...], so call |bn_correct_top|.
+    bn_correct_top(r);
+    return 1;
   }
 
-  if (!bn_wexpand(r, num)) {
-    return 0;
-  }
-  if (!bn_mul_mont(r->d, a->d, b->d, mont->N.d, mont->n0, num)) {
-    // The check above ensures this won't happen.
-    assert(0);
-    OPENSSL_PUT_ERROR(BN, ERR_R_INTERNAL_ERROR);
-    return 0;
-  }
-  r->neg = a->neg ^ b->neg;
-  r->top = num;
-  bn_correct_top(r);
-
-  return 1;
-#endif
+  return BN_from_montgomery(r, &mont->RR, mont, ctx);
 }
 
 static int bn_mod_mul_montgomery_fallback(BIGNUM *r, const BIGNUM *a,
@@ -417,6 +410,39 @@ err:
   return ret;
 }
 
+int BN_mod_mul_montgomery(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
+                          const BN_MONT_CTX *mont, BN_CTX *ctx) {
+  if (a->neg || b->neg) {
+    OPENSSL_PUT_ERROR(BN, BN_R_NEGATIVE_NUMBER);
+    return 0;
+  }
+
+#if defined(OPENSSL_BN_ASM_MONT)
+  // |bn_mul_mont| requires at least 128 bits of limbs, at least for x86.
+  int num = mont->N.top;
+  if (num >= (128 / BN_BITS2) &&
+      a->top == num &&
+      b->top == num) {
+    if (!bn_wexpand(r, num)) {
+      return 0;
+    }
+    if (!bn_mul_mont(r->d, a->d, b->d, mont->N.d, mont->n0, num)) {
+      // The check above ensures this won't happen.
+      assert(0);
+      OPENSSL_PUT_ERROR(BN, ERR_R_INTERNAL_ERROR);
+      return 0;
+    }
+    r->neg = 0;
+    r->top = num;
+    bn_correct_top(r);
+
+    return 1;
+  }
+#endif
+
+  return bn_mod_mul_montgomery_fallback(r, a, b, mont, ctx);
+}
+
 int bn_to_montgomery_small(BN_ULONG *r, size_t num_r, const BN_ULONG *a,
                            size_t num_a, const BN_MONT_CTX *mont) {
   return bn_mod_mul_montgomery_small(r, num_r, a, num_a, mont->RR.d,
@@ -437,6 +463,28 @@ int bn_from_montgomery_small(BN_ULONG *r, size_t num_r, const BN_ULONG *a,
   int ret = bn_from_montgomery_in_place(r, num_r, tmp, num_tmp, mont);
   OPENSSL_cleanse(tmp, num_tmp * sizeof(BN_ULONG));
   return ret;
+}
+
+int bn_one_to_montgomery_small(BN_ULONG *r, size_t num_r,
+                               const BN_MONT_CTX *mont) {
+  const BN_ULONG *n = mont->N.d;
+  size_t num_n = mont->N.top;
+  if (num_n == 0 || num_r != num_n) {
+    OPENSSL_PUT_ERROR(BN, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+    return 0;
+  }
+
+  // If the high bit of |n| is set, R = 2^(num_n*BN_BITS2) < 2 * |n|, so we
+  // compute R - |n| rather than perform Montgomery reduction.
+  if (num_n > 0 && (n[num_n - 1] >> (BN_BITS2 - 1)) != 0) {
+    r[0] = 0 - n[0];
+    for (size_t i = 1; i < num_n; i++) {
+      r[i] = ~n[i];
+    }
+    return 1;
+  }
+
+  return bn_from_montgomery_small(r, num_r, mont->RR.d, mont->RR.top, mont);
 }
 
 int bn_mod_mul_montgomery_small(BN_ULONG *r, size_t num_r, const BN_ULONG *a,
