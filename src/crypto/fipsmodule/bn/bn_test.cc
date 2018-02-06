@@ -1988,24 +1988,20 @@ TEST_F(BNTest, NonMinimal) {
 
     EXPECT_TRUE(BN_equal_consttime(ten.get(), ten_copy.get()));
     EXPECT_TRUE(BN_equal_consttime(ten_copy.get(), ten.get()));
-    EXPECT_FALSE(BN_less_than_consttime(ten.get(), ten_copy.get()));
-    EXPECT_FALSE(BN_less_than_consttime(ten_copy.get(), ten.get()));
     EXPECT_EQ(BN_cmp(ten.get(), ten_copy.get()), 0);
+    EXPECT_EQ(BN_cmp(ten_copy.get(), ten.get()), 0);
 
     EXPECT_FALSE(BN_equal_consttime(ten.get(), eight.get()));
-    EXPECT_FALSE(BN_less_than_consttime(ten.get(), eight.get()));
-    EXPECT_TRUE(BN_less_than_consttime(eight.get(), ten.get()));
     EXPECT_LT(BN_cmp(eight.get(), ten.get()), 0);
+    EXPECT_GT(BN_cmp(ten.get(), eight.get()), 0);
 
     EXPECT_FALSE(BN_equal_consttime(ten.get(), forty_two.get()));
-    EXPECT_TRUE(BN_less_than_consttime(ten.get(), forty_two.get()));
-    EXPECT_FALSE(BN_less_than_consttime(forty_two.get(), ten.get()));
     EXPECT_GT(BN_cmp(forty_two.get(), ten.get()), 0);
+    EXPECT_LT(BN_cmp(ten.get(), forty_two.get()), 0);
 
     EXPECT_FALSE(BN_equal_consttime(ten.get(), two_exp_256.get()));
-    EXPECT_TRUE(BN_less_than_consttime(ten.get(), two_exp_256.get()));
-    EXPECT_FALSE(BN_less_than_consttime(two_exp_256.get(), ten.get()));
     EXPECT_GT(BN_cmp(two_exp_256.get(), ten.get()), 0);
+    EXPECT_LT(BN_cmp(ten.get(), two_exp_256.get()), 0);
 
     EXPECT_EQ(4u, BN_num_bits(ten.get()));
     EXPECT_EQ(1u, BN_num_bytes(ten.get()));
@@ -2067,4 +2063,45 @@ TEST_F(BNTest, NonMinimal) {
 
   EXPECT_EQ(mont->N.width, mont2->N.width);
   EXPECT_EQ(0, BN_cmp(&mont->RR, &mont2->RR));
+}
+
+TEST_F(BNTest, CountLowZeroBits) {
+  bssl::UniquePtr<BIGNUM> ten(BN_new());
+  ASSERT_TRUE(ten);
+  ASSERT_TRUE(BN_set_word(ten.get(), 10));
+
+  bssl::UniquePtr<BIGNUM> eight(BN_new());
+  ASSERT_TRUE(eight);
+  ASSERT_TRUE(BN_set_word(eight.get(), 8));
+
+  bssl::UniquePtr<BIGNUM> two_exp_256(BN_new());
+  ASSERT_TRUE(two_exp_256);
+  ASSERT_TRUE(BN_lshift(two_exp_256.get(), BN_value_one(), 256));
+
+  bssl::UniquePtr<BIGNUM> two_exp_256_plus_4(BN_new());
+  ASSERT_TRUE(two_exp_256_plus_4);
+  ASSERT_TRUE(BN_lshift(two_exp_256_plus_4.get(), BN_value_one(), 256));
+  ASSERT_TRUE(BN_add_word(two_exp_256_plus_4.get(), 4));
+
+  bssl::UniquePtr<BIGNUM> zero(BN_new());
+  ASSERT_TRUE(zero);
+  BN_zero(zero.get());
+
+  EXPECT_EQ(1, BN_count_low_zero_bits(ten.get()));
+  EXPECT_EQ(3, BN_count_low_zero_bits(eight.get()));
+  EXPECT_EQ(256, BN_count_low_zero_bits(two_exp_256.get()));
+  EXPECT_EQ(2, BN_count_low_zero_bits(two_exp_256_plus_4.get()));
+  EXPECT_EQ(0, BN_count_low_zero_bits(zero.get()));
+
+  ASSERT_TRUE(bn_resize_words(ten.get(), 16));
+  ASSERT_TRUE(bn_resize_words(eight.get(), 16));
+  ASSERT_TRUE(bn_resize_words(two_exp_256.get(), 16));
+  ASSERT_TRUE(bn_resize_words(two_exp_256_plus_4.get(), 16));
+  ASSERT_TRUE(bn_resize_words(zero.get(), 16));
+
+  EXPECT_EQ(1, BN_count_low_zero_bits(ten.get()));
+  EXPECT_EQ(3, BN_count_low_zero_bits(eight.get()));
+  EXPECT_EQ(256, BN_count_low_zero_bits(two_exp_256.get()));
+  EXPECT_EQ(2, BN_count_low_zero_bits(two_exp_256_plus_4.get()));
+  EXPECT_EQ(0, BN_count_low_zero_bits(zero.get()));
 }
