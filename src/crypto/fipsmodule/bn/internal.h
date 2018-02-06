@@ -218,6 +218,11 @@ int bn_expand(BIGNUM *bn, size_t bits);
 // and zero on allocation error or if |bn|'s value is too large.
 OPENSSL_EXPORT int bn_resize_words(BIGNUM *bn, size_t words);
 
+// bn_select_words sets |r| to |a| if |mask| is all ones or |b| if |mask| is
+// all zeros.
+void bn_select_words(BN_ULONG *r, BN_ULONG mask, const BN_ULONG *a,
+                     const BN_ULONG *b, size_t num);
+
 // bn_set_words sets |bn| to the value encoded in the |num| words in |words|,
 // least significant word first.
 int bn_set_words(BIGNUM *bn, const BN_ULONG *words, size_t num);
@@ -274,16 +279,6 @@ void bn_sqr_comba8(BN_ULONG r[16], const BN_ULONG a[4]);
 
 // bn_sqr_comba4 sets |r| to |a|^2.
 void bn_sqr_comba4(BN_ULONG r[8], const BN_ULONG a[4]);
-
-// bn_cmp_words returns a value less than, equal to or greater than zero if
-// the, length |n|, array |a| is less than, equal to or greater than |b|.
-int bn_cmp_words(const BN_ULONG *a, const BN_ULONG *b, int n);
-
-// bn_cmp_words returns a value less than, equal to or greater than zero if the
-// array |a| is less than, equal to or greater than |b|. The arrays can be of
-// different lengths: |cl| gives the minimum of the two lengths and |dl| gives
-// the length of |a| minus the length of |b|.
-int bn_cmp_part_words(const BN_ULONG *a, const BN_ULONG *b, int cl, int dl);
 
 // bn_less_than_words returns one if |a| < |b| and zero otherwise, where |a|
 // and |b| both are |len| words long. It runs in constant time.
