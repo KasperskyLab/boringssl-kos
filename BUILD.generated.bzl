@@ -291,6 +291,7 @@ crypto_sources = [
     "src/crypto/cipher_extra/tls_cbc.c",
     "src/crypto/cmac/cmac.c",
     "src/crypto/conf/conf.c",
+    "src/crypto/cpu-aarch64-fuchsia.c",
     "src/crypto/cpu-aarch64-linux.c",
     "src/crypto/cpu-arm-linux.c",
     "src/crypto/cpu-arm.c",
