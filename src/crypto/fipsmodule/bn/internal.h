@@ -342,18 +342,6 @@ int bn_mod_exp_base_2_consttime(BIGNUM *r, unsigned p, const BIGNUM *n,
 #error "Either BN_ULLONG or BN_UMULT_LOHI must be defined on every platform."
 #endif
 
-// bn_mod_inverse_prime sets |out| to the modular inverse of |a| modulo |p|,
-// computed with Fermat's Little Theorem. It returns one on success and zero on
-// error. If |mont_p| is NULL, one will be computed temporarily.
-int bn_mod_inverse_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
-                         BN_CTX *ctx, const BN_MONT_CTX *mont_p);
-
-// bn_mod_inverse_secret_prime behaves like |bn_mod_inverse_prime| but uses
-// |BN_mod_exp_mont_consttime| instead of |BN_mod_exp_mont| in hopes of
-// protecting the exponent.
-int bn_mod_inverse_secret_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
-                                BN_CTX *ctx, const BN_MONT_CTX *mont_p);
-
 // bn_jacobi returns the Jacobi symbol of |a| and |b| (which is -1, 0 or 1), or
 // -2 on error.
 int bn_jacobi(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
@@ -374,6 +362,13 @@ int bn_less_than_montgomery_R(const BIGNUM *bn, const BN_MONT_CTX *mont);
 // bn_mod_u16_consttime returns |bn| mod |d|, ignoring |bn|'s sign bit. It runs
 // in time independent of the value of |bn|, but it treats |d| as public.
 OPENSSL_EXPORT uint16_t bn_mod_u16_consttime(const BIGNUM *bn, uint16_t d);
+
+// bn_odd_number_is_obviously_composite returns one if |bn| is divisible by one
+// of the first several odd primes and zero otherwise.
+int bn_odd_number_is_obviously_composite(const BIGNUM *bn);
+
+// bn_rshift1_words sets |r| to |a| >> 1, where both arrays are |num| bits wide.
+void bn_rshift1_words(BN_ULONG *r, const BN_ULONG *a, size_t num);
 
 // bn_rshift_secret_shift behaves like |BN_rshift| but runs in time independent
 // of both |a| and |n|.
@@ -398,6 +393,11 @@ int bn_uadd_consttime(BIGNUM *r, const BIGNUM *a, const BIGNUM *b);
 // |r->width| = |a->width|.
 int bn_usub_consttime(BIGNUM *r, const BIGNUM *a, const BIGNUM *b);
 
+// bn_abs_sub_consttime sets |r| to the absolute value of |a| - |b|, treating
+// both inputs as secret. It returns one on success and zero on error.
+OPENSSL_EXPORT int bn_abs_sub_consttime(BIGNUM *r, const BIGNUM *a,
+                                        const BIGNUM *b, BN_CTX *ctx);
+
 // bn_mul_consttime behaves like |BN_mul|, but it rejects negative inputs and
 // pessimally sets |r->width| to |a->width| + |b->width|, to avoid leaking
 // information about |a| and |b|.
@@ -406,6 +406,28 @@ int bn_mul_consttime(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
 // bn_sqrt_consttime behaves like |BN_sqrt|, but it pessimally sets |r->width|
 // to 2*|a->width|, to avoid leaking information about |a| and |b|.
 int bn_sqr_consttime(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx);
+
+// bn_div_consttime behaves like |BN_div|, but it rejects negative inputs and
+// treats both inputs, including their magnitudes, as secret. It is, as a
+// result, much slower than |BN_div| and should only be used for rare operations
+// where Montgomery reduction is not available.
+//
+// Note that |quotient->width| will be set pessimally to |numerator->width|.
+OPENSSL_EXPORT int bn_div_consttime(BIGNUM *quotient, BIGNUM *remainder,
+                                    const BIGNUM *numerator,
+                                    const BIGNUM *divisor, BN_CTX *ctx);
+
+// bn_is_relatively_prime checks whether GCD(|x|, |y|) is one. On success, it
+// returns one and sets |*out_relatively_prime| to one if the GCD was one and
+// zero otherwise. On error, it returns zero.
+OPENSSL_EXPORT int bn_is_relatively_prime(int *out_relatively_prime,
+                                          const BIGNUM *x, const BIGNUM *y,
+                                          BN_CTX *ctx);
+
+// bn_lcm_consttime sets |r| to LCM(|a|, |b|). It returns one and success and
+// zero on error. |a| and |b| are both treated as secret.
+OPENSSL_EXPORT int bn_lcm_consttime(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
+                                    BN_CTX *ctx);
 
 
 // Constant-time modular arithmetic.
@@ -428,6 +450,30 @@ int bn_mod_lshift1_consttime(BIGNUM *r, const BIGNUM *a, const BIGNUM *m,
 // bn_mod_lshift_consttime acts like |BN_mod_lshift_quick| but takes a |BN_CTX|.
 int bn_mod_lshift_consttime(BIGNUM *r, const BIGNUM *a, int n, const BIGNUM *m,
                             BN_CTX *ctx);
+
+// bn_mod_inverse_consttime sets |r| to |a|^-1, mod |n|. |a| must be non-
+// negative and less than |n|. It returns one on success and zero on error. On
+// failure, if the failure was caused by |a| having no inverse mod |n| then
+// |*out_no_inverse| will be set to one; otherwise it will be set to zero.
+//
+// This function treats both |a| and |n| as secret, provided they are both non-
+// zero and the inverse exists. It should only be used for even moduli where
+// none of the less general implementations are applicable.
+OPENSSL_EXPORT int bn_mod_inverse_consttime(BIGNUM *r, int *out_no_inverse,
+                                            const BIGNUM *a, const BIGNUM *n,
+                                            BN_CTX *ctx);
+
+// bn_mod_inverse_prime sets |out| to the modular inverse of |a| modulo |p|,
+// computed with Fermat's Little Theorem. It returns one on success and zero on
+// error. If |mont_p| is NULL, one will be computed temporarily.
+int bn_mod_inverse_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
+                         BN_CTX *ctx, const BN_MONT_CTX *mont_p);
+
+// bn_mod_inverse_secret_prime behaves like |bn_mod_inverse_prime| but uses
+// |BN_mod_exp_mont_consttime| instead of |BN_mod_exp_mont| in hopes of
+// protecting the exponent.
+int bn_mod_inverse_secret_prime(BIGNUM *out, const BIGNUM *a, const BIGNUM *p,
+                                BN_CTX *ctx, const BN_MONT_CTX *mont_p);
 
 
 // Low-level operations for small numbers.
