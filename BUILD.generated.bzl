@@ -43,6 +43,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/ec/oct.c",
     "src/crypto/fipsmodule/ec/p224-64.c",
     "src/crypto/fipsmodule/ec/p256-x86_64.c",
+    "src/crypto/fipsmodule/ec/scalar.c",
     "src/crypto/fipsmodule/ec/simple.c",
     "src/crypto/fipsmodule/ec/util.c",
     "src/crypto/fipsmodule/ec/wnaf.c",
