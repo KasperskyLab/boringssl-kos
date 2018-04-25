@@ -40,6 +40,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/ec/ec.c",
     "src/crypto/fipsmodule/ec/ec_key.c",
     "src/crypto/fipsmodule/ec/ec_montgomery.c",
+    "src/crypto/fipsmodule/ec/felem.c",
     "src/crypto/fipsmodule/ec/oct.c",
     "src/crypto/fipsmodule/ec/p224-64.c",
     "src/crypto/fipsmodule/ec/p256-x86_64.c",
