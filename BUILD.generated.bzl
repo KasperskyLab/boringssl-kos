@@ -147,6 +147,7 @@ crypto_headers = [
     "src/include/openssl/dh.h",
     "src/include/openssl/digest.h",
     "src/include/openssl/dsa.h",
+    "src/include/openssl/e_os2.h",
     "src/include/openssl/ec.h",
     "src/include/openssl/ec_key.h",
     "src/include/openssl/ecdh.h",
