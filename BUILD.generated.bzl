@@ -284,6 +284,7 @@ crypto_sources = [
     "src/crypto/bytestring/ber.c",
     "src/crypto/bytestring/cbb.c",
     "src/crypto/bytestring/cbs.c",
+    "src/crypto/bytestring/unicode.c",
     "src/crypto/chacha/chacha.c",
     "src/crypto/cipher_extra/cipher_extra.c",
     "src/crypto/cipher_extra/derive_key.c",
