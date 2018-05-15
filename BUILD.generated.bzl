@@ -445,6 +445,7 @@ crypto_sources = [
     "src/crypto/x509v3/v3_int.c",
     "src/crypto/x509v3/v3_lib.c",
     "src/crypto/x509v3/v3_ncons.c",
+    "src/crypto/x509v3/v3_ocsp.c",
     "src/crypto/x509v3/v3_pci.c",
     "src/crypto/x509v3/v3_pcia.c",
     "src/crypto/x509v3/v3_pcons.c",
