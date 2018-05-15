@@ -368,6 +368,7 @@ crypto_sources = [
     "src/crypto/rc4/rc4.c",
     "src/crypto/refcount_c11.c",
     "src/crypto/refcount_lock.c",
+    "src/crypto/rsa_extra/print.c",
     "src/crypto/rsa_extra/rsa_asn1.c",
     "src/crypto/stack/stack.c",
     "src/crypto/thread.c",
