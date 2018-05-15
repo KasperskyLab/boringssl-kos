@@ -293,18 +293,93 @@ static const uint8_t kPKCS8ShroudedKeyBag[] = {
 static const uint8_t kCertBag[] = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,
                                    0x01, 0x0c, 0x0a, 0x01, 0x03};
 
+// 1.2.840.113549.1.9.20
+static const uint8_t kFriendlyName[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
+                                        0x0d, 0x01, 0x09, 0x14};
+
+// 1.2.840.113549.1.9.21
+static const uint8_t kLocalKeyID[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
+                                      0x0d, 0x01, 0x09, 0x15};
+
 // 1.2.840.113549.1.9.22.1
 static const uint8_t kX509Certificate[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
                                            0x0d, 0x01, 0x09, 0x16, 0x01};
 
+// parse_bag_attributes parses the bagAttributes field of a SafeBag structure.
+// It sets |*out_friendly_name| to a newly-allocated copy of the friendly name,
+// encoded as a UTF-8 string, or NULL if there is none. It returns one on
+// success and zero on error.
+static int parse_bag_attributes(CBS *attrs, uint8_t **out_friendly_name,
+                                size_t *out_friendly_name_len) {
+  *out_friendly_name = NULL;
+  *out_friendly_name_len = 0;
+
+  // See https://tools.ietf.org/html/rfc7292#section-4.2.
+  while (CBS_len(attrs) != 0) {
+    CBS attr, oid, values;
+    if (!CBS_get_asn1(attrs, &attr, CBS_ASN1_SEQUENCE) ||
+        !CBS_get_asn1(&attr, &oid, CBS_ASN1_OBJECT) ||
+        !CBS_get_asn1(&attr, &values, CBS_ASN1_SET) ||
+        CBS_len(&attr) != 0) {
+      OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_BAD_PKCS12_DATA);
+      goto err;
+    }
+    if (CBS_mem_equal(&oid, kFriendlyName, sizeof(kFriendlyName))) {
+      // See https://tools.ietf.org/html/rfc2985, section 5.5.1.
+      CBS value;
+      if (*out_friendly_name != NULL ||
+          !CBS_get_asn1(&values, &value, CBS_ASN1_BMPSTRING) ||
+          CBS_len(&values) != 0 ||
+          CBS_len(&value) == 0) {
+        OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_BAD_PKCS12_DATA);
+        goto err;
+      }
+      // Convert the friendly name to UTF-8.
+      CBB cbb;
+      if (!CBB_init(&cbb, CBS_len(&value))) {
+        OPENSSL_PUT_ERROR(PKCS8, ERR_R_MALLOC_FAILURE);
+        goto err;
+      }
+      while (CBS_len(&value) != 0) {
+        uint32_t c;
+        if (!cbs_get_ucs2_be(&value, &c) ||
+            !cbb_add_utf8(&cbb, c)) {
+          OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_INVALID_CHARACTERS);
+          CBB_cleanup(&cbb);
+          goto err;
+        }
+      }
+      if (!CBB_finish(&cbb, out_friendly_name, out_friendly_name_len)) {
+        OPENSSL_PUT_ERROR(PKCS8, ERR_R_MALLOC_FAILURE);
+        CBB_cleanup(&cbb);
+        goto err;
+      }
+    }
+  }
+
+  return 1;
+
+err:
+  OPENSSL_free(*out_friendly_name);
+  *out_friendly_name = NULL;
+  *out_friendly_name_len = 0;
+  return 0;
+}
+
 // PKCS12_handle_safe_bag parses a single SafeBag element in a PKCS#12
 // structure.
 static int PKCS12_handle_safe_bag(CBS *safe_bag, struct pkcs12_context *ctx) {
-  CBS bag_id, wrapped_value;
+  CBS bag_id, wrapped_value, bag_attrs;
   if (!CBS_get_asn1(safe_bag, &bag_id, CBS_ASN1_OBJECT) ||
       !CBS_get_asn1(safe_bag, &wrapped_value,
-                        CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)
-      /* Ignore the bagAttributes field. */) {
+                    CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)) {
+    OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_BAD_PKCS12_DATA);
+    return 0;
+  }
+  if (CBS_len(safe_bag) == 0) {
+    CBS_init(&bag_attrs, NULL, 0);
+  } else if (!CBS_get_asn1(safe_bag, &bag_attrs, CBS_ASN1_SET) ||
+             CBS_len(safe_bag) != 0) {
     OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_BAD_PKCS12_DATA);
     return 0;
   }
@@ -369,7 +444,17 @@ static int PKCS12_handle_safe_bag(CBS *safe_bag, struct pkcs12_context *ctx) {
       return 0;
     }
 
-    if (0 == sk_X509_push(ctx->out_certs, x509)) {
+    uint8_t *friendly_name;
+    size_t friendly_name_len;
+    if (!parse_bag_attributes(&bag_attrs, &friendly_name, &friendly_name_len)) {
+      X509_free(x509);
+      return 0;
+    }
+    int ok = friendly_name_len == 0 ||
+             X509_alias_set1(x509, friendly_name, friendly_name_len);
+    OPENSSL_free(friendly_name);
+    if (!ok ||
+        0 == sk_X509_push(ctx->out_certs, x509)) {
       X509_free(x509);
       return 0;
     }
@@ -467,6 +552,34 @@ err:
   OPENSSL_free(storage);
   return ret;
 }
+
+static int pkcs12_check_mac(int *out_mac_ok, const char *password,
+                            size_t password_len, const CBS *salt,
+                            unsigned iterations, const EVP_MD *md,
+                            const CBS *authsafes, const CBS *expected_mac) {
+  int ret = 0;
+  uint8_t hmac_key[EVP_MAX_MD_SIZE];
+  if (!pkcs12_key_gen(password, password_len, CBS_data(salt), CBS_len(salt),
+                      PKCS12_MAC_ID, iterations, EVP_MD_size(md), hmac_key,
+                      md)) {
+    goto err;
+  }
+
+  uint8_t hmac[EVP_MAX_MD_SIZE];
+  unsigned hmac_len;
+  if (NULL == HMAC(md, hmac_key, EVP_MD_size(md), CBS_data(authsafes),
+                   CBS_len(authsafes), hmac, &hmac_len)) {
+    goto err;
+  }
+
+  *out_mac_ok = CBS_mem_equal(expected_mac, hmac, hmac_len);
+  ret = 1;
+
+err:
+  OPENSSL_cleanse(hmac_key, sizeof(hmac_key));
+  return ret;
+}
+
 
 int PKCS12_get_key_and_certs(EVP_PKEY **out_key, STACK_OF(X509) *out_certs,
                              CBS *ber_in, const char *password) {
@@ -576,21 +689,24 @@ int PKCS12_get_key_and_certs(EVP_PKEY **out_key, STACK_OF(X509) *out_certs,
       }
     }
 
-    uint8_t hmac_key[EVP_MAX_MD_SIZE];
-    if (!pkcs12_key_gen(ctx.password, ctx.password_len, CBS_data(&salt),
-                        CBS_len(&salt), PKCS12_MAC_ID, iterations,
-                        EVP_MD_size(md), hmac_key, md)) {
+    int mac_ok;
+    if (!pkcs12_check_mac(&mac_ok, ctx.password, ctx.password_len, &salt,
+                          iterations, md, &authsafes, &expected_mac)) {
       goto err;
     }
-
-    uint8_t hmac[EVP_MAX_MD_SIZE];
-    unsigned hmac_len;
-    if (NULL == HMAC(md, hmac_key, EVP_MD_size(md), CBS_data(&authsafes),
-                     CBS_len(&authsafes), hmac, &hmac_len)) {
-      goto err;
+    if (!mac_ok && ctx.password_len == 0) {
+      // PKCS#12 encodes passwords as NUL-terminated UCS-2, so the empty
+      // password is encoded as {0, 0}. Some implementations use the empty byte
+      // array for "no password". OpenSSL considers a non-NULL password as {0,
+      // 0} and a NULL password as {}. It then, in high-level PKCS#12 parsing
+      // code, tries both options. We match this behavior.
+      ctx.password = ctx.password != NULL ? NULL : "";
+      if (!pkcs12_check_mac(&mac_ok, ctx.password, ctx.password_len, &salt,
+                            iterations, md, &authsafes, &expected_mac)) {
+        goto err;
+      }
     }
-
-    if (!CBS_mem_equal(&expected_mac, hmac, hmac_len)) {
+    if (!mac_ok) {
       OPENSSL_PUT_ERROR(PKCS8, PKCS8_R_INCORRECT_PASSWORD);
       goto err;
     }
@@ -829,14 +945,6 @@ int PKCS12_verify_mac(const PKCS12 *p12, const char *password,
 
   return 1;
 }
-
-// 1.2.840.113549.1.9.20
-static const uint8_t kFriendlyName[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
-                                        0x0d, 0x01, 0x09, 0x14};
-
-// 1.2.840.113549.1.9.21
-static const uint8_t kLocalKeyID[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
-                                      0x0d, 0x01, 0x09, 0x15};
 
 // add_bag_attributes adds the bagAttributes field of a SafeBag structure,
 // containing the specified friendlyName and localKeyId attributes.
