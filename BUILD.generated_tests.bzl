@@ -112,7 +112,6 @@ ssl_test_sources = [
 ]
 
 crypto_test_data = [
-    "src/crypto/cipher_extra/test/aes_128_cbc_sha1_ssl3_tests.txt",
     "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt",
     "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_tests.txt",
     "src/crypto/cipher_extra/test/aes_128_cbc_sha256_tls_tests.txt",
@@ -121,7 +120,6 @@ crypto_test_data = [
     "src/crypto/cipher_extra/test/aes_128_ctr_hmac_sha256.txt",
     "src/crypto/cipher_extra/test/aes_128_gcm_siv_tests.txt",
     "src/crypto/cipher_extra/test/aes_128_gcm_tests.txt",
-    "src/crypto/cipher_extra/test/aes_256_cbc_sha1_ssl3_tests.txt",
     "src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_implicit_iv_tests.txt",
     "src/crypto/cipher_extra/test/aes_256_cbc_sha1_tls_tests.txt",
     "src/crypto/cipher_extra/test/aes_256_cbc_sha256_tls_tests.txt",
@@ -131,7 +129,6 @@ crypto_test_data = [
     "src/crypto/cipher_extra/test/aes_256_gcm_tests.txt",
     "src/crypto/cipher_extra/test/chacha20_poly1305_tests.txt",
     "src/crypto/cipher_extra/test/cipher_tests.txt",
-    "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_ssl3_tests.txt",
     "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_implicit_iv_tests.txt",
     "src/crypto/cipher_extra/test/des_ede3_cbc_sha1_tls_tests.txt",
     "src/crypto/cipher_extra/test/nist_cavp/aes_128_cbc.txt",

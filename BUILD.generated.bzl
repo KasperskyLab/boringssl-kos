@@ -295,7 +295,6 @@ crypto_sources = [
     "src/crypto/cipher_extra/e_null.c",
     "src/crypto/cipher_extra/e_rc2.c",
     "src/crypto/cipher_extra/e_rc4.c",
-    "src/crypto/cipher_extra/e_ssl3.c",
     "src/crypto/cipher_extra/e_tls.c",
     "src/crypto/cipher_extra/tls_cbc.c",
     "src/crypto/cmac/cmac.c",
