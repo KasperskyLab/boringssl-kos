@@ -567,34 +567,11 @@ int OPENSSL_init_ssl(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings) {
 }
 
 static uint32_t ssl_session_hash(const SSL_SESSION *sess) {
-  const uint8_t *session_id = sess->session_id;
-
-  uint8_t tmp_storage[sizeof(uint32_t)];
-  if (sess->session_id_length < sizeof(tmp_storage)) {
-    OPENSSL_memset(tmp_storage, 0, sizeof(tmp_storage));
-    OPENSSL_memcpy(tmp_storage, sess->session_id, sess->session_id_length);
-    session_id = tmp_storage;
-  }
-
-  uint32_t hash =
-      ((uint32_t)session_id[0]) |
-      ((uint32_t)session_id[1] << 8) |
-      ((uint32_t)session_id[2] << 16) |
-      ((uint32_t)session_id[3] << 24);
-
-  return hash;
+  return ssl_hash_session_id(
+      MakeConstSpan(sess->session_id, sess->session_id_length));
 }
 
-// NB: If this function (or indeed the hash function which uses a sort of
-// coarser function than this one) is changed, ensure
-// SSL_CTX_has_matching_session_id() is checked accordingly. It relies on being
-// able to construct an SSL_SESSION that will collide with any existing session
-// with a matching session ID.
 static int ssl_session_cmp(const SSL_SESSION *a, const SSL_SESSION *b) {
-  if (a->ssl_version != b->ssl_version) {
-    return 1;
-  }
-
   if (a->session_id_length != b->session_id_length) {
     return 1;
   }
@@ -2071,8 +2048,8 @@ void SSL_get0_signed_cert_timestamp_list(const SSL *ssl, const uint8_t **out,
     return;
   }
 
-  *out = CRYPTO_BUFFER_data(session->signed_cert_timestamp_list);
-  *out_len = CRYPTO_BUFFER_len(session->signed_cert_timestamp_list);
+  *out = CRYPTO_BUFFER_data(session->signed_cert_timestamp_list.get());
+  *out_len = CRYPTO_BUFFER_len(session->signed_cert_timestamp_list.get());
 }
 
 void SSL_get0_ocsp_response(const SSL *ssl, const uint8_t **out,
@@ -2084,8 +2061,8 @@ void SSL_get0_ocsp_response(const SSL *ssl, const uint8_t **out,
     return;
   }
 
-  *out = CRYPTO_BUFFER_data(session->ocsp_response);
-  *out_len = CRYPTO_BUFFER_len(session->ocsp_response);
+  *out = CRYPTO_BUFFER_data(session->ocsp_response.get());
+  *out_len = CRYPTO_BUFFER_len(session->ocsp_response.get());
 }
 
 int SSL_set_tlsext_host_name(SSL *ssl, const char *name) {
@@ -2214,8 +2191,8 @@ void SSL_CTX_set_alpn_select_cb(SSL_CTX *ctx,
 void SSL_get0_alpn_selected(const SSL *ssl, const uint8_t **out_data,
                             unsigned *out_len) {
   if (SSL_in_early_data(ssl) && !ssl->server) {
-    *out_data = ssl->s3->hs->early_session->early_alpn;
-    *out_len = ssl->s3->hs->early_session->early_alpn_len;
+    *out_data = ssl->s3->hs->early_session->early_alpn.data();
+    *out_len = ssl->s3->hs->early_session->early_alpn.size();
   } else {
     *out_data = ssl->s3->alpn_selected.data();
     *out_len = ssl->s3->alpn_selected.size();
@@ -2568,7 +2545,7 @@ const char *SSL_get_psk_identity(const SSL *ssl) {
   if (session == NULL) {
     return NULL;
   }
-  return session->psk_identity;
+  return session->psk_identity.get();
 }
 
 void SSL_set_psk_client_callback(
