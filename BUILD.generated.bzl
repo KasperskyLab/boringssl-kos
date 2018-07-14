@@ -84,7 +84,6 @@ ssl_internal_headers = [
 
 ssl_sources = [
     "src/ssl/bio_ssl.cc",
-    "src/ssl/custom_extensions.cc",
     "src/ssl/d1_both.cc",
     "src/ssl/d1_lib.cc",
     "src/ssl/d1_pkt.cc",
