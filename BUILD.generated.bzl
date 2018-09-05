@@ -203,6 +203,7 @@ crypto_internal_headers = [
     "src/crypto/cipher_extra/internal.h",
     "src/crypto/conf/conf_def.h",
     "src/crypto/conf/internal.h",
+    "src/crypto/cpu-arm-linux.h",
     "src/crypto/err/internal.h",
     "src/crypto/evp/internal.h",
     "src/crypto/fipsmodule/aes/internal.h",
