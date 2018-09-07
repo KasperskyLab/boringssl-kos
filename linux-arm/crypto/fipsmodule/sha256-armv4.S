@@ -1,3 +1,10 @@
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
+#define OPENSSL_NO_ASM
+#endif
+#endif
+
+#if !defined(OPENSSL_NO_ASM)
 #if defined(__arm__)
 #if defined(BORINGSSL_PREFIX)
 #include <boringssl_prefix_symbols_asm.h>
@@ -2824,3 +2831,4 @@ sha256_block_data_order_armv8:
 .hidden	OPENSSL_armcap_P
 #endif
 #endif
+#endif  // !OPENSSL_NO_ASM
