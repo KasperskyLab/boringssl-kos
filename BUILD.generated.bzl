@@ -162,7 +162,6 @@ crypto_headers = [
     "src/include/openssl/hmac.h",
     "src/include/openssl/is_boringssl.h",
     "src/include/openssl/lhash.h",
-    "src/include/openssl/lhash_macros.h",
     "src/include/openssl/md4.h",
     "src/include/openssl/md5.h",
     "src/include/openssl/mem.h",
