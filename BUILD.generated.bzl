@@ -2,6 +2,7 @@
 
 ssl_headers = [
     "src/include/openssl/dtls1.h",
+    "src/include/openssl/srtp.h",
     "src/include/openssl/ssl.h",
     "src/include/openssl/ssl3.h",
     "src/include/openssl/tls1.h",
@@ -185,7 +186,6 @@ crypto_headers = [
     "src/include/openssl/safestack.h",
     "src/include/openssl/sha.h",
     "src/include/openssl/span.h",
-    "src/include/openssl/srtp.h",
     "src/include/openssl/stack.h",
     "src/include/openssl/thread.h",
     "src/include/openssl/type_check.h",
