@@ -161,6 +161,7 @@ crypto_headers = [
     "src/include/openssl/ex_data.h",
     "src/include/openssl/hkdf.h",
     "src/include/openssl/hmac.h",
+    "src/include/openssl/hrss.h",
     "src/include/openssl/is_boringssl.h",
     "src/include/openssl/lhash.h",
     "src/include/openssl/md4.h",
@@ -220,6 +221,7 @@ crypto_internal_headers = [
     "src/crypto/fipsmodule/rand/internal.h",
     "src/crypto/fipsmodule/rsa/internal.h",
     "src/crypto/fipsmodule/tls/internal.h",
+    "src/crypto/hrss/internal.h",
     "src/crypto/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/pkcs7/internal.h",
@@ -340,6 +342,7 @@ crypto_sources = [
     "src/crypto/fipsmodule/bcm.c",
     "src/crypto/fipsmodule/is_fips.c",
     "src/crypto/hkdf/hkdf.c",
+    "src/crypto/hrss/hrss.c",
     "src/crypto/lhash/lhash.c",
     "src/crypto/mem.c",
     "src/crypto/obj/obj.c",
@@ -529,6 +532,7 @@ crypto_sources_linux_arm = [
     "linux-arm/crypto/fipsmodule/sha256-armv4.S",
     "linux-arm/crypto/fipsmodule/sha512-armv4.S",
     "src/crypto/curve25519/asm/x25519-asm-arm.S",
+    "src/crypto/hrss/asm/poly_mul_vec_armv7_neon.S",
     "src/crypto/poly1305/poly1305_arm_asm.S",
 ]
 
@@ -572,6 +576,7 @@ crypto_sources_linux_x86_64 = [
     "linux-x86_64/crypto/fipsmodule/vpaes-x86_64.S",
     "linux-x86_64/crypto/fipsmodule/x86_64-mont.S",
     "linux-x86_64/crypto/fipsmodule/x86_64-mont5.S",
+    "src/crypto/hrss/asm/poly_rq_mul.S",
 ]
 
 crypto_sources_mac_x86 = [
