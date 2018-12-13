@@ -532,7 +532,6 @@ crypto_sources_linux_arm = [
     "linux-arm/crypto/fipsmodule/sha256-armv4.S",
     "linux-arm/crypto/fipsmodule/sha512-armv4.S",
     "src/crypto/curve25519/asm/x25519-asm-arm.S",
-    "src/crypto/hrss/asm/poly_mul_vec_armv7_neon.S",
     "src/crypto/poly1305/poly1305_arm_asm.S",
 ]
 
