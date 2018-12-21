@@ -33,6 +33,8 @@ test_support_sources = [
     "src/crypto/pkcs8/internal.h",
     "src/crypto/poly1305/internal.h",
     "src/crypto/pool/internal.h",
+    "src/crypto/test/abi_test.cc",
+    "src/crypto/test/abi_test.h",
     "src/crypto/test/file_test.cc",
     "src/crypto/test/file_test.h",
     "src/crypto/test/gtest_main.h",
@@ -61,6 +63,7 @@ test_support_sources = [
 
 crypto_test_sources = [
     "crypto_test_data.cc",
+    "src/crypto/abi_self_test.cc",
     "src/crypto/asn1/asn1_test.cc",
     "src/crypto/base64/base64_test.cc",
     "src/crypto/bio/bio_test.cc",
