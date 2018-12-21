@@ -23,6 +23,7 @@
 .hidden abi_test_trampoline
 .align	16
 abi_test_trampoline:
+.Labi_test_trampoline_begin:
 .cfi_startproc	
 
 
@@ -34,18 +35,26 @@ abi_test_trampoline:
 
 	subq	$120,%rsp
 .cfi_adjust_cfa_offset	120
+.Labi_test_trampoline_prolog_alloc:
 	movq	%rbx,64(%rsp)
 .cfi_offset	rbx, -64
+.Labi_test_trampoline_prolog_rbx:
 	movq	%rbp,72(%rsp)
 .cfi_offset	rbp, -56
+.Labi_test_trampoline_prolog_rbp:
 	movq	%r12,80(%rsp)
 .cfi_offset	r12, -48
+.Labi_test_trampoline_prolog_r12:
 	movq	%r13,88(%rsp)
 .cfi_offset	r13, -40
+.Labi_test_trampoline_prolog_r13:
 	movq	%r14,96(%rsp)
 .cfi_offset	r14, -32
+.Labi_test_trampoline_prolog_r14:
 	movq	%r15,104(%rsp)
 .cfi_offset	r15, -24
+.Labi_test_trampoline_prolog_r15:
+.Labi_test_trampoline_prolog_end:
 	movq	0(%rsi),%rbx
 	movq	8(%rsi),%rbp
 	movq	16(%rsi),%r12
@@ -133,6 +142,7 @@ abi_test_trampoline:
 
 	.byte	0xf3,0xc3
 .cfi_endproc	
+.Labi_test_trampoline_end:
 .size	abi_test_trampoline,.-abi_test_trampoline
 .type	abi_test_clobber_rax, @function
 .globl	abi_test_clobber_rax

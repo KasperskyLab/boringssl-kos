@@ -23,6 +23,7 @@
 .private_extern _abi_test_trampoline
 .p2align	4
 _abi_test_trampoline:
+L$abi_test_trampoline_begin:
 
 
 
@@ -34,18 +35,26 @@ _abi_test_trampoline:
 
 	subq	$120,%rsp
 
+L$abi_test_trampoline_prolog_alloc:
 	movq	%rbx,64(%rsp)
 
+L$abi_test_trampoline_prolog_rbx:
 	movq	%rbp,72(%rsp)
 
+L$abi_test_trampoline_prolog_rbp:
 	movq	%r12,80(%rsp)
 
+L$abi_test_trampoline_prolog_r12:
 	movq	%r13,88(%rsp)
 
+L$abi_test_trampoline_prolog_r13:
 	movq	%r14,96(%rsp)
 
+L$abi_test_trampoline_prolog_r14:
 	movq	%r15,104(%rsp)
 
+L$abi_test_trampoline_prolog_r15:
+L$abi_test_trampoline_prolog_end:
 	movq	0(%rsi),%rbx
 	movq	8(%rsi),%rbp
 	movq	16(%rsi),%r12
@@ -133,6 +142,7 @@ L$call:
 
 	.byte	0xf3,0xc3
 
+L$abi_test_trampoline_end:
 
 
 .globl	_abi_test_clobber_rax
