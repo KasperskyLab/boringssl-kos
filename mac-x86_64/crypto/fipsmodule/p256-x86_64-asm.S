@@ -2772,7 +2772,9 @@ L$add_doubleq:
 .byte	102,72,15,126,206
 .byte	102,72,15,126,199
 	addq	$416,%rsp
+
 	jmp	L$point_double_shortcutq
+
 
 .p2align	5
 L$add_proceedq:
@@ -3865,7 +3867,9 @@ L$add_doublex:
 .byte	102,72,15,126,206
 .byte	102,72,15,126,199
 	addq	$416,%rsp
+
 	jmp	L$point_double_shortcutx
+
 
 .p2align	5
 L$add_proceedx:

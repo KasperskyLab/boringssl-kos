@@ -2953,7 +2953,9 @@ $L$add_doubleq:
 DB	102,72,15,126,206
 DB	102,72,15,126,199
 	add	rsp,416
+
 	jmp	NEAR $L$point_double_shortcutq
+
 
 ALIGN	32
 $L$add_proceedq:
@@ -4077,7 +4079,9 @@ $L$add_doublex:
 DB	102,72,15,126,206
 DB	102,72,15,126,199
 	add	rsp,416
+
 	jmp	NEAR $L$point_double_shortcutx
+
 
 ALIGN	32
 $L$add_proceedx:

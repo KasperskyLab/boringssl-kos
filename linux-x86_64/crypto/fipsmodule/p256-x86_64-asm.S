@@ -2823,7 +2823,9 @@ ecp_nistz256_point_add:
 .byte	102,72,15,126,206
 .byte	102,72,15,126,199
 	addq	$416,%rsp
+.cfi_adjust_cfa_offset	-416
 	jmp	.Lpoint_double_shortcutq
+.cfi_adjust_cfa_offset	416
 
 .align	32
 .Ladd_proceedq:
@@ -3934,7 +3936,9 @@ ecp_nistz256_point_addx:
 .byte	102,72,15,126,206
 .byte	102,72,15,126,199
 	addq	$416,%rsp
+.cfi_adjust_cfa_offset	-416
 	jmp	.Lpoint_double_shortcutx
+.cfi_adjust_cfa_offset	416
 
 .align	32
 .Ladd_proceedx:
