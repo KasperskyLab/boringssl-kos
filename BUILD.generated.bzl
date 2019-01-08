@@ -217,6 +217,7 @@ crypto_internal_headers = [
     "src/crypto/fipsmodule/ec/internal.h",
     "src/crypto/fipsmodule/ec/p256-x86_64-table.h",
     "src/crypto/fipsmodule/ec/p256-x86_64.h",
+    "src/crypto/fipsmodule/md5/internal.h",
     "src/crypto/fipsmodule/modes/internal.h",
     "src/crypto/fipsmodule/rand/internal.h",
     "src/crypto/fipsmodule/rsa/internal.h",
