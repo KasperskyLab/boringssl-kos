@@ -464,6 +464,10 @@ crypto_sources = [
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
+    "src/third_party/fiat/curve25519_32.c",
+    "src/third_party/fiat/curve25519_64.c",
+    "src/third_party/fiat/p256_32.c",
+    "src/third_party/fiat/p256_64.c",
 ]
 
 tool_sources = [
