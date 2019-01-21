@@ -59,8 +59,12 @@ test_support_sources = [
     "src/ssl/test/settings_writer.h",
     "src/ssl/test/test_config.h",
     "src/ssl/test/test_state.h",
+    "src/third_party/fiat/curve25519_32.h",
+    "src/third_party/fiat/curve25519_64.h",
     "src/third_party/fiat/curve25519_tables.h",
     "src/third_party/fiat/internal.h",
+    "src/third_party/fiat/p256_32.h",
+    "src/third_party/fiat/p256_64.h",
 ]
 
 crypto_test_sources = [

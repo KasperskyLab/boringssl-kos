@@ -236,8 +236,12 @@ crypto_internal_headers = [
     "src/crypto/x509v3/ext_dat.h",
     "src/crypto/x509v3/internal.h",
     "src/crypto/x509v3/pcy_int.h",
+    "src/third_party/fiat/curve25519_32.h",
+    "src/third_party/fiat/curve25519_64.h",
     "src/third_party/fiat/curve25519_tables.h",
     "src/third_party/fiat/internal.h",
+    "src/third_party/fiat/p256_32.h",
+    "src/third_party/fiat/p256_64.h",
 ]
 
 crypto_sources = [
@@ -464,10 +468,6 @@ crypto_sources = [
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
-    "src/third_party/fiat/curve25519_32.c",
-    "src/third_party/fiat/curve25519_64.c",
-    "src/third_party/fiat/p256_32.c",
-    "src/third_party/fiat/p256_64.c",
 ]
 
 tool_sources = [
