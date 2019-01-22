@@ -106,6 +106,7 @@ crypto_test_sources = [
     "src/crypto/hkdf/hkdf_test.cc",
     "src/crypto/hmac_extra/hmac_test.cc",
     "src/crypto/hrss/hrss_test.cc",
+    "src/crypto/impl_dispatch_test.cc",
     "src/crypto/lhash/lhash_test.cc",
     "src/crypto/obj/obj_test.cc",
     "src/crypto/pem/pem_test.cc",
