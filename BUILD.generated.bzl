@@ -559,6 +559,7 @@ crypto_sources_linux_x86 = [
     "linux-x86/crypto/fipsmodule/sha512-586.S",
     "linux-x86/crypto/fipsmodule/vpaes-x86.S",
     "linux-x86/crypto/fipsmodule/x86-mont.S",
+    "linux-x86/crypto/test/trampoline-x86.S",
 ]
 
 crypto_sources_linux_x86_64 = [
@@ -599,6 +600,7 @@ crypto_sources_mac_x86 = [
     "mac-x86/crypto/fipsmodule/sha512-586.S",
     "mac-x86/crypto/fipsmodule/vpaes-x86.S",
     "mac-x86/crypto/fipsmodule/x86-mont.S",
+    "mac-x86/crypto/test/trampoline-x86.S",
 ]
 
 crypto_sources_mac_x86_64 = [
@@ -638,6 +640,7 @@ crypto_sources_win_x86 = [
     "win-x86/crypto/fipsmodule/sha512-586.asm",
     "win-x86/crypto/fipsmodule/vpaes-x86.asm",
     "win-x86/crypto/fipsmodule/x86-mont.asm",
+    "win-x86/crypto/test/trampoline-x86.asm",
 ]
 
 crypto_sources_win_x86_64 = [
