@@ -501,6 +501,7 @@ crypto_sources_ios_aarch64 = [
     "ios-aarch64/crypto/fipsmodule/sha1-armv8.S",
     "ios-aarch64/crypto/fipsmodule/sha256-armv8.S",
     "ios-aarch64/crypto/fipsmodule/sha512-armv8.S",
+    "ios-aarch64/crypto/test/trampoline-armv8.S",
 ]
 
 crypto_sources_ios_arm = [
@@ -525,6 +526,7 @@ crypto_sources_linux_aarch64 = [
     "linux-aarch64/crypto/fipsmodule/sha1-armv8.S",
     "linux-aarch64/crypto/fipsmodule/sha256-armv8.S",
     "linux-aarch64/crypto/fipsmodule/sha512-armv8.S",
+    "linux-aarch64/crypto/test/trampoline-armv8.S",
 ]
 
 crypto_sources_linux_arm = [
