@@ -1092,10 +1092,10 @@ bsaes_cbc_encrypt:
 #ifndef	__KERNEL__
 	cmp	r2, #128
 #ifndef	__thumb__
-	blo	AES_cbc_encrypt
+	blo	aes_nohw_cbc_encrypt
 #else
 	bhs	1f
-	b	AES_cbc_encrypt
+	b	aes_nohw_cbc_encrypt
 1:
 #endif
 #endif
@@ -1329,7 +1329,7 @@ bsaes_cbc_encrypt:
 	mov	r2, r3
 	vmov	q4,q15		@ just in case ensure that IV
 	vmov	q5,q0			@ and input are preserved
-	bl	AES_decrypt
+	bl	aes_nohw_decrypt
 	vld1.8	{q0}, [r9]		@ load result
 	veor	q0, q0, q4	@ ^= IV
 	vmov	q15, q5		@ q5 holds input
@@ -1558,7 +1558,7 @@ bsaes_ctr32_encrypt_blocks:
 	mov	r1, sp			@ output on the stack
 	mov	r2, r7			@ key
 
-	bl	AES_encrypt
+	bl	aes_nohw_encrypt
 
 	vld1.8	{q0}, [r4]!	@ load input
 	vld1.8	{q1}, [sp]		@ load encrypted counter
