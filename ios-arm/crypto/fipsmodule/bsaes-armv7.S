@@ -1086,6 +1086,9 @@ Lkey_loop:
 	@ don't save last round key
 	bx	lr
 
+@ TODO(davidben): This should be aes_nohw_cbc_encrypt, but that function does
+@ not exist. Rather than add it, patch this fallback out. See
+@ https://crbug.com/boringssl/256.
 
 
 
@@ -1099,10 +1102,10 @@ _bsaes_cbc_encrypt:
 #ifndef	__KERNEL__
 	cmp	r2, #128
 #ifndef	__thumb__
-	blo	_aes_nohw_cbc_encrypt
+	blo	_AES_cbc_encrypt
 #else
 	bhs	1f
-	b	_aes_nohw_cbc_encrypt
+	b	_AES_cbc_encrypt
 1:
 #endif
 #endif

@@ -1081,6 +1081,9 @@ _bsaes_key_convert:
 	@ don't save last round key
 	bx	lr
 .size	_bsaes_key_convert,.-_bsaes_key_convert
+@ TODO(davidben): This should be aes_nohw_cbc_encrypt, but that function does
+@ not exist. Rather than add it, patch this fallback out. See
+@ https://crbug.com/boringssl/256.
 
 
 
@@ -1092,10 +1095,10 @@ bsaes_cbc_encrypt:
 #ifndef	__KERNEL__
 	cmp	r2, #128
 #ifndef	__thumb__
-	blo	aes_nohw_cbc_encrypt
+	blo	AES_cbc_encrypt
 #else
 	bhs	1f
-	b	aes_nohw_cbc_encrypt
+	b	AES_cbc_encrypt
 1:
 #endif
 #endif
