@@ -130,6 +130,7 @@ crypto_test_sources = [
 ]
 
 ssl_test_sources = [
+    "src/crypto/test/abi_test.cc",
     "src/crypto/test/gtest_main.cc",
     "src/ssl/span_test.cc",
     "src/ssl/ssl_test.cc",
