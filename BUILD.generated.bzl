@@ -504,6 +504,7 @@ crypto_sources_ios_aarch64 = [
     "ios-aarch64/crypto/fipsmodule/sha512-armv8.S",
     "ios-aarch64/crypto/fipsmodule/vpaes-armv8.S",
     "ios-aarch64/crypto/test/trampoline-armv8.S",
+    "ios-aarch64/crypto/third_party/sike/asm/fp-armv8.S",
 ]
 
 crypto_sources_ios_arm = [
@@ -531,6 +532,7 @@ crypto_sources_linux_aarch64 = [
     "linux-aarch64/crypto/fipsmodule/sha512-armv8.S",
     "linux-aarch64/crypto/fipsmodule/vpaes-armv8.S",
     "linux-aarch64/crypto/test/trampoline-armv8.S",
+    "linux-aarch64/crypto/third_party/sike/asm/fp-armv8.S",
 ]
 
 crypto_sources_linux_arm = [
@@ -592,6 +594,7 @@ crypto_sources_linux_x86_64 = [
     "linux-x86_64/crypto/fipsmodule/x86_64-mont.S",
     "linux-x86_64/crypto/fipsmodule/x86_64-mont5.S",
     "linux-x86_64/crypto/test/trampoline-x86_64.S",
+    "linux-x86_64/crypto/third_party/sike/asm/fp-x86_64.S",
     "src/crypto/hrss/asm/poly_rq_mul.S",
 ]
 
@@ -633,6 +636,7 @@ crypto_sources_mac_x86_64 = [
     "mac-x86_64/crypto/fipsmodule/x86_64-mont.S",
     "mac-x86_64/crypto/fipsmodule/x86_64-mont5.S",
     "mac-x86_64/crypto/test/trampoline-x86_64.S",
+    "mac-x86_64/crypto/third_party/sike/asm/fp-x86_64.S",
 ]
 
 crypto_sources_win_x86 = [
@@ -673,4 +677,5 @@ crypto_sources_win_x86_64 = [
     "win-x86_64/crypto/fipsmodule/x86_64-mont.asm",
     "win-x86_64/crypto/fipsmodule/x86_64-mont5.asm",
     "win-x86_64/crypto/test/trampoline-x86_64.asm",
+    "win-x86_64/crypto/third_party/sike/asm/fp-x86_64.asm",
 ]
