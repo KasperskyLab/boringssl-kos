@@ -242,6 +242,10 @@ crypto_internal_headers = [
     "src/third_party/fiat/internal.h",
     "src/third_party/fiat/p256_32.h",
     "src/third_party/fiat/p256_64.h",
+    "src/third_party/sike/fpx.h",
+    "src/third_party/sike/isogeny.h",
+    "src/third_party/sike/sike.h",
+    "src/third_party/sike/utils.h",
 ]
 
 crypto_sources = [
@@ -468,6 +472,11 @@ crypto_sources = [
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
+    "src/third_party/sike/P503.c",
+    "src/third_party/sike/asm/fp_generic.c",
+    "src/third_party/sike/fpx.c",
+    "src/third_party/sike/isogeny.c",
+    "src/third_party/sike/sike.c",
 ]
 
 tool_sources = [
