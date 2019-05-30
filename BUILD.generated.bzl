@@ -350,6 +350,7 @@ crypto_sources = [
     "src/crypto/evp/sign.c",
     "src/crypto/ex_data.c",
     "src/crypto/fipsmodule/bcm.c",
+    "src/crypto/fipsmodule/fips_shared_support.c",
     "src/crypto/fipsmodule/is_fips.c",
     "src/crypto/hkdf/hkdf.c",
     "src/crypto/hrss/hrss.c",
