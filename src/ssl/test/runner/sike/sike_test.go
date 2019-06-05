@@ -181,7 +181,7 @@ func testPrivateKeyBelowMax(t testing.TB) {
 					secretBytes[blen-i-1] = tmp ^ secretBytes[blen-i-1]
 				}
 				prvBig := new(big.Int).SetBytes(secretBytes)
-				// Check if generated key is bigger then acceptable
+				// Check if generated key is bigger than acceptable
 				if prvBig.Cmp(maxSecertVal) == 1 {
 					t.Error("Generated private key is wrong")
 				}
@@ -508,9 +508,6 @@ func testDecapsulation(pk, sk, ct, ssExpected []byte, id uint8) bool {
 		panic("sike test: can't perform degcapsulation KAT")
 	}
 
-	if err != nil {
-		return false
-	}
 	return bytes.Equal(ssGot, ssExpected)
 }
 
