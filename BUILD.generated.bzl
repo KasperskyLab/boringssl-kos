@@ -476,9 +476,9 @@ crypto_sources = [
     "src/crypto/x509v3/v3_utl.c",
     "src/third_party/fiat/curve25519.c",
     "src/third_party/sike/asm/fp_generic.c",
+    "src/third_party/sike/curve_params.c",
     "src/third_party/sike/fpx.c",
     "src/third_party/sike/isogeny.c",
-    "src/third_party/sike/params.c",
     "src/third_party/sike/sike.c",
 ]
 
