@@ -58,7 +58,6 @@ fips_fragments = [
     "src/crypto/fipsmodule/md4/md4.c",
     "src/crypto/fipsmodule/md5/md5.c",
     "src/crypto/fipsmodule/modes/cbc.c",
-    "src/crypto/fipsmodule/modes/ccm.c",
     "src/crypto/fipsmodule/modes/cfb.c",
     "src/crypto/fipsmodule/modes/ctr.c",
     "src/crypto/fipsmodule/modes/gcm.c",
