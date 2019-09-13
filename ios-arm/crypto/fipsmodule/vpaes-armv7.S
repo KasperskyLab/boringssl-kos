@@ -1204,4 +1204,50 @@ Loop_dec_key_to_bsaes_last:
 
 	ldmia	sp!, {r11, pc}	@ return
 
+.globl	_vpaes_ctr32_encrypt_blocks
+.private_extern	_vpaes_ctr32_encrypt_blocks
+#ifdef __thumb2__
+.thumb_func	_vpaes_ctr32_encrypt_blocks
+#endif
+.align	4
+_vpaes_ctr32_encrypt_blocks:
+	mov	ip, sp
+	stmdb	sp!, {r7,r8,r9,r10,r11, lr}
+	@ This function uses q4-q7 (d8-d15), which are callee-saved.
+	vstmdb	sp!, {d8,d9,d10,d11,d12,d13,d14,d15}
+
+	cmp	r2, #0
+	@ r8 is passed on the stack.
+	ldr	r8, [ip]
+	beq	Lctr32_done
+
+	@ _vpaes_encrypt_core expects the key in r2, so swap r2 and r3.
+	mov	r9, r3
+	mov	r3, r2
+	mov	r2, r9
+
+	@ Load the IV and counter portion.
+	ldr	r7, [r8, #12]
+	vld1.8	{q7}, [r8]
+
+	bl	_vpaes_preheat
+	rev	r7, r7		@ The counter is big-endian.
+
+Lctr32_loop:
+	vmov	q0, q7
+	vld1.8	{q6}, [r0]!		@ Load input ahead of time
+	bl	_vpaes_encrypt_core
+	veor	q0, q0, q6		@ XOR input and result
+	vst1.8	{q0}, [r1]!
+	subs	r3, r3, #1
+	@ Update the counter.
+	add	r7, r7, #1
+	rev	r9, r7
+	vmov.32	d15[1], r9
+	bne	Lctr32_loop
+
+Lctr32_done:
+	vldmia	sp!, {d8,d9,d10,d11,d12,d13,d14,d15}
+	ldmia	sp!, {r7,r8,r9,r10,r11, pc}	@ return
+
 #endif  // !OPENSSL_NO_ASM
