@@ -110,14 +110,22 @@ static int aes_init_key(EVP_CIPHER_CTX *ctx, const uint8_t *key,
         dat->stream.cbc = aes_hw_cbc_encrypt;
       }
     } else if (bsaes_capable() && mode == EVP_CIPH_CBC_MODE) {
-      ret = aes_nohw_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
+      ret = vpaes_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
+      if (ret == 0) {
+        vpaes_decrypt_key_to_bsaes(&dat->ks.ks, &dat->ks.ks);
+      }
       // If |dat->stream.cbc| is provided, |dat->block| is never used.
       dat->block = NULL;
       dat->stream.cbc = bsaes_cbc_encrypt;
     } else if (vpaes_capable()) {
       ret = vpaes_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
       dat->block = vpaes_decrypt;
-      dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ? vpaes_cbc_encrypt : NULL;
+      dat->stream.cbc = NULL;
+#if defined(VPAES_CBC)
+      if (mode == EVP_CIPH_CBC_MODE) {
+        dat->stream.cbc = vpaes_cbc_encrypt;
+      }
+#endif
     } else {
       ret = aes_nohw_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
       dat->block = aes_nohw_decrypt;
@@ -146,9 +154,11 @@ static int aes_init_key(EVP_CIPHER_CTX *ctx, const uint8_t *key,
     ret = vpaes_set_encrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
     dat->block = vpaes_encrypt;
     dat->stream.cbc = NULL;
+#if defined(VPAES_CBC)
     if (mode == EVP_CIPH_CBC_MODE) {
       dat->stream.cbc = vpaes_cbc_encrypt;
     }
+#endif
 #if defined(VPAES_CTR32)
     if (mode == EVP_CIPH_CTR_MODE) {
       dat->stream.ctr = vpaes_ctr32_encrypt_blocks;
