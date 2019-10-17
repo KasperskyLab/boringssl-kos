@@ -232,3 +232,7 @@ crypto_test_data = [
     "src/third_party/wycheproof_testvectors/rsa_signature_test.txt",
     "src/third_party/wycheproof_testvectors/x25519_test.txt",
 ]
+
+urandom_test_sources = [
+    "src/crypto/fipsmodule/rand/urandom_test.cc",
+]
