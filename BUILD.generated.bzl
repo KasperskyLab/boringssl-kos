@@ -61,6 +61,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/modes/cfb.c",
     "src/crypto/fipsmodule/modes/ctr.c",
     "src/crypto/fipsmodule/modes/gcm.c",
+    "src/crypto/fipsmodule/modes/gcm_nohw.c",
     "src/crypto/fipsmodule/modes/ofb.c",
     "src/crypto/fipsmodule/modes/polyval.c",
     "src/crypto/fipsmodule/rand/ctrdrbg.c",
