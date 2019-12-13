@@ -54,6 +54,7 @@ test_support_sources = [
     "src/ssl/test/fuzzer.h",
     "src/ssl/test/fuzzer_tags.h",
     "src/ssl/test/handshake_util.h",
+    "src/ssl/test/mock_quic_transport.h",
     "src/ssl/test/packeted_bio.h",
     "src/ssl/test/settings_writer.h",
     "src/ssl/test/test_config.h",
