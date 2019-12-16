@@ -228,6 +228,7 @@ crypto_test_data = [
     "src/third_party/wycheproof_testvectors/hmac_sha512_test.txt",
     "src/third_party/wycheproof_testvectors/kw_test.txt",
     "src/third_party/wycheproof_testvectors/kwp_test.txt",
+    "src/third_party/wycheproof_testvectors/primality_test.txt",
     "src/third_party/wycheproof_testvectors/rsa_oaep_2048_sha1_mgf1sha1_test.txt",
     "src/third_party/wycheproof_testvectors/rsa_oaep_2048_sha224_mgf1sha1_test.txt",
     "src/third_party/wycheproof_testvectors/rsa_oaep_2048_sha224_mgf1sha224_test.txt",
