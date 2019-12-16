@@ -144,10 +144,10 @@ func convertWycheproof(f io.Writer, jsonPath string) error {
 
 	for _, group := range w.TestGroups {
 		for _, k := range sortedKeys(group) {
-			// Wycheproof files always include both keyPem and
-			// keyDer. Skip keyPem as they contain newlines. We
-			// process keyDer more easily.
-			if k == "type" || k == "tests" || k == "keyPem" {
+			// Wycheproof files include keys in multiple formats. Skip PEM and
+			// JWK formats. We process DER more easily. PEM has newlines and
+			// JWK is a JSON object.
+			if k == "type" || k == "tests" || strings.HasSuffix(k, "Pem") || strings.HasSuffix(k, "Jwk") || k == "jwk" {
 				continue
 			}
 			if err := printAttribute(f, k, group[k], true); err != nil {
@@ -225,6 +225,27 @@ var defaultInputs = []string{
 	"hmac_sha512_test.json",
 	"kw_test.json",
 	"kwp_test.json",
+	"rsa_oaep_2048_sha1_mgf1sha1_test.json",
+	"rsa_oaep_2048_sha224_mgf1sha1_test.json",
+	"rsa_oaep_2048_sha224_mgf1sha224_test.json",
+	"rsa_oaep_2048_sha256_mgf1sha1_test.json",
+	"rsa_oaep_2048_sha256_mgf1sha256_test.json",
+	"rsa_oaep_2048_sha384_mgf1sha1_test.json",
+	"rsa_oaep_2048_sha384_mgf1sha384_test.json",
+	"rsa_oaep_2048_sha512_mgf1sha1_test.json",
+	"rsa_oaep_2048_sha512_mgf1sha512_test.json",
+	"rsa_oaep_3072_sha256_mgf1sha1_test.json",
+	"rsa_oaep_3072_sha256_mgf1sha256_test.json",
+	"rsa_oaep_3072_sha512_mgf1sha1_test.json",
+	"rsa_oaep_3072_sha512_mgf1sha512_test.json",
+	"rsa_oaep_4096_sha256_mgf1sha1_test.json",
+	"rsa_oaep_4096_sha256_mgf1sha256_test.json",
+	"rsa_oaep_4096_sha512_mgf1sha1_test.json",
+	"rsa_oaep_4096_sha512_mgf1sha512_test.json",
+	"rsa_oaep_misc_test.json",
+	"rsa_pkcs1_2048_test.json",
+	"rsa_pkcs1_3072_test.json",
+	"rsa_pkcs1_4096_test.json",
 	"rsa_pss_2048_sha1_mgf1_20_test.json",
 	"rsa_pss_2048_sha256_mgf1_0_test.json",
 	"rsa_pss_2048_sha256_mgf1_32_test.json",
@@ -232,6 +253,16 @@ var defaultInputs = []string{
 	"rsa_pss_4096_sha256_mgf1_32_test.json",
 	"rsa_pss_4096_sha512_mgf1_32_test.json",
 	"rsa_pss_misc_test.json",
+	"rsa_sig_gen_misc_test.json",
+	"rsa_signature_2048_sha224_test.json",
+	"rsa_signature_2048_sha256_test.json",
+	"rsa_signature_2048_sha384_test.json",
+	"rsa_signature_2048_sha512_test.json",
+	"rsa_signature_3072_sha256_test.json",
+	"rsa_signature_3072_sha384_test.json",
+	"rsa_signature_3072_sha512_test.json",
+	"rsa_signature_4096_sha384_test.json",
+	"rsa_signature_4096_sha512_test.json",
 	"rsa_signature_test.json",
 	"x25519_test.json",
 	"xchacha20_poly1305_test.json",

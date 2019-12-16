@@ -94,6 +94,27 @@ set(
   third_party/wycheproof_testvectors/hmac_sha512_test.txt
   third_party/wycheproof_testvectors/kwp_test.txt
   third_party/wycheproof_testvectors/kw_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha1_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha224_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha224_mgf1sha224_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha256_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha256_mgf1sha256_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha384_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha384_mgf1sha384_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha512_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_2048_sha512_mgf1sha512_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_3072_sha256_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_3072_sha256_mgf1sha256_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_3072_sha512_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_3072_sha512_mgf1sha512_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_4096_sha256_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_4096_sha256_mgf1sha256_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_4096_sha512_mgf1sha1_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_4096_sha512_mgf1sha512_test.txt
+  third_party/wycheproof_testvectors/rsa_oaep_misc_test.txt
+  third_party/wycheproof_testvectors/rsa_pkcs1_2048_test.txt
+  third_party/wycheproof_testvectors/rsa_pkcs1_3072_test.txt
+  third_party/wycheproof_testvectors/rsa_pkcs1_4096_test.txt
   third_party/wycheproof_testvectors/rsa_pss_2048_sha1_mgf1_20_test.txt
   third_party/wycheproof_testvectors/rsa_pss_2048_sha256_mgf1_0_test.txt
   third_party/wycheproof_testvectors/rsa_pss_2048_sha256_mgf1_32_test.txt
@@ -101,6 +122,16 @@ set(
   third_party/wycheproof_testvectors/rsa_pss_4096_sha256_mgf1_32_test.txt
   third_party/wycheproof_testvectors/rsa_pss_4096_sha512_mgf1_32_test.txt
   third_party/wycheproof_testvectors/rsa_pss_misc_test.txt
+  third_party/wycheproof_testvectors/rsa_sig_gen_misc_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_2048_sha224_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_2048_sha256_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_2048_sha384_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_2048_sha512_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_3072_sha256_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_3072_sha384_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_3072_sha512_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_4096_sha384_test.txt
+  third_party/wycheproof_testvectors/rsa_signature_4096_sha512_test.txt
   third_party/wycheproof_testvectors/rsa_signature_test.txt
   third_party/wycheproof_testvectors/x25519_test.txt
   third_party/wycheproof_testvectors/xchacha20_poly1305_test.txt
