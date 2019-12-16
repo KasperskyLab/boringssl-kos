@@ -221,6 +221,11 @@ crypto_test_data = [
     "src/third_party/wycheproof_testvectors/hkdf_sha256_test.txt",
     "src/third_party/wycheproof_testvectors/hkdf_sha384_test.txt",
     "src/third_party/wycheproof_testvectors/hkdf_sha512_test.txt",
+    "src/third_party/wycheproof_testvectors/hmac_sha1_test.txt",
+    "src/third_party/wycheproof_testvectors/hmac_sha224_test.txt",
+    "src/third_party/wycheproof_testvectors/hmac_sha256_test.txt",
+    "src/third_party/wycheproof_testvectors/hmac_sha384_test.txt",
+    "src/third_party/wycheproof_testvectors/hmac_sha512_test.txt",
     "src/third_party/wycheproof_testvectors/kw_test.txt",
     "src/third_party/wycheproof_testvectors/kwp_test.txt",
     "src/third_party/wycheproof_testvectors/rsa_pss_2048_sha1_mgf1_20_test.txt",
@@ -232,6 +237,7 @@ crypto_test_data = [
     "src/third_party/wycheproof_testvectors/rsa_pss_misc_test.txt",
     "src/third_party/wycheproof_testvectors/rsa_signature_test.txt",
     "src/third_party/wycheproof_testvectors/x25519_test.txt",
+    "src/third_party/wycheproof_testvectors/xchacha20_poly1305_test.txt",
 ]
 
 urandom_test_sources = [

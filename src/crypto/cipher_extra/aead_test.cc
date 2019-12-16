@@ -728,8 +728,8 @@ static void RunWycheproofTestCase(FileTest *t, const EVP_AEAD *aead) {
   size_t out_len;
   // Wycheproof tags small AES-GCM IVs as "acceptable" and otherwise does not
   // use it in AEADs. Any AES-GCM IV that isn't 96 bits is absurd, but our API
-  // supports those, so we treat "acceptable" as "valid" here.
-  if (result != WycheproofResult::kInvalid) {
+  // supports those, so we treat SmallIv tests as valid.
+  if (result.IsValid({"SmallIv"})) {
     // Decryption should succeed.
     ASSERT_TRUE(EVP_AEAD_CTX_open(ctx.get(), out.data(), &out_len, out.size(),
                                   iv.data(), iv.size(), ct_and_tag.data(),
@@ -822,4 +822,13 @@ TEST(AEADTest, WycheproofChaCha20Poly1305) {
     t->IgnoreInstruction("keySize");
     RunWycheproofTestCase(t, EVP_aead_chacha20_poly1305());
   });
+}
+
+TEST(AEADTest, WycheproofXChaCha20Poly1305) {
+  FileTestGTest(
+      "third_party/wycheproof_testvectors/xchacha20_poly1305_test.txt",
+      [](FileTest *t) {
+        t->IgnoreInstruction("keySize");
+        RunWycheproofTestCase(t, EVP_aead_xchacha20_poly1305());
+      });
 }

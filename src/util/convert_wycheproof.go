@@ -174,12 +174,15 @@ func convertWycheproof(f io.Writer, jsonPath string) error {
 					return err
 				}
 			}
-			if flags, ok := test["flags"]; ok {
-				for _, flag := range flags.([]interface{}) {
-					if note, ok := w.Notes[flag.(string)]; ok {
-						if err := printComment(f, note); err != nil {
-							return err
-						}
+			if flagsI, ok := test["flags"]; ok {
+				var flags []string
+				for _, flagI := range flagsI.([]interface{}) {
+					flag := flagI.(string)
+					flags = append(flags, flag)
+				}
+				if len(flags) != 0 {
+					if err := printAttribute(f, "flags", strings.Join(flags, ","), false); err != nil {
+						return err
 					}
 				}
 			}
@@ -215,6 +218,11 @@ var defaultInputs = []string{
 	"hkdf_sha256_test.json",
 	"hkdf_sha384_test.json",
 	"hkdf_sha512_test.json",
+	"hmac_sha1_test.json",
+	"hmac_sha224_test.json",
+	"hmac_sha256_test.json",
+	"hmac_sha384_test.json",
+	"hmac_sha512_test.json",
 	"kw_test.json",
 	"kwp_test.json",
 	"rsa_pss_2048_sha1_mgf1_20_test.json",
@@ -226,6 +234,7 @@ var defaultInputs = []string{
 	"rsa_pss_misc_test.json",
 	"rsa_signature_test.json",
 	"x25519_test.json",
+	"xchacha20_poly1305_test.json",
 }
 
 func main() {
