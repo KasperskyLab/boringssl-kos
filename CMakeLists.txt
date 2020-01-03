@@ -128,6 +128,7 @@ set(
   CRYPTO_ios_arm_SOURCES
 
   ios-arm/crypto/chacha/chacha-armv4.S
+  ios-arm/crypto/fipsmodule/aes-armv4.S
   ios-arm/crypto/fipsmodule/aesv8-armx32.S
   ios-arm/crypto/fipsmodule/armv4-mont.S
   ios-arm/crypto/fipsmodule/bsaes-armv7.S
@@ -159,6 +160,7 @@ set(
   CRYPTO_linux_arm_SOURCES
 
   linux-arm/crypto/chacha/chacha-armv4.S
+  linux-arm/crypto/fipsmodule/aes-armv4.S
   linux-arm/crypto/fipsmodule/aesv8-armx32.S
   linux-arm/crypto/fipsmodule/armv4-mont.S
   linux-arm/crypto/fipsmodule/bsaes-armv7.S
@@ -185,6 +187,7 @@ set(
   CRYPTO_linux_x86_SOURCES
 
   linux-x86/crypto/chacha/chacha-x86.S
+  linux-x86/crypto/fipsmodule/aes-586.S
   linux-x86/crypto/fipsmodule/aesni-x86.S
   linux-x86/crypto/fipsmodule/bn-586.S
   linux-x86/crypto/fipsmodule/co-586.S
@@ -205,6 +208,7 @@ set(
   linux-x86_64/crypto/chacha/chacha-x86_64.S
   linux-x86_64/crypto/cipher_extra/aes128gcmsiv-x86_64.S
   linux-x86_64/crypto/cipher_extra/chacha20_poly1305_x86_64.S
+  linux-x86_64/crypto/fipsmodule/aes-x86_64.S
   linux-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.S
   linux-x86_64/crypto/fipsmodule/aesni-x86_64.S
   linux-x86_64/crypto/fipsmodule/ghash-ssse3-x86_64.S
@@ -228,6 +232,7 @@ set(
   CRYPTO_mac_x86_SOURCES
 
   mac-x86/crypto/chacha/chacha-x86.S
+  mac-x86/crypto/fipsmodule/aes-586.S
   mac-x86/crypto/fipsmodule/aesni-x86.S
   mac-x86/crypto/fipsmodule/bn-586.S
   mac-x86/crypto/fipsmodule/co-586.S
@@ -248,6 +253,7 @@ set(
   mac-x86_64/crypto/chacha/chacha-x86_64.S
   mac-x86_64/crypto/cipher_extra/aes128gcmsiv-x86_64.S
   mac-x86_64/crypto/cipher_extra/chacha20_poly1305_x86_64.S
+  mac-x86_64/crypto/fipsmodule/aes-x86_64.S
   mac-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.S
   mac-x86_64/crypto/fipsmodule/aesni-x86_64.S
   mac-x86_64/crypto/fipsmodule/ghash-ssse3-x86_64.S
@@ -270,6 +276,7 @@ set(
   CRYPTO_win_x86_SOURCES
 
   win-x86/crypto/chacha/chacha-x86.asm
+  win-x86/crypto/fipsmodule/aes-586.asm
   win-x86/crypto/fipsmodule/aesni-x86.asm
   win-x86/crypto/fipsmodule/bn-586.asm
   win-x86/crypto/fipsmodule/co-586.asm
@@ -290,6 +297,7 @@ set(
   win-x86_64/crypto/chacha/chacha-x86_64.asm
   win-x86_64/crypto/cipher_extra/aes128gcmsiv-x86_64.asm
   win-x86_64/crypto/cipher_extra/chacha20_poly1305_x86_64.asm
+  win-x86_64/crypto/fipsmodule/aes-x86_64.asm
   win-x86_64/crypto/fipsmodule/aesni-gcm-x86_64.asm
   win-x86_64/crypto/fipsmodule/aesni-x86_64.asm
   win-x86_64/crypto/fipsmodule/ghash-ssse3-x86_64.asm
