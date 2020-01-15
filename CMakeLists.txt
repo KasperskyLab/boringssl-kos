@@ -107,6 +107,20 @@ if(NOT OPENSSL_NO_ASM)
   endif()
 endif()
 
+# CMake's iOS support uses Apple's multiple-architecture toolchain. It takes an
+# architecture list from CMAKE_OSX_ARCHITECTURES, leaves CMAKE_SYSTEM_PROCESSOR
+# alone, and expects all architecture-specific logic to be conditioned within
+# the source files rather than the build. This does not work for our assembly
+# files, so we fix CMAKE_SYSTEM_PROCESSOR and only support single-architecture
+# builds.
+if(NOT OPENSSL_NO_ASM AND CMAKE_OSX_ARCHITECTURES)
+  list(LENGTH CMAKE_OSX_ARCHITECTURES NUM_ARCHES)
+  if(NOT ${NUM_ARCHES} EQUAL 1)
+    message(FATAL_ERROR "Universal binaries not supported.")
+  endif()
+  list(GET CMAKE_OSX_ARCHITECTURES 0 CMAKE_SYSTEM_PROCESSOR)
+endif()
+
 include_directories(src/include)
 
 set(
@@ -615,5 +629,9 @@ add_executable(
   src/tool/transport_common.cc
 )
 
-target_link_libraries(bssl ssl crypto -lpthread)
+target_link_libraries(bssl ssl crypto)
+
+if(NOT MSVC AND NOT ANDROID)
+  target_link_libraries(crypto pthread)
+endif()
 
