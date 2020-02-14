@@ -24,6 +24,7 @@ test_support_sources = [
     "src/crypto/fipsmodule/ec/p256-x86_64.h",
     "src/crypto/fipsmodule/md5/internal.h",
     "src/crypto/fipsmodule/modes/internal.h",
+    "src/crypto/fipsmodule/rand/getrandom_fillin.h",
     "src/crypto/fipsmodule/rand/internal.h",
     "src/crypto/fipsmodule/rsa/internal.h",
     "src/crypto/fipsmodule/sha/internal.h",
