@@ -490,6 +490,7 @@ add_library(
   src/crypto/thread_none.c
   src/crypto/thread_pthread.c
   src/crypto/thread_win.c
+  src/crypto/trust_token/privacy_pass.c
   src/crypto/x509/a_digest.c
   src/crypto/x509/a_sign.c
   src/crypto/x509/a_strex.c
