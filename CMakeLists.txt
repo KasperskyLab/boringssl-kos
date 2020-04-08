@@ -426,6 +426,7 @@ add_library(
   src/crypto/dsa/dsa_asn1.c
   src/crypto/ec_extra/ec_asn1.c
   src/crypto/ec_extra/ec_derive.c
+  src/crypto/ec_extra/hash_to_curve.c
   src/crypto/ecdh_extra/ecdh_extra.c
   src/crypto/ecdsa_extra/ecdsa_asn1.c
   src/crypto/engine/engine.c
