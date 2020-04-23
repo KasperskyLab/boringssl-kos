@@ -9,6 +9,8 @@ test_support_sources = [
     "src/crypto/conf/conf_def.h",
     "src/crypto/conf/internal.h",
     "src/crypto/cpu-arm-linux.h",
+    "src/crypto/curve25519/curve25519_tables.h",
+    "src/crypto/curve25519/internal.h",
     "src/crypto/ec_extra/internal.h",
     "src/crypto/err/internal.h",
     "src/crypto/evp/internal.h",
@@ -64,8 +66,6 @@ test_support_sources = [
     "src/ssl/test/test_state.h",
     "src/third_party/fiat/curve25519_32.h",
     "src/third_party/fiat/curve25519_64.h",
-    "src/third_party/fiat/curve25519_tables.h",
-    "src/third_party/fiat/internal.h",
     "src/third_party/fiat/p256_32.h",
     "src/third_party/fiat/p256_64.h",
 ]

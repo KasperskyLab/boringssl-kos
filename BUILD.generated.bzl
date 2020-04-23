@@ -48,6 +48,7 @@ fips_fragments = [
     "src/crypto/fipsmodule/ec/oct.c",
     "src/crypto/fipsmodule/ec/p224-64.c",
     "src/crypto/fipsmodule/ec/p256-x86_64.c",
+    "src/crypto/fipsmodule/ec/p256.c",
     "src/crypto/fipsmodule/ec/scalar.c",
     "src/crypto/fipsmodule/ec/simple.c",
     "src/crypto/fipsmodule/ec/simple_mul.c",
@@ -78,7 +79,6 @@ fips_fragments = [
     "src/crypto/fipsmodule/sha/sha256.c",
     "src/crypto/fipsmodule/sha/sha512.c",
     "src/crypto/fipsmodule/tls/kdf.c",
-    "src/third_party/fiat/p256.c",
 ]
 
 ssl_internal_headers = [
@@ -207,6 +207,8 @@ crypto_internal_headers = [
     "src/crypto/conf/conf_def.h",
     "src/crypto/conf/internal.h",
     "src/crypto/cpu-arm-linux.h",
+    "src/crypto/curve25519/curve25519_tables.h",
+    "src/crypto/curve25519/internal.h",
     "src/crypto/ec_extra/internal.h",
     "src/crypto/err/internal.h",
     "src/crypto/evp/internal.h",
@@ -244,8 +246,6 @@ crypto_internal_headers = [
     "src/crypto/x509v3/pcy_int.h",
     "src/third_party/fiat/curve25519_32.h",
     "src/third_party/fiat/curve25519_64.h",
-    "src/third_party/fiat/curve25519_tables.h",
-    "src/third_party/fiat/internal.h",
     "src/third_party/fiat/p256_32.h",
     "src/third_party/fiat/p256_64.h",
 ]
@@ -322,6 +322,7 @@ crypto_sources = [
     "src/crypto/cpu-intel.c",
     "src/crypto/cpu-ppc64le.c",
     "src/crypto/crypto.c",
+    "src/crypto/curve25519/curve25519.c",
     "src/crypto/curve25519/spake25519.c",
     "src/crypto/dh/check.c",
     "src/crypto/dh/dh.c",
@@ -481,7 +482,6 @@ crypto_sources = [
     "src/crypto/x509v3/v3_skey.c",
     "src/crypto/x509v3/v3_sxnet.c",
     "src/crypto/x509v3/v3_utl.c",
-    "src/third_party/fiat/curve25519.c",
 ]
 
 tool_sources = [

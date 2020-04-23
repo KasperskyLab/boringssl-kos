@@ -416,6 +416,7 @@ add_library(
   src/crypto/cpu-intel.c
   src/crypto/cpu-ppc64le.c
   src/crypto/crypto.c
+  src/crypto/curve25519/curve25519.c
   src/crypto/curve25519/spake25519.c
   src/crypto/dh/check.c
   src/crypto/dh/dh.c
@@ -575,7 +576,6 @@ add_library(
   src/crypto/x509v3/v3_skey.c
   src/crypto/x509v3/v3_sxnet.c
   src/crypto/x509v3/v3_utl.c
-  src/third_party/fiat/curve25519.c
 )
 
 add_library(
