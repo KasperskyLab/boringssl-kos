@@ -68,7 +68,7 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "amd64")
   set(ARCH "x86_64")
 elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
   # cmake reports AMD64 on Windows, but we might be building for 32-bit.
-  if(CMAKE_CL_64)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(ARCH "x86_64")
   else()
     set(ARCH "x86")
@@ -288,6 +288,21 @@ set(
 )
 
 set(
+  CRYPTO_win_aarch64_SOURCES
+
+  win-aarch64/crypto/chacha/chacha-armv8.S
+  win-aarch64/crypto/fipsmodule/aesv8-armx64.S
+  win-aarch64/crypto/fipsmodule/armv8-mont.S
+  win-aarch64/crypto/fipsmodule/ghash-neon-armv8.S
+  win-aarch64/crypto/fipsmodule/ghashv8-armx64.S
+  win-aarch64/crypto/fipsmodule/sha1-armv8.S
+  win-aarch64/crypto/fipsmodule/sha256-armv8.S
+  win-aarch64/crypto/fipsmodule/sha512-armv8.S
+  win-aarch64/crypto/fipsmodule/vpaes-armv8.S
+  win-aarch64/crypto/test/trampoline-armv8.S
+)
+
+set(
   CRYPTO_win_x86_SOURCES
 
   win-x86/crypto/chacha/chacha-x86.asm
@@ -411,6 +426,7 @@ add_library(
   src/crypto/conf/conf.c
   src/crypto/cpu-aarch64-fuchsia.c
   src/crypto/cpu-aarch64-linux.c
+  src/crypto/cpu-aarch64-win.c
   src/crypto/cpu-arm-linux.c
   src/crypto/cpu-arm.c
   src/crypto/cpu-intel.c
@@ -418,10 +434,8 @@ add_library(
   src/crypto/crypto.c
   src/crypto/curve25519/curve25519.c
   src/crypto/curve25519/spake25519.c
-  src/crypto/dh/check.c
-  src/crypto/dh/dh.c
-  src/crypto/dh/dh_asn1.c
-  src/crypto/dh/params.c
+  src/crypto/dh_extra/dh_asn1.c
+  src/crypto/dh_extra/params.c
   src/crypto/digest_extra/digest_extra.c
   src/crypto/dsa/dsa.c
   src/crypto/dsa/dsa_asn1.c
@@ -454,6 +468,7 @@ add_library(
   src/crypto/fipsmodule/fips_shared_support.c
   src/crypto/fipsmodule/is_fips.c
   src/crypto/hkdf/hkdf.c
+  src/crypto/hpke/hpke.c
   src/crypto/hrss/hrss.c
   src/crypto/lhash/lhash.c
   src/crypto/mem.c
@@ -479,6 +494,7 @@ add_library(
   src/crypto/rand_extra/deterministic.c
   src/crypto/rand_extra/forkunsafe.c
   src/crypto/rand_extra/fuchsia.c
+  src/crypto/rand_extra/passive.c
   src/crypto/rand_extra/rand_extra.c
   src/crypto/rand_extra/windows.c
   src/crypto/rc4/rc4.c
@@ -494,6 +510,7 @@ add_library(
   src/crypto/thread_win.c
   src/crypto/trust_token/pmbtoken.c
   src/crypto/trust_token/trust_token.c
+  src/crypto/trust_token/voprf.c
   src/crypto/x509/a_digest.c
   src/crypto/x509/a_sign.c
   src/crypto/x509/a_strex.c
@@ -569,12 +586,10 @@ add_library(
   src/crypto/x509v3/v3_pci.c
   src/crypto/x509v3/v3_pcia.c
   src/crypto/x509v3/v3_pcons.c
-  src/crypto/x509v3/v3_pku.c
   src/crypto/x509v3/v3_pmaps.c
   src/crypto/x509v3/v3_prn.c
   src/crypto/x509v3/v3_purp.c
   src/crypto/x509v3/v3_skey.c
-  src/crypto/x509v3/v3_sxnet.c
   src/crypto/x509v3/v3_utl.c
 )
 
@@ -627,6 +642,7 @@ add_executable(
   src/tool/client.cc
   src/tool/const.cc
   src/tool/digest.cc
+  src/tool/fd.cc
   src/tool/file.cc
   src/tool/generate_ed25519.cc
   src/tool/genrsa.cc
@@ -641,7 +657,11 @@ add_executable(
 
 target_link_libraries(bssl ssl crypto)
 
-if(NOT MSVC AND NOT ANDROID)
+if(NOT WIN32 AND NOT ANDROID)
   target_link_libraries(crypto pthread)
+endif()
+
+if(WIN32)
+  target_link_libraries(bssl ws2_32)
 endif()
 
