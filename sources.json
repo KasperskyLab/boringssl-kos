@@ -45,6 +45,7 @@
     "src/crypto/bio/printf.c", 
     "src/crypto/bio/socket.c", 
     "src/crypto/bio/socket_helper.c", 
+    "src/crypto/blake2/blake2.c", 
     "src/crypto/bn_extra/bn_asn1.c", 
     "src/crypto/bn_extra/convert.c", 
     "src/crypto/buf/buf.c", 
@@ -245,6 +246,7 @@
     "src/include/openssl/base.h", 
     "src/include/openssl/base64.h", 
     "src/include/openssl/bio.h", 
+    "src/include/openssl/blake2.h", 
     "src/include/openssl/blowfish.h", 
     "src/include/openssl/bn.h", 
     "src/include/openssl/buf.h", 
@@ -499,6 +501,7 @@
     "src/crypto/asn1/asn1_test.cc", 
     "src/crypto/base64/base64_test.cc", 
     "src/crypto/bio/bio_test.cc", 
+    "src/crypto/blake2/blake2_test.cc", 
     "src/crypto/buf/buf_test.cc", 
     "src/crypto/bytestring/bytestring_test.cc", 
     "src/crypto/chacha/chacha_test.cc", 
@@ -561,6 +564,7 @@
     "src/crypto/x509v3/v3name_test.cc"
   ], 
   "crypto_test_data": [
+    "src/crypto/blake2/blake2b256_tests.txt", 
     "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_implicit_iv_tests.txt", 
     "src/crypto/cipher_extra/test/aes_128_cbc_sha1_tls_tests.txt", 
     "src/crypto/cipher_extra/test/aes_128_cbc_sha256_tls_tests.txt", 

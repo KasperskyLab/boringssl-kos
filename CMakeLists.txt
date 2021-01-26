@@ -402,6 +402,7 @@ add_library(
   src/crypto/bio/printf.c
   src/crypto/bio/socket.c
   src/crypto/bio/socket_helper.c
+  src/crypto/blake2/blake2.c
   src/crypto/bn_extra/bn_asn1.c
   src/crypto/bn_extra/convert.c
   src/crypto/buf/buf.c
