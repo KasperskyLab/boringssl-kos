@@ -27,6 +27,7 @@ test_support_sources = [
     "src/crypto/fipsmodule/ec/p256-x86_64-table.h",
     "src/crypto/fipsmodule/ec/p256-x86_64.h",
     "src/crypto/fipsmodule/ec/p256_table.h",
+    "src/crypto/fipsmodule/ecdsa/internal.h",
     "src/crypto/fipsmodule/md5/internal.h",
     "src/crypto/fipsmodule/modes/internal.h",
     "src/crypto/fipsmodule/rand/fork_detect.h",
