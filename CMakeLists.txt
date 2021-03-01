@@ -534,7 +534,6 @@ add_library(
   src/crypto/x509/x509_ext.c
   src/crypto/x509/x509_lu.c
   src/crypto/x509/x509_obj.c
-  src/crypto/x509/x509_r2x.c
   src/crypto/x509/x509_req.c
   src/crypto/x509/x509_set.c
   src/crypto/x509/x509_trs.c
