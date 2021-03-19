@@ -164,6 +164,7 @@ crypto_headers = [
     "src/include/openssl/engine.h",
     "src/include/openssl/err.h",
     "src/include/openssl/evp.h",
+    "src/include/openssl/evp_errors.h",
     "src/include/openssl/ex_data.h",
     "src/include/openssl/hkdf.h",
     "src/include/openssl/hmac.h",
