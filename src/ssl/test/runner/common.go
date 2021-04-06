@@ -74,7 +74,6 @@ const (
 	typeHelloVerifyRequest    uint8 = 3
 	typeNewSessionTicket      uint8 = 4
 	typeEndOfEarlyData        uint8 = 5
-	typeHelloRetryRequest     uint8 = 6
 	typeEncryptedExtensions   uint8 = 8
 	typeCertificate           uint8 = 11
 	typeServerKeyExchange     uint8 = 12
@@ -288,7 +287,7 @@ type ClientSessionState struct {
 	sessionTicket            []uint8             // Encrypted ticket used for session resumption with server
 	vers                     uint16              // SSL/TLS version negotiated for the session
 	wireVersion              uint16              // Wire SSL/TLS version negotiated for the session
-	cipherSuite              uint16              // Ciphersuite negotiated for the session
+	cipherSuite              *cipherSuite        // Ciphersuite negotiated for the session
 	secret                   []byte              // Secret associated with the session
 	handshakeHash            []byte              // Handshake hash for Channel ID purposes.
 	serverCertificates       []*x509.Certificate // Certificate chain presented by the server
@@ -1669,10 +1668,6 @@ type ProtocolBugs struct {
 	// to use when signing in TLS 1.1 and earlier where algorithms are not
 	// negotiated.
 	UseLegacySigningAlgorithm signatureAlgorithm
-
-	// SendServerHelloAsHelloRetryRequest, if true, causes the server to
-	// send ServerHello messages with a HelloRetryRequest type field.
-	SendServerHelloAsHelloRetryRequest bool
 
 	// RejectUnsolicitedKeyUpdate, if true, causes all unsolicited
 	// KeyUpdates from the peer to be rejected.

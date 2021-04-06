@@ -338,7 +338,7 @@ NextCipherSuite:
 			cipherSuiteOk := false
 			if candidateSession.vers <= VersionTLS12 {
 				for _, id := range hello.cipherSuites {
-					if id == candidateSession.cipherSuite {
+					if id == candidateSession.cipherSuite.id {
 						cipherSuiteOk = true
 						break
 					}
@@ -357,7 +357,6 @@ NextCipherSuite:
 		}
 	}
 
-	var pskCipherSuite *cipherSuite
 	if session != nil && c.config.time().Before(session.ticketExpiration) {
 		ticket := session.sessionTicket
 		if c.config.Bugs.FilterTicket != nil && len(ticket) > 0 {
@@ -372,10 +371,6 @@ NextCipherSuite:
 		}
 
 		if session.vers >= VersionTLS13 || c.config.Bugs.SendBothTickets {
-			pskCipherSuite = cipherSuiteFromID(session.cipherSuite)
-			if pskCipherSuite == nil {
-				return errors.New("tls: client session cache has invalid cipher suite")
-			}
 			// TODO(nharper): Support sending more
 			// than one PSK identity.
 			ticketAge := uint32(c.config.time().Sub(session.ticketCreationTime) / time.Millisecond)
@@ -472,7 +467,7 @@ NextCipherSuite:
 			if session.vers < VersionTLS13 {
 				version = VersionTLS13
 			}
-			generatePSKBinders(version, hello, pskCipherSuite, session.secret, []byte{}, []byte{}, c.config)
+			generatePSKBinders(version, hello, session, []byte{}, []byte{}, c.config)
 		}
 		if c.config.Bugs.SendClientHelloWithFixes != nil {
 			helloBytes, err = fixClientHellos(hello, c.config.Bugs.SendClientHelloWithFixes)
@@ -513,7 +508,7 @@ NextCipherSuite:
 
 	// Derive early write keys and set Conn state to allow early writes.
 	if sendEarlyData {
-		finishedHash := newFinishedHash(session.wireVersion, c.isDTLS, pskCipherSuite)
+		finishedHash := newFinishedHash(session.wireVersion, c.isDTLS, session.cipherSuite)
 		finishedHash.addEntropy(session.secret)
 		finishedHash.Write(helloBytes)
 
@@ -528,7 +523,7 @@ NextCipherSuite:
 		earlyTrafficSecret := finishedHash.deriveSecret(earlyTrafficLabel)
 		c.earlyExporterSecret = finishedHash.deriveSecret(earlyExporterLabel)
 
-		c.useOutTrafficSecret(encryptionEarlyData, session.wireVersion, pskCipherSuite, earlyTrafficSecret)
+		c.useOutTrafficSecret(encryptionEarlyData, session.wireVersion, session.cipherSuite, earlyTrafficSecret)
 		for _, earlyData := range c.config.Bugs.SendEarlyData {
 			if _, err := c.writeRecord(recordTypeApplicationData, earlyData); err != nil {
 				return err
@@ -657,7 +652,7 @@ NextCipherSuite:
 		hello.raw = nil
 
 		if len(hello.pskIdentities) > 0 {
-			generatePSKBinders(c.wireVersion, hello, pskCipherSuite, session.secret, helloBytes, helloRetryRequest.marshal(), c.config)
+			generatePSKBinders(c.wireVersion, hello, session, helloBytes, helloRetryRequest.marshal(), c.config)
 		}
 		secondHelloBytes = hello.marshal()
 		secondHelloBytesToWrite := secondHelloBytes
@@ -754,7 +749,7 @@ NextCipherSuite:
 		session:      session,
 	}
 
-	hs.writeHash(helloBytes, hs.c.sendHandshakeSeq-1)
+	hs.finishedHash.WriteHandshake(helloBytes, hs.c.sendHandshakeSeq-1)
 	if haveHelloRetryRequest {
 		err = hs.finishedHash.UpdateForHelloRetryRequest()
 		if err != nil {
@@ -874,8 +869,7 @@ func (hs *clientHandshakeState) doTLS13Handshake() error {
 			c.sendAlert(alertUnknownPSKIdentity)
 			return errors.New("tls: server sent unknown PSK identity")
 		}
-		sessionCipher := cipherSuiteFromID(hs.session.cipherSuite)
-		if sessionCipher == nil || sessionCipher.hash() != hs.suite.hash() {
+		if hs.session.cipherSuite.hash() != hs.suite.hash() {
 			c.sendAlert(alertHandshakeFailure)
 			return errors.New("tls: server resumed an invalid session for the cipher suite")
 		}
@@ -1890,7 +1884,7 @@ func (hs *clientHandshakeState) readSessionTicket() error {
 	session := &ClientSessionState{
 		vers:               c.vers,
 		wireVersion:        c.wireVersion,
-		cipherSuite:        hs.suite.id,
+		cipherSuite:        hs.suite,
 		secret:             hs.masterSecret,
 		handshakeHash:      hs.finishedHash.Sum(),
 		serverCertificates: c.peerCertificates,
@@ -1948,7 +1942,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 		c.clientProtocolFallback = fallback
 
 		nextProtoBytes := nextProto.marshal()
-		hs.writeHash(nextProtoBytes, seqno)
+		hs.finishedHash.WriteHandshake(nextProtoBytes, seqno)
 		seqno++
 		postCCSMsgs = append(postCCSMsgs, nextProtoBytes)
 	}
@@ -1962,7 +1956,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 		if err != nil {
 			return err
 		}
-		hs.writeHash(channelIDMsgBytes, seqno)
+		hs.finishedHash.WriteHandshake(channelIDMsgBytes, seqno)
 		seqno++
 		postCCSMsgs = append(postCCSMsgs, channelIDMsgBytes)
 	}
@@ -1979,7 +1973,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte, isResume bool) error {
 	}
 	c.clientVerify = append(c.clientVerify[:0], finished.verifyData...)
 	hs.finishedBytes = finished.marshal()
-	hs.writeHash(hs.finishedBytes, seqno)
+	hs.finishedHash.WriteHandshake(hs.finishedBytes, seqno)
 	if c.config.Bugs.PartialClientFinishedWithClientHello {
 		// The first byte has already been written.
 		postCCSMsgs = append(postCCSMsgs, hs.finishedBytes[1:])
@@ -2055,28 +2049,12 @@ func (hs *clientHandshakeState) writeChannelIDMessage(channelIDHash []byte) ([]b
 
 func (hs *clientHandshakeState) writeClientHash(msg []byte) {
 	// writeClientHash is called before writeRecord.
-	hs.writeHash(msg, hs.c.sendHandshakeSeq)
+	hs.finishedHash.WriteHandshake(msg, hs.c.sendHandshakeSeq)
 }
 
 func (hs *clientHandshakeState) writeServerHash(msg []byte) {
 	// writeServerHash is called after readHandshake.
-	hs.writeHash(msg, hs.c.recvHandshakeSeq-1)
-}
-
-func (hs *clientHandshakeState) writeHash(msg []byte, seqno uint16) {
-	if hs.c.isDTLS {
-		// This is somewhat hacky. DTLS hashes a slightly different format.
-		// First, the TLS header.
-		hs.finishedHash.Write(msg[:4])
-		// Then the sequence number and reassembled fragment offset (always 0).
-		hs.finishedHash.Write([]byte{byte(seqno >> 8), byte(seqno), 0, 0, 0})
-		// Then the reassembled fragment (always equal to the message length).
-		hs.finishedHash.Write(msg[1:4])
-		// And then the message body.
-		hs.finishedHash.Write(msg[4:])
-	} else {
-		hs.finishedHash.Write(msg)
-	}
+	hs.finishedHash.WriteHandshake(msg, hs.c.recvHandshakeSeq-1)
 }
 
 // selectClientCertificate selects a certificate for use with the given
@@ -2131,9 +2109,9 @@ func writeIntPadded(b []byte, x *big.Int) {
 	copy(b[len(b)-len(xb):], xb)
 }
 
-func generatePSKBinders(version uint16, hello *clientHelloMsg, pskCipherSuite *cipherSuite, psk, firstClientHello, helloRetryRequest []byte, config *Config) {
+func generatePSKBinders(version uint16, hello *clientHelloMsg, session *ClientSessionState, firstClientHello, helloRetryRequest []byte, config *Config) {
 	maybeCorruptBinder := !config.Bugs.OnlyCorruptSecondPSKBinder || len(firstClientHello) > 0
-	binderLen := pskCipherSuite.hash().Size()
+	binderLen := session.cipherSuite.hash().Size()
 	numBinders := 1
 	if maybeCorruptBinder {
 		if config.Bugs.SendNoPSKBinder {
@@ -2163,7 +2141,7 @@ func generatePSKBinders(version uint16, hello *clientHelloMsg, pskCipherSuite *c
 	helloBytes := hello.marshal()
 	binderSize := len(hello.pskBinders)*(binderLen+1) + 2
 	truncatedHello := helloBytes[:len(helloBytes)-binderSize]
-	binder := computePSKBinder(psk, version, resumptionPSKBinderLabel, pskCipherSuite, firstClientHello, helloRetryRequest, truncatedHello)
+	binder := computePSKBinder(session.secret, version, resumptionPSKBinderLabel, session.cipherSuite, firstClientHello, helloRetryRequest, truncatedHello)
 	if maybeCorruptBinder {
 		if config.Bugs.SendShortPSKBinder {
 			binder = binder[:binderLen]
