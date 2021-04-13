@@ -2018,10 +2018,10 @@ bool ssl_ext_key_share_parse_serverhello(SSL_HANDSHAKE *hs,
                                          Array<uint8_t> *out_secret,
                                          uint8_t *out_alert, CBS *contents);
 bool ssl_ext_key_share_parse_clienthello(SSL_HANDSHAKE *hs, bool *out_found,
-                                         Array<uint8_t> *out_secret,
-                                         uint8_t *out_alert, CBS *contents);
-bool ssl_ext_key_share_add_serverhello(SSL_HANDSHAKE *hs, CBB *out,
-                                       bool dry_run);
+                                         Span<const uint8_t> *out_peer_key,
+                                         uint8_t *out_alert,
+                                         const SSL_CLIENT_HELLO *client_hello);
+bool ssl_ext_key_share_add_serverhello(SSL_HANDSHAKE *hs, CBB *out);
 
 bool ssl_ext_pre_shared_key_parse_serverhello(SSL_HANDSHAKE *hs,
                                               uint8_t *out_alert,
@@ -2051,6 +2051,9 @@ enum ssl_cert_verify_context_t {
 bool tls13_get_cert_verify_signature_input(
     SSL_HANDSHAKE *hs, Array<uint8_t> *out,
     enum ssl_cert_verify_context_t cert_verify_context);
+
+// ssl_is_valid_alpn_list returns whether |in| is a valid ALPN protocol list.
+bool ssl_is_valid_alpn_list(Span<const uint8_t> in);
 
 // ssl_is_alpn_protocol_allowed returns whether |protocol| is a valid server
 // selection for |hs->ssl|'s client preferences.
