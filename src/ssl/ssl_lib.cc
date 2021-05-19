@@ -1316,8 +1316,6 @@ const char *SSL_early_data_reason_string(enum ssl_early_data_reason_t reason) {
       return "alpn_mismatch";
     case ssl_early_data_channel_id:
       return "channel_id";
-    case ssl_early_data_token_binding:
-      return "token_binding";
     case ssl_early_data_ticket_age_skew:
       return "ticket_age_skew";
     case ssl_early_data_quic_parameter_mismatch:
@@ -1463,6 +1461,8 @@ const char *SSL_error_description(int err) {
       return "HANDOFF";
     case SSL_ERROR_HANDBACK:
       return "HANDBACK";
+    case SSL_ERROR_WANT_RENEGOTIATE:
+      return "WANT_RENEGOTIATE";
     case SSL_ERROR_HANDSHAKE_HINTS_READY:
       return "HANDSHAKE_HINTS_READY";
     default:
@@ -2463,25 +2463,6 @@ size_t SSL_get_tls_channel_id(SSL *ssl, uint8_t *out, size_t max_out) {
   }
   OPENSSL_memcpy(out, ssl->s3->channel_id, (max_out < 64) ? max_out : 64);
   return 64;
-}
-
-int SSL_set_token_binding_params(SSL *ssl, const uint8_t *params, size_t len) {
-  if (!ssl->config) {
-    return 0;
-  }
-  if (len > 256) {
-    OPENSSL_PUT_ERROR(SSL, ERR_R_OVERFLOW);
-    return 0;
-  }
-  return ssl->config->token_binding_params.CopyFrom(MakeConstSpan(params, len));
-}
-
-int SSL_is_token_binding_negotiated(const SSL *ssl) {
-  return ssl->s3->token_binding_negotiated;
-}
-
-uint8_t SSL_get_negotiated_token_binding_param(const SSL *ssl) {
-  return ssl->s3->negotiated_token_binding_param;
 }
 
 size_t SSL_get0_certificate_types(const SSL *ssl, const uint8_t **out_types) {
