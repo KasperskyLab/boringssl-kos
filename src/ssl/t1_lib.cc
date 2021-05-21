@@ -1720,7 +1720,8 @@ static void ext_srtp_init(SSL_HANDSHAKE *hs) {
 
 static bool ext_srtp_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
   SSL *const ssl = hs->ssl;
-  STACK_OF(SRTP_PROTECTION_PROFILE) *profiles = SSL_get_srtp_profiles(ssl);
+  const STACK_OF(SRTP_PROTECTION_PROFILE) *profiles =
+      SSL_get_srtp_profiles(ssl);
   if (profiles == NULL ||
       sk_SRTP_PROTECTION_PROFILE_num(profiles) == 0) {
     return true;
@@ -1776,11 +1777,8 @@ static bool ext_srtp_parse_serverhello(SSL_HANDSHAKE *hs, uint8_t *out_alert,
     return false;
   }
 
-  STACK_OF(SRTP_PROTECTION_PROFILE) *profiles = SSL_get_srtp_profiles(ssl);
-
-  // Check to see if the server gave us something we support (and presumably
-  // offered).
-  for (const SRTP_PROTECTION_PROFILE *profile : profiles) {
+  // Check to see if the server gave us something we support and offered.
+  for (const SRTP_PROTECTION_PROFILE *profile : SSL_get_srtp_profiles(ssl)) {
     if (profile->id == profile_id) {
       ssl->s3->srtp_profile = profile;
       return true;
@@ -2328,7 +2326,7 @@ static bool ext_key_share_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
       return CBB_flush(out);
     }
   } else {
-    // Add a fake group. See draft-davidben-tls-grease-01.
+    // Add a fake group. See RFC 8701.
     if (ssl->ctx->grease_enabled &&
         (!CBB_add_u16(&kse_bytes,
                       ssl_get_grease_value(hs, ssl_grease_group)) ||
@@ -2505,7 +2503,7 @@ static bool ext_supported_versions_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) 
     return false;
   }
 
-  // Add a fake version. See draft-davidben-tls-grease-01.
+  // Add a fake version. See RFC 8701.
   if (ssl->ctx->grease_enabled &&
       !CBB_add_u16(&versions, ssl_get_grease_value(hs, ssl_grease_version))) {
     return false;
@@ -2558,7 +2556,7 @@ static bool ext_supported_groups_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
     return false;
   }
 
-  // Add a fake group. See draft-davidben-tls-grease-01.
+  // Add a fake group. See RFC 8701.
   if (ssl->ctx->grease_enabled &&
       !CBB_add_u16(&groups_bytes,
                    ssl_get_grease_value(hs, ssl_grease_group))) {
@@ -3339,7 +3337,7 @@ bool ssl_add_clienthello_tlsext(SSL_HANDSHAKE *hs, CBB *out,
 
   uint16_t grease_ext1 = 0;
   if (ssl->ctx->grease_enabled) {
-    // Add a fake empty extension. See draft-davidben-tls-grease-01.
+    // Add a fake empty extension. See RFC 8701.
     grease_ext1 = ssl_get_grease_value(hs, ssl_grease_extension1);
     if (!CBB_add_u16(&extensions, grease_ext1) ||
         !CBB_add_u16(&extensions, 0 /* zero length */)) {
@@ -3367,7 +3365,7 @@ bool ssl_add_clienthello_tlsext(SSL_HANDSHAKE *hs, CBB *out,
   }
 
   if (ssl->ctx->grease_enabled) {
-    // Add a fake non-empty extension. See draft-davidben-tls-grease-01.
+    // Add a fake non-empty extension. See RFC 8701.
     uint16_t grease_ext2 = ssl_get_grease_value(hs, ssl_grease_extension2);
 
     // The two fake extensions must not have the same value. GREASE values are
