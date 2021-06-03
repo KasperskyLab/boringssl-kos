@@ -1557,7 +1557,6 @@ enum ssl_hs_wait_t {
   ssl_hs_handoff,
   ssl_hs_handback,
   ssl_hs_x509_lookup,
-  ssl_hs_channel_id_lookup,
   ssl_hs_private_key_operation,
   ssl_hs_pending_session,
   ssl_hs_pending_ticket,
@@ -1958,6 +1957,10 @@ struct SSL_HANDSHAKE {
   // in this handshake.
   bool can_release_private_key : 1;
 
+  // channel_id_negotiated is true if Channel ID should be used in this
+  // handshake.
+  bool channel_id_negotiated : 1;
+
   // client_version is the value sent or received in the ClientHello version.
   uint16_t client_version = 0;
 
@@ -2315,10 +2318,11 @@ struct SSL_PROTOCOL_METHOD {
   // init_message begins a new handshake message of type |type|. |cbb| is the
   // root CBB to be passed into |finish_message|. |*body| is set to a child CBB
   // the caller should write to. It returns true on success and false on error.
-  bool (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
+  bool (*init_message)(const SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
   // finish_message finishes a handshake message. It sets |*out_msg| to the
   // serialized message. It returns true on success and false on error.
-  bool (*finish_message)(SSL *ssl, CBB *cbb, bssl::Array<uint8_t> *out_msg);
+  bool (*finish_message)(const SSL *ssl, CBB *cbb,
+                         bssl::Array<uint8_t> *out_msg);
   // add_message adds a handshake message to the pending flight. It returns
   // true on success and false on error.
   bool (*add_message)(SSL *ssl, bssl::Array<uint8_t> msg);
@@ -2562,9 +2566,8 @@ struct SSL3_STATE {
 
   bool send_connection_binding : 1;
 
-  // In a client, this means that the server supported Channel ID and that a
-  // Channel ID was sent. In a server it means that we echoed support for
-  // Channel IDs and that |channel_id| will be valid after the handshake.
+  // channel_id_valid is true if, on the server, the client has negotiated a
+  // Channel ID and the |channel_id| field is filled in.
   bool channel_id_valid : 1;
 
   // key_update_pending is true if we have a KeyUpdate acknowledgment
@@ -2859,7 +2862,8 @@ struct SSL_CONFIG {
 
   Array<uint16_t> supported_group_list;  // our list
 
-  // The client's Channel ID private key.
+  // channel_id_private is the client's Channel ID private key, or null if
+  // Channel ID should not be offered on this connection.
   UniquePtr<EVP_PKEY> channel_id_private;
 
   // For a client, this contains the list of supported protocols in wire
@@ -2898,9 +2902,8 @@ struct SSL_CONFIG {
   // whether OCSP stapling will be requested.
   bool ocsp_stapling_enabled : 1;
 
-  // channel_id_enabled is copied from the |SSL_CTX|. For a server, means that
-  // we'll accept Channel IDs from clients. For a client, means that we'll
-  // advertise support.
+  // channel_id_enabled is copied from the |SSL_CTX|. For a server, it means
+  // that we'll accept Channel IDs from clients. It is ignored on the client.
   bool channel_id_enabled : 1;
 
   // If enforce_rsa_key_usage is true, the handshake will fail if the
@@ -3053,14 +3056,14 @@ int tls_write_app_data(SSL *ssl, bool *out_needs_handshake, const uint8_t *buf,
 bool tls_new(SSL *ssl);
 void tls_free(SSL *ssl);
 
-bool tls_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
-bool tls_finish_message(SSL *ssl, CBB *cbb, Array<uint8_t> *out_msg);
+bool tls_init_message(const SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
+bool tls_finish_message(const SSL *ssl, CBB *cbb, Array<uint8_t> *out_msg);
 bool tls_add_message(SSL *ssl, Array<uint8_t> msg);
 bool tls_add_change_cipher_spec(SSL *ssl);
 int tls_flush_flight(SSL *ssl);
 
-bool dtls1_init_message(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
-bool dtls1_finish_message(SSL *ssl, CBB *cbb, Array<uint8_t> *out_msg);
+bool dtls1_init_message(const SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
+bool dtls1_finish_message(const SSL *ssl, CBB *cbb, Array<uint8_t> *out_msg);
 bool dtls1_add_message(SSL *ssl, Array<uint8_t> msg);
 bool dtls1_add_change_cipher_spec(SSL *ssl);
 int dtls1_flush_flight(SSL *ssl);
@@ -3192,12 +3195,6 @@ bool tls1_channel_id_hash(SSL_HANDSHAKE *hs, uint8_t *out, size_t *out_len);
 // data.
 bool tls1_record_handshake_hashes_for_channel_id(SSL_HANDSHAKE *hs);
 
-// ssl_do_channel_id_callback checks runs |hs->ssl->ctx->channel_id_cb| if
-// necessary. It returns true on success and false on fatal error. Note that, on
-// success, |hs->ssl->channel_id_private| may be unset, in which case the
-// operation should be retried later.
-bool ssl_do_channel_id_callback(SSL_HANDSHAKE *hs);
-
 // ssl_can_write returns whether |ssl| is allowed to write.
 bool ssl_can_write(const SSL *ssl);
 
@@ -3320,9 +3317,6 @@ struct ssl_ctx_st {
   // get client cert callback
   int (*client_cert_cb)(SSL *ssl, X509 **out_x509,
                         EVP_PKEY **out_pkey) = nullptr;
-
-  // get channel id callback
-  void (*channel_id_cb)(SSL *ssl, EVP_PKEY **out_pkey) = nullptr;
 
   CRYPTO_EX_DATA ex_data;
 
@@ -3451,7 +3445,8 @@ struct ssl_ctx_st {
   // Supported group values inherited by SSL structure
   bssl::Array<uint16_t> supported_group_list;
 
-  // The client's Channel ID private key.
+  // channel_id_private is the client's Channel ID private key, or null if
+  // Channel ID should not be offered on this connection.
   bssl::UniquePtr<EVP_PKEY> channel_id_private;
 
   // ech_server_config_list contains the server's list of ECHConfig values and

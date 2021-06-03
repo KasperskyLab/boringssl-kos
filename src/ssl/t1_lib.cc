@@ -1641,13 +1641,9 @@ static bool ext_alpn_add_serverhello(SSL_HANDSHAKE *hs, CBB *out) {
 //
 // https://tools.ietf.org/html/draft-balfanz-tls-channelid-01
 
-static void ext_channel_id_init(SSL_HANDSHAKE *hs) {
-  hs->ssl->s3->channel_id_valid = false;
-}
-
 static bool ext_channel_id_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
   SSL *const ssl = hs->ssl;
-  if (!hs->config->channel_id_enabled || SSL_is_dtls(ssl)) {
+  if (!hs->config->channel_id_private || SSL_is_dtls(ssl)) {
     return true;
   }
 
@@ -1662,19 +1658,18 @@ static bool ext_channel_id_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
 static bool ext_channel_id_parse_serverhello(SSL_HANDSHAKE *hs,
                                              uint8_t *out_alert,
                                              CBS *contents) {
-  SSL *const ssl = hs->ssl;
   if (contents == NULL) {
     return true;
   }
 
-  assert(!SSL_is_dtls(ssl));
-  assert(hs->config->channel_id_enabled);
+  assert(!SSL_is_dtls(hs->ssl));
+  assert(hs->config->channel_id_private);
 
   if (CBS_len(contents) != 0) {
     return false;
   }
 
-  ssl->s3->channel_id_valid = true;
+  hs->channel_id_negotiated = true;
   return true;
 }
 
@@ -1690,13 +1685,12 @@ static bool ext_channel_id_parse_clienthello(SSL_HANDSHAKE *hs,
     return false;
   }
 
-  ssl->s3->channel_id_valid = true;
+  hs->channel_id_negotiated = true;
   return true;
 }
 
 static bool ext_channel_id_add_serverhello(SSL_HANDSHAKE *hs, CBB *out) {
-  SSL *const ssl = hs->ssl;
-  if (!ssl->s3->channel_id_valid) {
+  if (!hs->channel_id_negotiated) {
     return true;
   }
 
@@ -3195,7 +3189,7 @@ static const struct tls_extension kExtensions[] = {
   },
   {
     TLSEXT_TYPE_channel_id,
-    ext_channel_id_init,
+    NULL,
     ext_channel_id_add_clienthello,
     ext_channel_id_parse_serverhello,
     ext_channel_id_parse_clienthello,
@@ -4080,11 +4074,11 @@ bool tls1_verify_channel_id(SSL_HANDSHAKE *hs, const SSLMessage &msg) {
   if (!sig_ok) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_CHANNEL_ID_SIGNATURE_INVALID);
     ssl_send_alert(ssl, SSL3_AL_FATAL, SSL_AD_DECRYPT_ERROR);
-    ssl->s3->channel_id_valid = false;
     return false;
   }
 
   OPENSSL_memcpy(ssl->s3->channel_id, p, 64);
+  ssl->s3->channel_id_valid = true;
   return true;
 }
 
@@ -4193,23 +4187,6 @@ bool tls1_record_handshake_hashes_for_channel_id(SSL_HANDSHAKE *hs) {
   hs->new_session->original_handshake_hash_len = (uint8_t)digest_len;
 
   return true;
-}
-
-bool ssl_do_channel_id_callback(SSL_HANDSHAKE *hs) {
-  if (hs->config->channel_id_private != NULL ||
-      hs->ssl->ctx->channel_id_cb == NULL) {
-    return true;
-  }
-
-  EVP_PKEY *key = NULL;
-  hs->ssl->ctx->channel_id_cb(hs->ssl, &key);
-  if (key == NULL) {
-    // The caller should try again later.
-    return true;
-  }
-
-  UniquePtr<EVP_PKEY> free_key(key);
-  return SSL_set1_tls_channel_id(hs->ssl, key);
 }
 
 bool ssl_is_sct_list_valid(const CBS *contents) {
