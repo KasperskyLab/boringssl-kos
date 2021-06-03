@@ -1853,6 +1853,7 @@ NextTest:
 		if test.protocol != tls ||
 			test.testType != serverTest ||
 			strings.Contains(test.name, "DelegatedCredentials") ||
+			strings.Contains(test.name, "ECH-Server") ||
 			test.skipSplitHandshake {
 			continue
 		}
@@ -16281,6 +16282,7 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
 					"-expect-server-name", "secret.example",
+					"-expect-ech-accept",
 				},
 				expectations: connectionExpectations{
 					echAccepted: true,
@@ -16308,6 +16310,7 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
 					"-expect-server-name", "secret.example",
+					"-expect-ech-accept",
 				},
 				expectations: connectionExpectations{
 					echAccepted: true,
@@ -16426,6 +16429,7 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
 					"-expect-server-name", "secret.example",
+					"-expect-ech-accept",
 				},
 				expectations: connectionExpectations{
 					echAccepted: true,
@@ -16456,7 +16460,6 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-config", base64.StdEncoding.EncodeToString(MarshalECHConfig(echConfig)),
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
-					"-expect-server-name", "secret.example",
 				},
 				shouldFail:         true,
 				expectedLocalError: "remote error: illegal parameter",
@@ -16485,6 +16488,7 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
 					"-expect-server-name", "secret.example",
+					"-expect-ech-accept",
 				},
 				shouldFail:         true,
 				expectedLocalError: "remote error: illegal parameter",
@@ -16513,7 +16517,6 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-config", base64.StdEncoding.EncodeToString(MarshalECHConfig(echConfig)),
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
-					"-expect-server-name", "secret.example",
 				},
 				shouldFail:         true,
 				expectedLocalError: "remote error: illegal parameter",
@@ -16538,6 +16541,7 @@ func addEncryptedClientHelloTests() {
 				"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 				"-ech-is-retry-config", "1",
 				"-expect-server-name", "secret.example",
+				"-expect-ech-accept",
 			},
 			expectations: connectionExpectations{
 				echAccepted: true,
@@ -16562,6 +16566,7 @@ func addEncryptedClientHelloTests() {
 				"-ech-server-key", base64.StdEncoding.EncodeToString(key1),
 				"-ech-is-retry-config", "1",
 				"-expect-server-name", "secret.example",
+				"-expect-ech-accept",
 			},
 			expectations: connectionExpectations{
 				echAccepted: true,
@@ -16586,6 +16591,7 @@ func addEncryptedClientHelloTests() {
 				"-ech-server-key", base64.StdEncoding.EncodeToString(keyRepeatID),
 				"-ech-is-retry-config", "1",
 				"-expect-server-name", "secret.example",
+				"-expect-ech-accept",
 			},
 			expectations: connectionExpectations{
 				echAccepted: true,
@@ -16614,6 +16620,7 @@ func addEncryptedClientHelloTests() {
 					"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 					"-ech-is-retry-config", "1",
 					"-expect-server-name", "secret.example",
+					"-expect-ech-accept",
 				},
 				expectations: connectionExpectations{
 					echAccepted: true,
@@ -16778,6 +16785,7 @@ func addEncryptedClientHelloTests() {
 				"-ech-server-config", base64.StdEncoding.EncodeToString(MarshalECHConfig(echConfig)),
 				"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 				"-ech-is-retry-config", "1",
+				"-expect-ech-accept",
 			},
 			expectations: connectionExpectations{
 				echAccepted: true,
@@ -16802,6 +16810,7 @@ func addEncryptedClientHelloTests() {
 				"-ech-server-config", base64.StdEncoding.EncodeToString(MarshalECHConfig(echConfig)),
 				"-ech-server-key", base64.StdEncoding.EncodeToString(key),
 				"-ech-is-retry-config", "1",
+				"-expect-ech-accept",
 			},
 			expectations: connectionExpectations{
 				echAccepted: true,
@@ -16887,11 +16896,11 @@ func addEncryptedClientHelloTests() {
 			0x05, 0x04, 0x03, 0x02, 0x01,
 		}
 
-		validAndInvalidConfigsBuilder := newByteBuilder()
-		validAndInvalidConfigsBody := validAndInvalidConfigsBuilder.addU16LengthPrefixed()
-		validAndInvalidConfigsBody.addBytes(MarshalECHConfig(&retryConfigValid))
-		validAndInvalidConfigsBody.addBytes(retryConfigUnsupportedVersion)
-		validAndInvalidConfigs := validAndInvalidConfigsBuilder.finish()
+		validAndUnsupportedConfigsBuilder := newByteBuilder()
+		validAndUnsupportedConfigsBody := validAndUnsupportedConfigsBuilder.addU16LengthPrefixed()
+		validAndUnsupportedConfigsBody.addBytes(MarshalECHConfig(&retryConfigValid))
+		validAndUnsupportedConfigsBody.addBytes(retryConfigUnsupportedVersion)
+		validAndUnsupportedConfigs := validAndUnsupportedConfigsBuilder.finish()
 
 		// Test that the client accepts a well-formed encrypted_client_hello
 		// extension in response to ECH GREASE. The response includes one ECHConfig
@@ -16905,14 +16914,36 @@ func addEncryptedClientHelloTests() {
 				MaxVersion: VersionTLS13,
 				Bugs: ProtocolBugs{
 					ExpectClientECH: true,
-					// Include an additional well-formed ECHConfig with an invalid
-					// version. This ensures the client can iterate over the retry
-					// configs.
-					SendECHRetryConfigs: validAndInvalidConfigs,
+					// Include an additional well-formed ECHConfig with an
+					// unsupported version. This ensures the client can skip
+					// unsupported configs.
+					SendECHRetryConfigs: validAndUnsupportedConfigs,
 				},
 			},
 			flags: []string{"-enable-ech-grease"},
 		})
+
+		if protocol != quic {
+			// Test that the client rejects retry configs in TLS 1.2.
+			testCases = append(testCases, testCase{
+				testType: clientTest,
+				protocol: protocol,
+				name:     prefix + "ECH-GREASE-Client-TLS12-Retry-Configs",
+				config: Config{
+					MinVersion: VersionTLS12,
+					MaxVersion: VersionTLS12,
+					Bugs: ProtocolBugs{
+						ExpectClientECH:                       true,
+						SendECHRetryConfigs:                   validAndUnsupportedConfigs,
+						SendECHRetryConfigsInTLS12ServerHello: true,
+					},
+				},
+				flags:              []string{"-enable-ech-grease"},
+				shouldFail:         true,
+				expectedLocalError: "remote error: unsupported extension",
+				expectedError:      ":UNEXPECTED_EXTENSION:",
+			})
+		}
 
 		// Test that the client aborts with a decode_error alert when it receives a
 		// syntactically-invalid encrypted_client_hello extension from the server.

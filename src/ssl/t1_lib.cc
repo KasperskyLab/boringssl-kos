@@ -688,8 +688,17 @@ static bool ext_ech_add_clienthello(SSL_HANDSHAKE *hs, CBB *out) {
 
 static bool ext_ech_parse_serverhello(SSL_HANDSHAKE *hs, uint8_t *out_alert,
                                       CBS *contents) {
+  SSL *const ssl = hs->ssl;
   if (contents == NULL) {
     return true;
+  }
+
+  // The ECH extension may not be sent in TLS 1.2 ServerHello, only TLS 1.3
+  // EncryptedExtension.
+  if (ssl_protocol_version(ssl) < TLS1_3_VERSION) {
+    *out_alert = SSL_AD_UNSUPPORTED_EXTENSION;
+    OPENSSL_PUT_ERROR(SSL, SSL_R_UNEXPECTED_EXTENSION);
+    return false;
   }
 
   // If the client only sent GREASE, we must check the extension syntactically.
@@ -725,7 +734,7 @@ static bool ext_ech_parse_clienthello(SSL_HANDSHAKE *hs, uint8_t *out_alert,
 static bool ext_ech_add_serverhello(SSL_HANDSHAKE *hs, CBB *out) {
   SSL *const ssl = hs->ssl;
   if (ssl_protocol_version(ssl) < TLS1_3_VERSION ||  //
-      hs->ech_accept ||                              //
+      ssl->s3->ech_accept ||                         //
       hs->ech_server_config_list == nullptr) {
     return true;
   }
