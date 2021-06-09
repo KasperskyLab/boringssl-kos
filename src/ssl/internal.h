@@ -1505,6 +1505,10 @@ bool tls13_ech_accept_confirmation(
     SSL_HANDSHAKE *hs, bssl::Span<uint8_t> out,
     bssl::Span<const uint8_t> server_hello_ech_conf);
 
+// ssl_setup_ech_grease computes a GREASE ECH extension to offer instead of a
+// real one. It returns true on success and false otherwise.
+bool ssl_setup_ech_grease(SSL_HANDSHAKE *hs);
+
 
 // Delegated credentials.
 
@@ -1575,7 +1579,8 @@ enum ssl_grease_index_t {
   ssl_grease_extension2,
   ssl_grease_version,
   ssl_grease_ticket_extension,
-  ssl_grease_last_index = ssl_grease_ticket_extension,
+  ssl_grease_ech_config_id,
+  ssl_grease_last_index = ssl_grease_ech_config_id,
 };
 
 enum tls12_server_hs_state_t {
@@ -1742,10 +1747,6 @@ struct SSL_HANDSHAKE {
     uint32_t received;
   } extensions;
 
-  // retry_group is the group ID selected by the server in HelloRetryRequest in
-  // TLS 1.3.
-  uint16_t retry_group = 0;
-
   // error, if |wait| is |ssl_hs_error|, is the error the handshake failed on.
   UniquePtr<ERR_SAVE_STATE> error;
 
@@ -1760,16 +1761,14 @@ struct SSL_HANDSHAKE {
   // cookie is the value of the cookie received from the server, if any.
   Array<uint8_t> cookie;
 
-  // ech_grease contains the bytes of the GREASE ECH extension that was sent in
-  // the first ClientHello.
+  // ech_grease contains the GREASE ECH extension to send in the ClientHello.
   Array<uint8_t> ech_grease;
 
   // ech_client_hello_buf, on the server, contains the bytes of the
   // reconstructed ClientHelloInner message.
   Array<uint8_t> ech_client_hello_buf;
 
-  // key_share_bytes is the value of the previously sent KeyShare extension by
-  // the client in TLS 1.3.
+  // key_share_bytes is the key_share extension that the client should send.
   Array<uint8_t> key_share_bytes;
 
   // ecdh_public_key, for servers, is the key share to be sent to the client in
@@ -1932,9 +1931,6 @@ struct SSL_HANDSHAKE {
   // in progress.
   bool pending_private_key_op : 1;
 
-  // grease_seeded is true if |grease_seed| has been initialized.
-  bool grease_seeded : 1;
-
   // handback indicates that a server should pause the handshake after
   // finishing operations that require private key material, in such a way that
   // |SSL_get_error| returns |SSL_ERROR_HANDBACK|.  It is set by
@@ -1979,8 +1975,7 @@ struct SSL_HANDSHAKE {
   uint8_t session_id[SSL_MAX_SSL_SESSION_ID_LENGTH] = {0};
   uint8_t session_id_len = 0;
 
-  // grease_seed is the entropy for GREASE values. It is valid if
-  // |grease_seeded| is true.
+  // grease_seed is the entropy for GREASE values.
   uint8_t grease_seed[ssl_grease_last_index + 1] = {0};
 };
 
@@ -2040,6 +2035,12 @@ bool tls13_process_new_session_ticket(SSL *ssl, const SSLMessage &msg);
 bssl::UniquePtr<SSL_SESSION> tls13_create_session_with_ticket(SSL *ssl,
                                                               CBS *body);
 
+// ssl_setup_key_shares computes client key shares and saves them in |hs|. It
+// returns true on success and false on failure. If |override_group_id| is zero,
+// it offers the default groups, including GREASE. If it is non-zero, it offers
+// a single key share of the specified group.
+bool ssl_setup_key_shares(SSL_HANDSHAKE *hs, uint16_t override_group_id);
+
 bool ssl_ext_key_share_parse_serverhello(SSL_HANDSHAKE *hs,
                                          Array<uint8_t> *out_secret,
                                          uint8_t *out_alert, CBS *contents);
@@ -2092,6 +2093,13 @@ bool ssl_is_alpn_protocol_allowed(const SSL_HANDSHAKE *hs,
 bool ssl_negotiate_alpn(SSL_HANDSHAKE *hs, uint8_t *out_alert,
                         const SSL_CLIENT_HELLO *client_hello);
 
+// ssl_get_local_application_settings looks up the configured ALPS value for
+// |protocol|. If found, it sets |*out_settings| to the value and returns true.
+// Otherwise, it returns false.
+bool ssl_get_local_application_settings(const SSL_HANDSHAKE *hs,
+                                        Span<const uint8_t> *out_settings,
+                                        Span<const uint8_t> protocol);
+
 // ssl_negotiate_alps negotiates the ALPS extension, if applicable. It returns
 // true on successful negotiation or if nothing was negotiated. It returns false
 // and sets |*out_alert| to an alert on error.
@@ -2128,6 +2136,10 @@ bool ssl_output_cert_chain(SSL_HANDSHAKE *hs);
 // handshake. Note, in TLS 1.2 resumptions, this session is immutable.
 const SSL_SESSION *ssl_handshake_session(const SSL_HANDSHAKE *hs);
 
+// ssl_done_writing_client_hello is called after the last ClientHello is written
+// by |hs|. It releases some memory that is no longer needed.
+void ssl_done_writing_client_hello(SSL_HANDSHAKE *hs);
+
 
 // SSLKEYLOGFILE functions.
 
@@ -2158,7 +2170,8 @@ bool ssl_client_cipher_list_contains_cipher(
 // connection, the values for each index will be deterministic. This allows the
 // same ClientHello be sent twice for a HelloRetryRequest or the same group be
 // advertised in both supported_groups and key_shares.
-uint16_t ssl_get_grease_value(SSL_HANDSHAKE *hs, enum ssl_grease_index_t index);
+uint16_t ssl_get_grease_value(const SSL_HANDSHAKE *hs,
+                              enum ssl_grease_index_t index);
 
 
 // Signature algorithms.
