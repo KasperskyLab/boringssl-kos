@@ -733,20 +733,19 @@ static bool ext_ech_add_serverhello(SSL_HANDSHAKE *hs, CBB *out) {
   SSL *const ssl = hs->ssl;
   if (ssl_protocol_version(ssl) < TLS1_3_VERSION ||  //
       ssl->s3->ech_accept ||                         //
-      hs->ech_server_config_list == nullptr) {
+      hs->ech_keys == nullptr) {
     return true;
   }
 
-  // Write the list of retry configs to |out|. Note
-  // |SSL_CTX_set1_ech_server_config_list| ensures |ech_server_config_list|
-  // contains at least one retry config.
+  // Write the list of retry configs to |out|. Note |SSL_CTX_set1_ech_keys|
+  // ensures |ech_keys| contains at least one retry config.
   CBB body, retry_configs;
   if (!CBB_add_u16(out, TLSEXT_TYPE_encrypted_client_hello) ||
       !CBB_add_u16_length_prefixed(out, &body) ||
       !CBB_add_u16_length_prefixed(&body, &retry_configs)) {
     return false;
   }
-  for (const auto &config : hs->ech_server_config_list->configs) {
+  for (const auto &config : hs->ech_keys->configs) {
     if (!config->is_retry_config()) {
       continue;
     }
@@ -1937,10 +1936,27 @@ static bool ext_ec_point_add_serverhello(SSL_HANDSHAKE *hs, CBB *out) {
 //
 // https://tools.ietf.org/html/rfc8446#section-4.2.11
 
-static size_t ext_pre_shared_key_clienthello_length(SSL_HANDSHAKE *hs) {
-  SSL *const ssl = hs->ssl;
+static bool should_offer_psk(const SSL_HANDSHAKE *hs) {
+  const SSL *const ssl = hs->ssl;
   if (hs->max_version < TLS1_3_VERSION || ssl->session == nullptr ||
       ssl_session_protocol_version(ssl->session.get()) < TLS1_3_VERSION) {
+    return false;
+  }
+
+  // Per RFC 8446 section 4.1.4, skip offering the session if the selected
+  // cipher in HelloRetryRequest does not match. This avoids performing the
+  // transcript hash transformation for multiple hashes.
+  if (ssl->s3->used_hello_retry_request &&
+      ssl->session->cipher->algorithm_prf != hs->new_cipher->algorithm_prf) {
+    return false;
+  }
+
+  return true;
+}
+
+static size_t ext_pre_shared_key_clienthello_length(const SSL_HANDSHAKE *hs) {
+  const SSL *const ssl = hs->ssl;
+  if (!should_offer_psk(hs)) {
     return 0;
   }
 
@@ -1953,16 +1969,7 @@ static bool ext_pre_shared_key_add_clienthello(const SSL_HANDSHAKE *hs,
                                                bool *out_needs_binder) {
   const SSL *const ssl = hs->ssl;
   *out_needs_binder = false;
-  if (hs->max_version < TLS1_3_VERSION || ssl->session == nullptr ||
-      ssl_session_protocol_version(ssl->session.get()) < TLS1_3_VERSION) {
-    return true;
-  }
-
-  // Per RFC 8446 section 4.1.4, skip offering the session if the selected
-  // cipher in HelloRetryRequest does not match. This avoids performing the
-  // transcript hash transformation for multiple hashes.
-  if (ssl->s3->used_hello_retry_request &&
-      ssl->session->cipher->algorithm_prf != hs->new_cipher->algorithm_prf) {
+  if (!should_offer_psk(hs)) {
     return true;
   }
 
@@ -3309,8 +3316,9 @@ bool ssl_add_clienthello_tlsext(SSL_HANDSHAKE *hs, CBB *out,
     last_was_empty = false;
   }
 
-  if (!SSL_is_dtls(ssl) && !ssl->quic_method) {
-    size_t psk_extension_len = ext_pre_shared_key_clienthello_length(hs);
+  size_t psk_extension_len = ext_pre_shared_key_clienthello_length(hs);
+  if (!SSL_is_dtls(ssl) && !ssl->quic_method &&
+      !ssl->s3->used_hello_retry_request) {
     header_len +=
         SSL3_HM_HEADER_LENGTH + 2 + CBB_len(&extensions) + psk_extension_len;
     size_t padding_len = 0;
@@ -3353,11 +3361,14 @@ bool ssl_add_clienthello_tlsext(SSL_HANDSHAKE *hs, CBB *out,
   }
 
   // The PSK extension must be last, including after the padding.
+  const size_t len_before = CBB_len(&extensions);
   if (!ext_pre_shared_key_add_clienthello(hs, &extensions,
                                           out_needs_psk_binder)) {
     OPENSSL_PUT_ERROR(SSL, ERR_R_INTERNAL_ERROR);
     return false;
   }
+  assert(psk_extension_len == CBB_len(&extensions) - len_before);
+  (void)len_before;  // |assert| is omitted in release builds.
 
   // Discard empty extensions blocks.
   if (CBB_len(&extensions) == 0) {
