@@ -54,7 +54,6 @@ test_support_sources = [
     "src/crypto/trust_token/internal.h",
     "src/crypto/x509/charmap.h",
     "src/crypto/x509/internal.h",
-    "src/crypto/x509/vpm_int.h",
     "src/crypto/x509v3/ext_dat.h",
     "src/crypto/x509v3/internal.h",
     "src/crypto/x509v3/pcy_int.h",
