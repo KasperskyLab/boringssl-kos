@@ -598,6 +598,7 @@ add_library(
   src/ssl/dtls_method.cc
   src/ssl/dtls_record.cc
   src/ssl/encrypted_client_hello.cc
+  src/ssl/extensions.cc
   src/ssl/handoff.cc
   src/ssl/handshake.cc
   src/ssl/handshake_client.cc
@@ -620,7 +621,6 @@ add_library(
   src/ssl/ssl_versions.cc
   src/ssl/ssl_x509.cc
   src/ssl/t1_enc.cc
-  src/ssl/t1_lib.cc
   src/ssl/tls13_both.cc
   src/ssl/tls13_client.cc
   src/ssl/tls13_enc.cc
