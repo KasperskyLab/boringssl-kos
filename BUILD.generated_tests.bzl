@@ -38,6 +38,7 @@ test_support_sources = [
     "src/crypto/fipsmodule/tls/internal.h",
     "src/crypto/hrss/internal.h",
     "src/crypto/internal.h",
+    "src/crypto/lhash/internal.h",
     "src/crypto/obj/obj_dat.h",
     "src/crypto/pkcs7/internal.h",
     "src/crypto/pkcs8/internal.h",
