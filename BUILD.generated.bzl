@@ -207,7 +207,7 @@ crypto_headers = [
 ]
 
 crypto_internal_headers = [
-    "src/crypto/asn1/asn1_locl.h",
+    "src/crypto/asn1/internal.h",
     "src/crypto/bio/internal.h",
     "src/crypto/bytestring/internal.h",
     "src/crypto/chacha/internal.h",

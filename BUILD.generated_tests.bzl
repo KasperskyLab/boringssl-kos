@@ -1,7 +1,7 @@
 # This file is created by generate_build_files.py. Do not edit manually.
 
 test_support_sources = [
-    "src/crypto/asn1/asn1_locl.h",
+    "src/crypto/asn1/internal.h",
     "src/crypto/bio/internal.h",
     "src/crypto/bytestring/internal.h",
     "src/crypto/chacha/internal.h",
