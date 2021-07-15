@@ -134,12 +134,6 @@ struct X509_name_st {
 
 DEFINE_STACK_OF(X509_NAME)
 
-struct X509_extension_st {
-  ASN1_OBJECT *object;
-  ASN1_BOOLEAN critical;
-  ASN1_OCTET_STRING *value;
-} /* X509_EXTENSION */;
-
 typedef STACK_OF(X509_EXTENSION) X509_EXTENSIONS;
 
 DEFINE_STACK_OF(X509_EXTENSION)
@@ -316,40 +310,7 @@ struct x509_revoked_st {
 
 DEFINE_STACK_OF(X509_REVOKED)
 
-struct X509_crl_info_st {
-  ASN1_INTEGER *version;
-  X509_ALGOR *sig_alg;
-  X509_NAME *issuer;
-  ASN1_TIME *lastUpdate;
-  ASN1_TIME *nextUpdate;
-  STACK_OF(X509_REVOKED) *revoked;
-  STACK_OF(X509_EXTENSION) /* [0] */ *extensions;
-  ASN1_ENCODING enc;
-} /* X509_CRL_INFO */;
-
 DECLARE_STACK_OF(GENERAL_NAMES)
-
-struct X509_crl_st {
-  // actual signature
-  X509_CRL_INFO *crl;
-  X509_ALGOR *sig_alg;
-  ASN1_BIT_STRING *signature;
-  CRYPTO_refcount_t references;
-  int flags;
-  // Copies of various extensions
-  AUTHORITY_KEYID *akid;
-  ISSUING_DIST_POINT *idp;
-  // Convenient breakdown of IDP
-  int idp_flags;
-  int idp_reasons;
-  // CRL and base CRL numbers for delta processing
-  ASN1_INTEGER *crl_number;
-  ASN1_INTEGER *base_crl_number;
-  unsigned char sha1_hash[SHA_DIGEST_LENGTH];
-  STACK_OF(GENERAL_NAMES) *issuers;
-  const X509_CRL_METHOD *meth;
-  void *meth_data;
-} /* X509_CRL */;
 
 DEFINE_STACK_OF(X509_CRL)
 
@@ -1040,7 +1001,6 @@ OPENSSL_EXPORT void X509_trust_clear(X509 *x);
 OPENSSL_EXPORT void X509_reject_clear(X509 *x);
 
 DECLARE_ASN1_FUNCTIONS(X509_REVOKED)
-DECLARE_ASN1_FUNCTIONS(X509_CRL_INFO)
 DECLARE_ASN1_FUNCTIONS(X509_CRL)
 
 OPENSSL_EXPORT int X509_CRL_add0_revoked(X509_CRL *crl, X509_REVOKED *rev);
@@ -1736,7 +1696,7 @@ OPENSSL_EXPORT ASN1_OCTET_STRING *X509_EXTENSION_get_data(X509_EXTENSION *ne);
 
 // X509_EXTENSION_get_critical returns one if |ex| is critical and zero
 // otherwise.
-OPENSSL_EXPORT int X509_EXTENSION_get_critical(X509_EXTENSION *ex);
+OPENSSL_EXPORT int X509_EXTENSION_get_critical(const X509_EXTENSION *ex);
 
 // X509at_get_attr_count returns the number of attributes in |x|.
 OPENSSL_EXPORT int X509at_get_attr_count(const STACK_OF(X509_ATTRIBUTE) *x);
