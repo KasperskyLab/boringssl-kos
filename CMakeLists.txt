@@ -639,6 +639,7 @@ add_executable(
   src/tool/digest.cc
   src/tool/fd.cc
   src/tool/file.cc
+  src/tool/generate_ech.cc
   src/tool/generate_ed25519.cc
   src/tool/genrsa.cc
   src/tool/pkcs12.cc
