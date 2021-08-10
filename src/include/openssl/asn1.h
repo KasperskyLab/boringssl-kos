@@ -779,17 +779,6 @@ typedef struct asn1_string_table_st {
   unsigned long flags;
 } ASN1_STRING_TABLE;
 
-// size limits: this stuff is taken straight from RFC2459
-
-#define ub_name 32768
-#define ub_common_name 64
-#define ub_locality_name 128
-#define ub_state_name 128
-#define ub_organization_name 64
-#define ub_organization_unit_name 64
-#define ub_title 64
-#define ub_email_address 128
-
 // Declarations for template structures: for full definitions
 // see asn1t.h
 typedef struct ASN1_TEMPLATE_st ASN1_TEMPLATE;
@@ -965,20 +954,6 @@ typedef STACK_OF(ASN1_TYPE) ASN1_SEQUENCE_ANY;
 DECLARE_ASN1_ENCODE_FUNCTIONS_const(ASN1_SEQUENCE_ANY, ASN1_SEQUENCE_ANY)
 DECLARE_ASN1_ENCODE_FUNCTIONS_const(ASN1_SEQUENCE_ANY, ASN1_SET_ANY)
 
-struct X509_algor_st {
-  ASN1_OBJECT *algorithm;
-  ASN1_TYPE *parameter;
-} /* X509_ALGOR */;
-
-DECLARE_ASN1_FUNCTIONS(X509_ALGOR)
-
-// This is used to contain a list of bit names
-typedef struct BIT_STRING_BITNAME_st {
-  int bitnum;
-  const char *lname;
-  const char *sname;
-} BIT_STRING_BITNAME;
-
 // M_ASN1_* are legacy aliases for various |ASN1_STRING| functions. Use the
 // functions themselves.
 #define M_ASN1_STRING_length(x) ASN1_STRING_length(x)
@@ -1129,12 +1104,10 @@ OPENSSL_EXPORT int ASN1_object_size(int constructed, int length, int tag);
 
 OPENSSL_EXPORT void *ASN1_item_dup(const ASN1_ITEM *it, void *x);
 
-#ifndef OPENSSL_NO_FP_API
 OPENSSL_EXPORT void *ASN1_item_d2i_fp(const ASN1_ITEM *it, FILE *in, void *x);
 OPENSSL_EXPORT int ASN1_item_i2d_fp(const ASN1_ITEM *it, FILE *out, void *x);
 OPENSSL_EXPORT int ASN1_STRING_print_ex_fp(FILE *fp, const ASN1_STRING *str,
                                            unsigned long flags);
-#endif
 
 OPENSSL_EXPORT void *ASN1_item_d2i_bio(const ASN1_ITEM *it, BIO *in, void *x);
 OPENSSL_EXPORT int ASN1_item_i2d_bio(const ASN1_ITEM *it, BIO *out, void *x);

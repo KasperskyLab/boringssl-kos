@@ -110,6 +110,13 @@ extern "C" {
 #define X509v3_KU_DECIPHER_ONLY 0x8000
 #define X509v3_KU_UNDEF 0xffff
 
+struct X509_algor_st {
+  ASN1_OBJECT *algorithm;
+  ASN1_TYPE *parameter;
+} /* X509_ALGOR */;
+
+DECLARE_ASN1_FUNCTIONS(X509_ALGOR)
+
 DEFINE_STACK_OF(X509_ALGOR)
 
 typedef STACK_OF(X509_ALGOR) X509_ALGORS;
@@ -724,7 +731,6 @@ OPENSSL_EXPORT int X509_NAME_digest(const X509_NAME *name, const EVP_MD *md,
 // copying parts of it as a normal |d2i_X509| call would do.
 OPENSSL_EXPORT X509 *X509_parse_from_buffer(CRYPTO_BUFFER *buf);
 
-#ifndef OPENSSL_NO_FP_API
 OPENSSL_EXPORT X509 *d2i_X509_fp(FILE *fp, X509 **x509);
 OPENSSL_EXPORT int i2d_X509_fp(FILE *fp, X509 *x509);
 OPENSSL_EXPORT X509_CRL *d2i_X509_CRL_fp(FILE *fp, X509_CRL **crl);
@@ -758,7 +764,6 @@ OPENSSL_EXPORT int i2d_PrivateKey_fp(FILE *fp, EVP_PKEY *pkey);
 OPENSSL_EXPORT EVP_PKEY *d2i_PrivateKey_fp(FILE *fp, EVP_PKEY **a);
 OPENSSL_EXPORT int i2d_PUBKEY_fp(FILE *fp, EVP_PKEY *pkey);
 OPENSSL_EXPORT EVP_PKEY *d2i_PUBKEY_fp(FILE *fp, EVP_PKEY **a);
-#endif
 
 OPENSSL_EXPORT X509 *d2i_X509_bio(BIO *bp, X509 **x509);
 OPENSSL_EXPORT int i2d_X509_bio(BIO *bp, X509 *x509);
@@ -1394,7 +1399,6 @@ OPENSSL_EXPORT unsigned long X509_NAME_hash_old(X509_NAME *x);
 
 OPENSSL_EXPORT int X509_CRL_cmp(const X509_CRL *a, const X509_CRL *b);
 OPENSSL_EXPORT int X509_CRL_match(const X509_CRL *a, const X509_CRL *b);
-#ifndef OPENSSL_NO_FP_API
 OPENSSL_EXPORT int X509_print_ex_fp(FILE *bp, X509 *x, unsigned long nmflag,
                                     unsigned long cflag);
 OPENSSL_EXPORT int X509_print_fp(FILE *bp, X509 *x);
@@ -1402,7 +1406,6 @@ OPENSSL_EXPORT int X509_CRL_print_fp(FILE *bp, X509_CRL *x);
 OPENSSL_EXPORT int X509_REQ_print_fp(FILE *bp, X509_REQ *req);
 OPENSSL_EXPORT int X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm,
                                          int indent, unsigned long flags);
-#endif
 
 OPENSSL_EXPORT int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase);
 OPENSSL_EXPORT int X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
