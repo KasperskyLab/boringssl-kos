@@ -131,8 +131,6 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
 {
     const ASN1_TEMPLATE *tt = NULL;
     int i, seqcontlen, seqlen;
-    const ASN1_AUX *aux = it->funcs;
-    ASN1_aux_cb *asn1_cb = NULL;
 
     /* All fields are pointers, except for boolean |ASN1_ITYPE_PRIMITIVE|s.
      * Optional primitives are handled later. */
@@ -143,9 +141,6 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
         OPENSSL_PUT_ERROR(ASN1, ASN1_R_MISSING_VALUE);
         return -1;
     }
-
-    if (aux && aux->asn1_cb)
-        asn1_cb = aux->asn1_cb;
 
     switch (it->itype) {
 
@@ -179,8 +174,6 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
             OPENSSL_PUT_ERROR(ASN1, ASN1_R_BAD_TEMPLATE);
             return -1;
         }
-        if (asn1_cb && !asn1_cb(ASN1_OP_I2D_PRE, pval, it, NULL))
-            return -1;
         i = asn1_get_choice_selector(pval, it);
         if (i < 0 || i >= it->tcount) {
             OPENSSL_PUT_ERROR(ASN1, ASN1_R_NO_MATCHING_CHOICE_TYPE);
@@ -192,12 +185,7 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
             return -1;
         }
         ASN1_VALUE **pchval = asn1_get_field_ptr(pval, chtt);
-        int ret = asn1_template_ex_i2d(pchval, out, chtt, -1, aclass);
-        if (ret < 0 ||
-            (asn1_cb && !asn1_cb(ASN1_OP_I2D_POST, pval, it, NULL))) {
-            return -1;
-        }
-        return ret;
+        return asn1_template_ex_i2d(pchval, out, chtt, -1, aclass);
     }
 
     case ASN1_ITYPE_EXTERN: {
@@ -214,7 +202,7 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
         return ret;
     }
 
-    case ASN1_ITYPE_SEQUENCE:
+    case ASN1_ITYPE_SEQUENCE: {
         i = asn1_enc_restore(&seqcontlen, out, pval, it);
         /* An error occurred */
         if (i < 0)
@@ -231,8 +219,6 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
             aclass = (aclass & ~ASN1_TFLG_TAG_CLASS)
                 | V_ASN1_UNIVERSAL;
         }
-        if (asn1_cb && !asn1_cb(ASN1_OP_I2D_PRE, pval, it, NULL))
-            return -1;
         /* First work out sequence content length */
         for (i = 0, tt = it->templates; i < it->tcount; tt++, i++) {
             const ASN1_TEMPLATE *seqtt;
@@ -264,9 +250,8 @@ int asn1_item_ex_i2d_opt(ASN1_VALUE **pval, unsigned char **out,
                 return -1;
             }
         }
-        if (asn1_cb && !asn1_cb(ASN1_OP_I2D_POST, pval, it, NULL))
-            return -1;
         return seqlen;
+    }
 
     default:
         OPENSSL_PUT_ERROR(ASN1, ASN1_R_BAD_TEMPLATE);
