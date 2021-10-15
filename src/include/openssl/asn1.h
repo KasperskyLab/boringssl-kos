@@ -830,6 +830,36 @@ OPENSSL_EXPORT int ASN1_TIME_set_string(ASN1_TIME *s, const char *str);
 // TODO(davidben): Expand and document function prototypes generated in macros.
 
 
+// NULL values.
+//
+// This library represents the ASN.1 NULL value by a non-NULL pointer to the
+// opaque type |ASN1_NULL|. An omitted OPTIONAL ASN.1 NULL value is a NULL
+// pointer. Unlike other pointer types, it is not necessary to free |ASN1_NULL|
+// pointers, but it is safe to do so.
+
+// ASN1_NULL_new returns an opaque, non-NULL pointer. It is safe to call
+// |ASN1_NULL_free| on the result, but not necessary.
+OPENSSL_EXPORT ASN1_NULL *ASN1_NULL_new(void);
+
+// ASN1_NULL_free does nothing.
+OPENSSL_EXPORT void ASN1_NULL_free(ASN1_NULL *null);
+
+// d2i_ASN1_NULL parses a DER-encoded ASN.1 NULL value from up to |len| bytes
+// at |*inp|, as described in |d2i_SAMPLE|.
+//
+// TODO(https://crbug.com/boringssl/354): This function currently also accepts
+// BER, but this will be removed in the future.
+OPENSSL_EXPORT ASN1_NULL *d2i_ASN1_NULL(ASN1_NULL **out, const uint8_t **inp,
+                                        long len);
+
+// i2d_ASN1_NULL marshals |in| as a DER-encoded ASN.1 NULL value, as described
+// in |i2d_SAMPLE|.
+OPENSSL_EXPORT int i2d_ASN1_NULL(const ASN1_NULL *in, uint8_t **outp);
+
+// ASN1_NULL is an |ASN1_ITEM| with ASN.1 type NULL and C type |ASN1_NULL*|.
+DECLARE_ASN1_ITEM(ASN1_NULL)
+
+
 // Arbitrary elements.
 
 // An asn1_type_st (aka |ASN1_TYPE|) represents an arbitrary ASN.1 element,
@@ -1200,23 +1230,23 @@ OPENSSL_EXPORT ASN1_OBJECT *d2i_ASN1_OBJECT(ASN1_OBJECT **a,
 
 DECLARE_ASN1_ITEM(ASN1_OBJECT)
 
-DECLARE_ASN1_FUNCTIONS(ASN1_BIT_STRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_BIT_STRING)
 OPENSSL_EXPORT int i2c_ASN1_BIT_STRING(const ASN1_BIT_STRING *a,
                                        unsigned char **pp);
 OPENSSL_EXPORT ASN1_BIT_STRING *c2i_ASN1_BIT_STRING(ASN1_BIT_STRING **a,
                                                     const unsigned char **pp,
                                                     long length);
 
-DECLARE_ASN1_FUNCTIONS(ASN1_INTEGER)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_INTEGER)
 OPENSSL_EXPORT int i2c_ASN1_INTEGER(const ASN1_INTEGER *a, unsigned char **pp);
 OPENSSL_EXPORT ASN1_INTEGER *c2i_ASN1_INTEGER(ASN1_INTEGER **a,
                                               const unsigned char **pp,
                                               long length);
 OPENSSL_EXPORT ASN1_INTEGER *ASN1_INTEGER_dup(const ASN1_INTEGER *x);
 
-DECLARE_ASN1_FUNCTIONS(ASN1_ENUMERATED)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_ENUMERATED)
 
-DECLARE_ASN1_FUNCTIONS(ASN1_OCTET_STRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_OCTET_STRING)
 OPENSSL_EXPORT ASN1_OCTET_STRING *ASN1_OCTET_STRING_dup(
     const ASN1_OCTET_STRING *a);
 OPENSSL_EXPORT int ASN1_OCTET_STRING_cmp(const ASN1_OCTET_STRING *a,
@@ -1224,23 +1254,22 @@ OPENSSL_EXPORT int ASN1_OCTET_STRING_cmp(const ASN1_OCTET_STRING *a,
 OPENSSL_EXPORT int ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *str,
                                          const unsigned char *data, int len);
 
-DECLARE_ASN1_FUNCTIONS(ASN1_VISIBLESTRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_UNIVERSALSTRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_UTF8STRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_NULL)
-DECLARE_ASN1_FUNCTIONS(ASN1_BMPSTRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_VISIBLESTRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_UNIVERSALSTRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_UTF8STRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_BMPSTRING)
 
 DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, ASN1_PRINTABLE)
 
 DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, DIRECTORYSTRING)
 DECLARE_ASN1_FUNCTIONS_name(ASN1_STRING, DISPLAYTEXT)
-DECLARE_ASN1_FUNCTIONS(ASN1_PRINTABLESTRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_T61STRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_IA5STRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_GENERALSTRING)
-DECLARE_ASN1_FUNCTIONS(ASN1_UTCTIME)
-DECLARE_ASN1_FUNCTIONS(ASN1_GENERALIZEDTIME)
-DECLARE_ASN1_FUNCTIONS(ASN1_TIME)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_PRINTABLESTRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_T61STRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_IA5STRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_GENERALSTRING)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_UTCTIME)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_GENERALIZEDTIME)
+DECLARE_ASN1_FUNCTIONS_const(ASN1_TIME)
 
 OPENSSL_EXPORT int i2a_ASN1_INTEGER(BIO *bp, const ASN1_INTEGER *a);
 OPENSSL_EXPORT int i2a_ASN1_ENUMERATED(BIO *bp, const ASN1_ENUMERATED *a);
