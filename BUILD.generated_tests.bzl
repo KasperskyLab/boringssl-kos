@@ -57,7 +57,6 @@ test_support_sources = [
     "src/crypto/x509/internal.h",
     "src/crypto/x509v3/ext_dat.h",
     "src/crypto/x509v3/internal.h",
-    "src/crypto/x509v3/pcy_int.h",
     "src/ssl/internal.h",
     "src/ssl/test/async_bio.h",
     "src/ssl/test/fuzzer.h",
