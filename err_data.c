@@ -732,16 +732,17 @@ const uint32_t kOpenSSLReasonValues[] = {
     0x504bb8fc,
     0x504c391f,
     0x504cb94d,
-    0x504d395f,
-    0x504db97c,
-    0x504e3997,
-    0x504eb9b3,
-    0x504f39c5,
-    0x504fb9dc,
-    0x505039eb,
+    0x504d397a,
+    0x504db997,
+    0x504e39b2,
+    0x504eb9ce,
+    0x504f39e0,
+    0x504fb9f7,
+    0x50503a06,
     0x505086fe,
-    0x505139fe,
+    0x50513a19,
     0x5051b7b7,
+    0x5052395f,
     0x58320f72,
     0x68320f34,
     0x68328c8c,
@@ -1477,6 +1478,7 @@ const char kOpenSSLReasonStringData[] =
     "POLICY_PATH_LENGTH_ALREADY_DEFINED\0"
     "POLICY_WHEN_PROXY_LANGUAGE_REQUIRES_NO_POLICY\0"
     "SECTION_NOT_FOUND\0"
+    "TRAILING_DATA_IN_EXTENSION\0"
     "UNABLE_TO_GET_ISSUER_DETAILS\0"
     "UNABLE_TO_GET_ISSUER_KEYID\0"
     "UNKNOWN_BIT_STRING_ARGUMENT\0"
