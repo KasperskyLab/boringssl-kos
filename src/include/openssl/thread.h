@@ -79,6 +79,11 @@ typedef union crypto_mutex_st {
 } CRYPTO_MUTEX;
 #elif defined(__MACH__) && defined(__APPLE__)
 typedef pthread_rwlock_t CRYPTO_MUTEX;
+#elif defined(__KOS__)
+typedef union crypto_mutex_st {
+  double alignment;
+  uint8_t padding[3*sizeof(int) + 5*sizeof(unsigned) + 16 + 8 + 8];
+} CRYPTO_MUTEX;
 #else
 // It is reasonable to include pthread.h on non-Windows systems, however the
 // |pthread_rwlock_t| that we need is hidden under feature flags, and we can't

@@ -93,7 +93,7 @@ else()
 endif()
 
 if(NOT OPENSSL_NO_ASM)
-  if(UNIX)
+  if(UNIX OR KOS)
     enable_language(ASM)
 
     # Clang's integerated assembler does not support debug symbols.
@@ -345,7 +345,7 @@ elseif(APPLE AND ARCH STREQUAL "arm")
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_ios_arm_SOURCES})
 elseif(APPLE)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_mac_${ARCH}_SOURCES})
-elseif(UNIX)
+elseif(UNIX OR KOS)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_linux_${ARCH}_SOURCES})
 elseif(WIN32)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_win_${ARCH}_SOURCES})
