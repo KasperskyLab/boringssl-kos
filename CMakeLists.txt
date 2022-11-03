@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# © 2022 AO Kaspersky Lab. All Rights Reserved
+
 # This file is created by generate_build_files.py. Do not edit manually.
 
 cmake_minimum_required(VERSION 3.5)
@@ -93,7 +95,7 @@ else()
 endif()
 
 if(NOT OPENSSL_NO_ASM)
-  if(UNIX OR KOS)
+  if(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
     enable_language(ASM)
 
     # Clang's integerated assembler does not support debug symbols.
@@ -345,7 +347,7 @@ elseif(APPLE AND ARCH STREQUAL "arm")
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_ios_arm_SOURCES})
 elseif(APPLE)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_mac_${ARCH}_SOURCES})
-elseif(UNIX OR KOS)
+elseif(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_linux_${ARCH}_SOURCES})
 elseif(WIN32)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_win_${ARCH}_SOURCES})
