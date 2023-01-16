@@ -1,6 +1,6 @@
 # BoringSSL adaptation for KasperskyOS
 
-This is a fork of [BoringSSL](https://github.com/google/boringssl) project adapted to be used with KasperskyOS. For more information about the target OS, please refer to [KaspeksyOS Community Edition](https://support.kaspersky.com/help/KCE/1.1/en-US/community_edition.htm).
+This is a fork of [BoringSSL](https://github.com/google/boringssl) project adapted to be used with KasperskyOS. The modification is based on [b9232f9e](https://github.com/google/boringssl/tree/b9232f9e27e5668bc0414879dcdedb2a59ea75f2) commit. For more information about the target OS, please refer to [KaspeksyOS Community Edition](https://support.kaspersky.com/help/KCE/1.1/en-US/community_edition.htm).
 
 BoringSSL is a fork of OpenSSL that is designed to meet Google's needs.
 
