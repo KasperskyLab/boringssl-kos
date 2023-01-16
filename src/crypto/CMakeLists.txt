@@ -1,7 +1,7 @@
 include_directories(../include)
 
 if(NOT OPENSSL_NO_ASM)
-  if(UNIX)
+  if(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
     if(ARCH STREQUAL "aarch64")
       # The "armx" Perl scripts look for "64" in the style argument
       # in order to decide whether to generate 32- or 64-bit asm.

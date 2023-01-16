@@ -52,7 +52,11 @@
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
- * [including the GNU Public Licence.] */
+ * [including the GNU Public Licence.]
+ *
+ * © 2022 AO Kaspersky Lab. All Rights Reserved
+ *
+ */
 
 #ifndef OPENSSL_HEADER_THREAD_H
 #define OPENSSL_HEADER_THREAD_H
@@ -79,6 +83,11 @@ typedef union crypto_mutex_st {
 } CRYPTO_MUTEX;
 #elif defined(__MACH__) && defined(__APPLE__)
 typedef pthread_rwlock_t CRYPTO_MUTEX;
+#elif defined(__KOS__) // 03.11.2022 adapted for KasperskyOS
+typedef union crypto_mutex_st {
+  double alignment;
+  uint8_t padding[3*sizeof(int) + 5*sizeof(unsigned) + 16 + 8 + 8];
+} CRYPTO_MUTEX;
 #else
 // It is reasonable to include pthread.h on non-Windows systems, however the
 // |pthread_rwlock_t| that we need is hidden under feature flags, and we can't
