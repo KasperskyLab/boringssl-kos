@@ -2,7 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# © 2022 AO Kaspersky Lab. All Rights Reserved
+# © 2024 AO Kaspersky Lab
+# Licensed under the OpenSSL License
 
 # This file is created by generate_build_files.py. Do not edit manually.
 
@@ -95,7 +96,7 @@ else()
 endif()
 
 if(NOT OPENSSL_NO_ASM)
-  if(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
+  if(UNIX OR KOS)
     enable_language(ASM)
 
     # Clang's integerated assembler does not support debug symbols.
@@ -347,7 +348,7 @@ elseif(APPLE AND ARCH STREQUAL "arm")
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_ios_arm_SOURCES})
 elseif(APPLE)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_mac_${ARCH}_SOURCES})
-elseif(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
+elseif(UNIX OR KOS)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_linux_${ARCH}_SOURCES})
 elseif(WIN32)
   set(CRYPTO_ARCH_SOURCES ${CRYPTO_win_${ARCH}_SOURCES})
@@ -663,3 +664,36 @@ if(WIN32)
   target_link_libraries(bssl ws2_32)
 endif()
 
+if(KOS AND ENABLE_INSTALL)
+
+  include(CMakePackageConfigHelpers)
+  include(GNUInstallDirs)
+
+  install(EXPORT ${PROJECT_NAME}Targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  )
+  message(STATUS "CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}")
+
+  configure_package_config_file(
+    cmake/Config.cmake.in
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  )
+  install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  )
+
+  install(DIRECTORY src/include/openssl
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+  )
+
+  install(TARGETS ssl crypto
+    EXPORT ${PROJECT_NAME}Targets
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+endif()

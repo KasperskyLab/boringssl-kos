@@ -54,8 +54,8 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.]
  *
- * © 2022 AO Kaspersky Lab. All Rights Reserved
- *
+ * © 2024 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
  */
 
 #ifndef OPENSSL_HEADER_THREAD_H
@@ -83,7 +83,7 @@ typedef union crypto_mutex_st {
 } CRYPTO_MUTEX;
 #elif defined(__MACH__) && defined(__APPLE__)
 typedef pthread_rwlock_t CRYPTO_MUTEX;
-#elif defined(__KOS__) // 03.11.2022 adapted for KasperskyOS
+#elif defined(__KOS__)
 typedef union crypto_mutex_st {
   double alignment;
   uint8_t padding[3*sizeof(int) + 5*sizeof(unsigned) + 16 + 8 + 8];

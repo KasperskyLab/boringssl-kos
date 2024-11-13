@@ -14,6 +14,10 @@ include(sources.cmake)
 enable_language(C)
 enable_language(CXX)
 
+if(KOS)
+  include(${KOS_DIR}/cmake/tests.cmake)
+endif()
+
 # This is a dummy target which all other targets depend on (manually - see other
 # CMakeLists.txt files). This gives us a hook to add any targets which need to
 # run before all other targets.

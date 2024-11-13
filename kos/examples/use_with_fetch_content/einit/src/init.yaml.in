@@ -1,0 +1,9 @@
+# © 2024 AO Kaspersky Lab
+# Licensed under the OpenSSL License
+
+entities:
+
+- name: examples.Hasher
+@INIT_Hasher_ENTITY_CONNECTIONS@
+
+@INIT_EXTERNAL_ENTITIES@
