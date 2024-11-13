@@ -1,7 +1,10 @@
+# © 2024 AO Kaspersky Lab
+# Licensed under the OpenSSL License
+
 include_directories(../include)
 
 if(NOT OPENSSL_NO_ASM)
-  if(UNIX OR KOS) # 03.11.2022 adapted for KasperskyOS
+  if(UNIX OR KOS)
     if(ARCH STREQUAL "aarch64")
       # The "armx" Perl scripts look for "64" in the style argument
       # in order to decide whether to generate 32- or 64-bit asm.
@@ -565,3 +568,8 @@ if(WIN32)
   target_link_libraries(crypto_test ws2_32)
 endif()
 add_dependencies(all_tests crypto_test)
+
+if(KOS)
+  kos_gtest(urandom_test)
+  kos_gtest(crypto_test)
+endif()

@@ -52,7 +52,11 @@
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
- * [including the GNU Public Licence.] */
+ * [including the GNU Public Licence.]
+ *
+ * © 2024 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
+ */
 
 #include <openssl/asn1.h>
 
@@ -574,7 +578,7 @@ int ASN1_GENERALIZEDTIME_print(BIO *bp, const ASN1_GENERALIZEDTIME *tm)
 // their value, updates |v| and |len|, and returns one. Otherwise, returns
 // zero.
 static int consume_two_digits(int* out, const char **v, int *len) {
-  if (*len < 2|| !isdigit((*v)[0]) || !isdigit((*v)[1])) {
+  if (*len < 2|| !isdigit((unsigned char)(*v)[0]) || !isdigit((unsigned char)(*v)[1])) {
     return 0;
   }
   *out = ((*v)[0] - '0') * 10 + ((*v)[1] - '0');

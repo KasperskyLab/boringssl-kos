@@ -87,6 +87,10 @@ remove some code that is especially large.
 See [CMake's documentation](https://cmake.org/cmake/help/v3.4/manual/cmake-variables.7.html)
 for other variables which may be used to configure the build.
 
+### Building for KasperskyOS
+
+For information how to build BoringSSL for KasperskyOS see [kos/README](../kos/README.md)
+
 ### Building for Android
 
 It's possible to build BoringSSL with the Android NDK using CMake. Recent

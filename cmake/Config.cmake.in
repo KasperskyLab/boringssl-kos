@@ -1,0 +1,5 @@
+# © 2024 AO Kaspersky Lab
+# Licensed under the OpenSSL License
+
+@PACKAGE_INIT@
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")

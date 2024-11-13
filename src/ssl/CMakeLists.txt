@@ -1,3 +1,6 @@
+# © 2024 AO Kaspersky Lab
+# Licensed under the OpenSSL License
+
 include_directories(../include)
 
 add_library(
@@ -62,4 +65,9 @@ target_link_libraries(ssl_test test_support_lib boringssl_gtest ssl crypto)
 if(WIN32)
   target_link_libraries(ssl_test ws2_32)
 endif()
+
+if(KOS)
+  kos_gtest(ssl_test)
+endif()
+
 add_dependencies(all_tests ssl_test)

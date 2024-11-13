@@ -12,7 +12,8 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * © 2022 AO Kaspersky Lab. All Rights Reserved
+ * © 2024 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
  */
 
 #include <openssl/crypto.h>
@@ -23,7 +24,6 @@
 #include "fipsmodule/rand/internal.h"
 #include "internal.h"
 
-// 03.11.2022 adapted for KasperskyOS
 #if !defined(OPENSSL_NO_ASM) && !defined(OPENSSL_STATIC_ARMCAP) && \
     !defined(__KOS__) && \
     (defined(OPENSSL_X86) || defined(OPENSSL_X86_64) || \

@@ -10,7 +10,11 @@
  * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * © 2024 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
+ */
 
 #include <algorithm>
 #include <string>
@@ -73,6 +77,7 @@ TEST(BIOTest, SocketConnect) {
   struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
   OPENSSL_memset(&ss, 0, sizeof(ss));
 
+#ifndef __KOS__ // KasperskyOS not supports IPV6
   ss.ss_family = AF_INET6;
   listening_sock = socket(AF_INET6, SOCK_STREAM, 0);
   ASSERT_NE(-1, listening_sock) << LastSocketError();
@@ -81,7 +86,9 @@ TEST(BIOTest, SocketConnect) {
       << LastSocketError();
   if (bind(listening_sock, (struct sockaddr *)sin6, sizeof(*sin6)) == -1) {
     closesocket(listening_sock);
-
+#else 
+  {
+#endif
     ss.ss_family = AF_INET;
     listening_sock = socket(AF_INET, SOCK_STREAM, 0);
     ASSERT_NE(-1, listening_sock) << LastSocketError();

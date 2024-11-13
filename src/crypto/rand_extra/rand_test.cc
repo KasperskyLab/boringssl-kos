@@ -10,7 +10,11 @@
  * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * © 2024 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
+ */
 
 #include <openssl/rand.h>
 
@@ -56,7 +60,8 @@ TEST(RandTest, NotObviouslyBroken) {
 }
 
 #if !defined(OPENSSL_WINDOWS) && !defined(OPENSSL_IOS) && \
-    !defined(OPENSSL_FUCHSIA) && !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE)
+    !defined(OPENSSL_FUCHSIA) && !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE) && \
+    !defined(__KOS__) // fork not implemented on KasperskyOS
 static bool ForkAndRand(bssl::Span<uint8_t> out) {
   int pipefds[2];
   if (pipe(pipefds) < 0) {
@@ -151,7 +156,8 @@ TEST(RandTest, Fork) {
   EXPECT_NE(Bytes(buf3), Bytes(kZeros));
 }
 #endif  // !OPENSSL_WINDOWS && !OPENSSL_IOS &&
-        // !OPENSSL_FUCHSIA && !BORINGSSL_UNSAFE_DETERMINISTIC_MODE
+        // !OPENSSL_FUCHSIA && !BORINGSSL_UNSAFE_DETERMINISTIC_MODE &&
+        // !__KOS__
 
 #if defined(OPENSSL_THREADS)
 static void RunConcurrentRands(size_t num_threads) {
