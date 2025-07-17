@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# © 2024 AO Kaspersky Lab
+# © 2025 AO Kaspersky Lab
 # Licensed under the OpenSSL License
 
 set -e
@@ -129,8 +129,8 @@ function Generate() {
              -D KOS_DIR="${KOS_DIR}" \
              -D CMAKE_FIND_ROOT_PATH="${PREFIX_DIR}/sysroot-${TARGET}" \
              -D CMAKE_TOOLCHAIN_FILE="${SDK_PREFIX}/toolchain/share/toolchain-${TARGET}${TOOLCHAIN_SUFFIX}.cmake" \
-             "${ROOT_DIR}/src"
-     if [ $? -ne 0 ]; then
+             "${ROOT_DIR}/src" || fail=1
+     if ((fail)); then
          echo "Can't generate make files.";
          rm -rf "${BUILD}"
          exit 1

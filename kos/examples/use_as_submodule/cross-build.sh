@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# © 2024 AO Kaspersky Lab
+# © 2025 AO Kaspersky Lab
 # Licensed under the OpenSSL License
 
 set -e
@@ -21,9 +21,7 @@ USAGE:
 
 BUILD_TARGET:
     qemu - to build and run the example on QEMU (default value).
-    rpi  - to create a file system image called rpi4kos.img for a bootable SD card.
-           This image can be directly copied onto an SD card using the dd utility,
-           allowing the example to be run on Raspberry Pi.
+    hw   - to create a file system image bootable device for hardware.
 
 OPTIONS:
     -h, --help
@@ -37,7 +35,7 @@ while [ -n "${1}" ]; do
     -h | --help) PrintHelp
         exit 0;;
     qemu) BUILD_TARGET=sim;;
-    rpi) BUILD_TARGET=sd-image;;
+    hw) BUILD_TARGET=sd-image;;
     *) echo "Unknown option -'${1}'."
         PrintHelp
         exit 1;;
