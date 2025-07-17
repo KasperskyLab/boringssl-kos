@@ -1,3 +1,6 @@
+# © 2025 AO Kaspersky Lab
+# Licensed under the OpenSSL License
+
 cmake_minimum_required(VERSION 3.5)
 
 # Defer enabling C and CXX languages.

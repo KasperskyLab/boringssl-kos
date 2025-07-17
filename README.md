@@ -11,7 +11,7 @@ For more information about BoringSSL library, see the
 [README.md](https://github.com/google/boringssl/blob/master/README.md) file of this library.
 
 For additional details on KasperskyOS, including its limitations and known issues, please refer to the
-[KasperskyOS Community Edition Online Help](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.2&customization=KCE_community_edition).
+[KasperskyOS Community Edition Online Help](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.3&customization=KCE&helpid=community_edition).
 
 ## Table of contents
 - [BoringSSL adaptation for KasperskyOS](#boringssl-adaptation-for-kasperskyos)
@@ -32,7 +32,7 @@ For additional details on KasperskyOS, including its limitations and known issue
 
 ### Prerequisites
 
-1. [Install](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.2&customization=KCE_sdk_install_and_remove) KasperskyOS Community Edition SDK. You can download the latest version of the KasperskyOS Community Edition for free from [os.kaspersky.com](https://os.kaspersky.com/development/). The minimum required version of KasperskyOS Community Edition SDK is 1.2. For more information, see [System requirements](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.2&customization=KCE_system_requirements).
+1. [Install](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.3&customization=KCE&helpid=sdk_install_and_remove) KasperskyOS Community Edition SDK. You can download the latest version of the KasperskyOS Community Edition for free from [os.kaspersky.com](https://os.kaspersky.com/development/). The minimum required version of KasperskyOS Community Edition SDK is 1.3. For more information, see [System requirements](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.3&customization=KCE&helpid=system_requirements).
 1. Copy source files to your project directory. The examples of KasperskyOS-based solutions are located in the following directory:
    ```
    ./kos
@@ -54,7 +54,7 @@ To build and install the BoringSSL library, execute the `cross-build.sh` script 
 * `TARGET` specifies the target platform. (Currently only the `aarch64-kos` platform is supported.)
 
 > [!WARNING]
-> The KasperskyOS Community Edition SDK comes with pre-built OpenSSL libraries and headers. It is strongly not recommended to install BoringSSL to the KasperskyOS SDK `sysroot-<platform>` directory, as it will cause OpenSSL to malfunction and render it unusable.
+> The KasperskyOS Community Edition SDK comes with pre-built OpenSSL library. It is strongly not recommended to install BoringSSL to the KasperskyOS SDK `sysroot-<platform>` directory, as it will cause OpenSSL to malfunction and render it unusable.
 
 For example, review the following command:
 ```sh
@@ -83,7 +83,7 @@ For example:
 $ ./cross-build.sh -s /opt/KasperskyOS-Community-Edition-<version> -i /opt/libs
 ```
 
-[⬆ Back to Top](#Table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 #### Tests
 
@@ -133,13 +133,13 @@ For example, to start executing all tests, use the following command:
 $ SDK_PREFIX=/opt/KasperskyOS-Community-Edition-<version> ./run-tests.sh
 ```
 
-[⬆ Back to Top](#Table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ## Usage
 
 To include the BoringSSL library in a KasperskyOS-based solution, there are three recommended options: using the library source code as a git submodule, using the previously installed BoringSSL library, or using the CMake module `FetchContent`. Each project example demonstrates one of these methods.
 
-When you develop a KasperskyOS-based solution, use the [recommended structure of project directories](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.2&customization=KCE_cmake_using_sdk_cmake) to simplify usage of CMake scripts.
+When you develop a KasperskyOS-based solution, use the [recommended structure of project directories](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.3&customization=KCE&helpid=cmake_using_sdk_cmake) to simplify usage of CMake scripts.
 
 ### Examples
 
@@ -152,15 +152,44 @@ When you develop a KasperskyOS-based solution, use the [recommended structure of
 
 [`./kos/run-tests.sh`](kos/run-tests.sh)—Script runs unit tests using the GoogleTest framework.
 
-[⬆ Back to Top](#Table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ## Trademarks
 
 Registered trademarks and endpoint marks are the property of their respective owners.
 
-GoogleTest is a trademark of Google LLC.
+AMD, AMD64, Opteron are trademarks or a registered trademarks of Advanced Micro Devices, Inc.
+
+Android, Chrome, Chromium, Dalvik, Google, GoogleTest, Google Code, Nexus are trademarks of Google LLC.
+
+Apple, macOS, Mac OS, Xcode, MacTest, OS X, Tiger, iPhone are trademarks of Apple Inc.
+
+Arm is a registered trademark of Arm Limited (or its subsidiaries) in the US and/or elsewhere.
+
+Atom, Core, Intel, Itanium, Pentium, XMM, MMX, Xeon are trademarks of Intel Corporation or its subsidiaries.
+
+F5 is a trademark of F5 Networks, Inc. in the U.S. and in certain other countries.
+
+Firefox, Mozilla are trademarks of the Mozilla Foundation in the U.S. and other countries.
+
+FreeBSD is a registered trademark of The FreeBSD Foundation.
+
+IBM, s3, POWER, POWER8, PowerPC, WebSphere, z/OS, z10, z9 are trademarks of International Business Machines Corporation, registered in many jurisdictions worldwide.
+
+Linux is the registered trademark of Linus Torvalds in the U.S. and other countries.
+
+Microsoft, MSDN, Visual C++, Visual Studio, Win32, Windows, Windows Mobile, Windows Store are trademarks of the Microsoft group of companies.
+
+Nokia is registered trademark of Nokia Corporation.
+
+Python is a trademark or registered trademark of the Python Software Foundation.
+
+UNIX is a registered trademark in the United States and other countries, licensed exclusively through X/Open Company Limited.
+
+IOS is a registered trademark of Cisco Systems, Inc. and/or its affiliates in the United States and certain other countries.
 
 OpenSSL is a trademark owned by the OpenSSL Software Foundation.
+
 BoringSSL adaptation for KasperskyOS is not affiliated with OpenSSL.
 
 Raspberry Pi is a trademark of the Raspberry Pi Foundation.
@@ -173,6 +202,6 @@ Only KasperskyOS-specific changes can be approved. See [CONTRIBUTING.md](CONTRIB
 
 This project is licensed under the terms of the OpenSSL License. See [LICENSE](LICENSE) for more information.
 
-[⬆ Back to Top](#Table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
-© 2024 AO Kaspersky Lab
+© 2025 AO Kaspersky Lab

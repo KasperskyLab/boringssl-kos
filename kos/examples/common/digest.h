@@ -1,5 +1,5 @@
 /*
- * © 2024 AO Kaspersky Lab
+ * © 2025 AO Kaspersky Lab
  * Licensed under the OpenSSL License
  */
 
@@ -87,7 +87,7 @@ public :
 
         return m_value;
     }
-    
+
     const std::string Name() const noexcept
     {
         return m_name;
@@ -95,7 +95,7 @@ public :
 
 private:
 
-    const std::string           m_name;
+    std::string                 m_name;
     bssl::UniquePtr<EVP_MD_CTX> m_context;
     Data                        m_value;
 };

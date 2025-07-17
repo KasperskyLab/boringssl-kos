@@ -52,7 +52,11 @@
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
- * [including the GNU Public Licence.] */
+ * [including the GNU Public Licence.]
+ *
+ * © 2025 AO Kaspersky Lab
+ * Licensed under the OpenSSL License
+ */
 
 #include <openssl/asn1.h>
 #include <openssl/bio.h>
@@ -318,9 +322,7 @@ int X509_signature_print(BIO *bp, const X509_ALGOR *sigalg,
 int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase)
 {
     char *s, *c, *b;
-    int ret = 0, l, i;
-
-    l = 80 - 2 - obase;
+    int ret = 0, i;
 
     b = X509_NAME_oneline(name, NULL, 0);
     if (!b)
@@ -347,12 +349,10 @@ int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase)
                 if (BIO_write(bp, ", ", 2) != 2)
                     goto err;
             }
-            l--;
         }
         if (*s == '\0')
             break;
         s++;
-        l--;
     }
 
     ret = 1;

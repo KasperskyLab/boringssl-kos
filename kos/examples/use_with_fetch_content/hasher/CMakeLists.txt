@@ -1,4 +1,4 @@
-# © 2024 AO Kaspersky Lab
+# © 2025 AO Kaspersky Lab
 # Licensed under the OpenSSL License
 
 project(hasher)
@@ -7,7 +7,7 @@ project(hasher)
 include(platform/nk)
 
 # Set the linker and compiler flags.
-project_header_default("STANDARD_GNU_11:YES" "STRICT_WARNINGS:NO")
+project_header_default("STANDARD_GNU_17:YES" "STRICT_WARNINGS:NO")
 
 generate_edl_file(Hasher PREFIX examples)
 nk_build_edl_files(hasher_edl_files NK_MODULE examples EDL "${EDL_FILE}")
