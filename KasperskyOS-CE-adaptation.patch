@@ -1,0 +1,106 @@
+© 2026 AO Kaspersky Lab
+This script is licensed under the MIT License
+
+---
+ CMakeLists.txt                 | 4 +++-
+ crypto/bcm_support.h           | 2 +-
+ crypto/internal.h              | 1 +
+ crypto/rand/rand_test.cc       | 8 +++++---
+ crypto/rand/sysrand_internal.h | 2 +-
+ include/openssl/target.h       | 4 ++++
+ 6 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 50f5e3799..0b07b6ae0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -38,7 +38,9 @@ enable_language(CXX)
+ 
+ include(GNUInstallDirs)
+ 
+-set(INSTALL_ENABLED 1)
++if(NOT DEFINED INSTALL_ENABLED)
++  set(INSTALL_ENABLED 0)
++endif()
+ 
+ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT CMAKE_CROSSCOMPILING)
+   find_package(PkgConfig QUIET)
+diff --git a/crypto/bcm_support.h b/crypto/bcm_support.h
+index 903c85c2e..a814d6eb3 100644
+--- a/crypto/bcm_support.h
++++ b/crypto/bcm_support.h
+@@ -49,7 +49,7 @@ extern "C" {
+ #define OPENSSL_RAND_TRUSTY
+ #elif defined(OPENSSL_WINDOWS)
+ #define OPENSSL_RAND_WINDOWS
+-#elif defined(OPENSSL_LINUX)
++#elif defined(OPENSSL_LINUX) || defined(OPENSSL_KOS)
+ #define OPENSSL_RAND_URANDOM
+ #elif defined(OPENSSL_APPLE) && !defined(OPENSSL_MACOS)
+ // Unlike macOS, iOS and similar hide away getentropy().
+diff --git a/crypto/internal.h b/crypto/internal.h
+index 0d9b0a6d9..651999b01 100644
+--- a/crypto/internal.h
++++ b/crypto/internal.h
+@@ -59,6 +59,7 @@ extern "C" {
+ 
+ 
+ #if !defined(OPENSSL_NO_ASM) && !defined(OPENSSL_STATIC_ARMCAP) && \
++    !defined(OPENSSL_KOS) &&                                       \
+     (defined(OPENSSL_X86) || defined(OPENSSL_X86_64) ||            \
+      defined(OPENSSL_ARM) || defined(OPENSSL_AARCH64))
+ // x86, x86_64, and the ARMs need to record the result of a cpuid/getauxval call
+diff --git a/crypto/rand/rand_test.cc b/crypto/rand/rand_test.cc
+index b15b33524..9a8383d5b 100644
+--- a/crypto/rand/rand_test.cc
++++ b/crypto/rand/rand_test.cc
+@@ -54,8 +54,9 @@ TEST(RandTest, NotObviouslyBroken) {
+   EXPECT_NE(Bytes(buf2), Bytes(kZeros));
+ }
+ 
+-#if !defined(OPENSSL_WINDOWS) && !defined(OPENSSL_IOS) && \
+-    !defined(OPENSSL_FUCHSIA) && !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE)
++#if !defined(OPENSSL_WINDOWS) && !defined(OPENSSL_IOS) &&  \
++    !defined(OPENSSL_FUCHSIA) && !defined(OPENSSL_KOS) &&  \
++    !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE)
+ static bool ForkAndRand(bssl::Span<uint8_t> out, bool fork_unsafe_buffering) {
+   int pipefds[2];
+   if (pipe(pipefds) < 0) {
+@@ -162,7 +163,8 @@ TEST(RandTest, Fork) {
+   }
+ }
+ #endif  // !OPENSSL_WINDOWS && !OPENSSL_IOS &&
+-        // !OPENSSL_FUCHSIA && !BORINGSSL_UNSAFE_DETERMINISTIC_MODE
++        // !OPENSSL_FUCHSIA && !OPENSSL_KOS &&
++        // !BORINGSSL_UNSAFE_DETERMINISTIC_MODE
+ 
+ #if defined(OPENSSL_THREADS)
+ static void RunConcurrentRands(size_t num_threads) {
+diff --git a/crypto/rand/sysrand_internal.h b/crypto/rand/sysrand_internal.h
+index 90931a231..4d5166d17 100644
+--- a/crypto/rand/sysrand_internal.h
++++ b/crypto/rand/sysrand_internal.h
+@@ -23,7 +23,7 @@
+ #define OPENSSL_RAND_TRUSTY
+ #elif defined(OPENSSL_WINDOWS)
+ #define OPENSSL_RAND_WINDOWS
+-#elif defined(OPENSSL_LINUX)
++#elif defined(OPENSSL_LINUX) || defined(OPENSSL_KOS)
+ #define OPENSSL_RAND_URANDOM
+ #elif defined(OPENSSL_APPLE) && !defined(OPENSSL_MACOS)
+ // Unlike macOS, iOS and similar hide away getentropy().
+diff --git a/include/openssl/target.h b/include/openssl/target.h
+index 147ab31fe..50cc828b6 100644
+--- a/include/openssl/target.h
++++ b/include/openssl/target.h
+@@ -175,6 +175,10 @@
+ #define OPENSSL_OPENBSD
+ #endif
+ 
++#if defined(__KOS__)
++#define OPENSSL_KOS
++#endif
++
+ // BoringSSL requires platform's locking APIs to make internal global state
+ // thread-safe, including the PRNG. On some single-threaded embedded platforms,
+ // locking APIs may not exist, so this dependency may be disabled with the
