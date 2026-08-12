@@ -9,7 +9,7 @@ For details on BoringSSL—a fork of the OpenSSL library—see its official
 [README.md](https://github.com/google/boringssl/blob/master/README.md)
 
 For additional details on KasperskyOS, including its limitations and known issues, please refer to
-the [KasperskyOS Community Edition Online Help](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.4&customization=KCE&helpid=community_edition).
+the [KasperskyOS Community Edition Online Help](https://kas.pr/ma1f).
 
 ## Table of contents
 - [KasperskyOS adaptation patch for BoringSSL](#kasperskyos-adaptation-patch-for-boringssl)
@@ -27,11 +27,11 @@ the [KasperskyOS Community Edition Online Help](https://click.kaspersky.com/?hl=
 ### Prerequisites
 
 1. Confirm that your host system meets all the
-[System requirements](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.4&customization=KCE&helpid=system_requirements)
+[System requirements](https://kas.pr/r72s)
 listed in the KasperskyOS Community Edition Developer's Guide.
-1. [Install](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.4&customization=KCE&helpid=sdk_install_and_remove)
+1. [Install](https://kas.pr/w66w)
 the KasperskyOS Community Edition SDK version 1.4. You can download it for free from
-[os.kaspersky.com](https://os.kaspersky.com/development/).
+[os.kaspersky.com](https://kas.pr/1kz3).
 1. Copy the source files of this adaptation patch to your local project directory.
 1. Source the SDK setup script to configure the build environment. This exports the `KOSCEDIR`
   environment variable, which points to the SDK installation directory:
@@ -44,7 +44,7 @@ the KasperskyOS Community Edition SDK version 1.4. You can download it for free 
 The KasperskyOS-adapted version of the BoringSSL library is built using the CMake build system,
 which is provided in the KasperskyOS Community Edition SDK. When you develop a KasperskyOS-based
 solution, use the
-[recommended structure of project directories](https://click.kaspersky.com/?hl=en-us&link=online_help&pid=kos&version=1.4&customization=KCE&helpid=cmake_using_sdk_cmake)
+[recommended structure of project directories](https://kas.pr/2p4w)
 to simplify usage of CMake scripts.
 
 To install the BoringSSL library adapted for KasperskyOS, run the following command:
@@ -68,7 +68,7 @@ directory, as it will cause OpenSSL to malfunction and render it unusable.
 To integrate the adapted BoringSSL library in a KasperskyOS-based solution, there are three
 recommended options: using the library source code as a git submodule, using the previously
 installed BoringSSL library, or using the CMake module `FetchContent`. For practical guidance, see
-the [BoringSSL example](https://github.com/KasperskyLab/kos-ce-extra/tree/master/examples/boringssl)
+the [BoringSSL example](https://kas.pr/6atb)
 in the `KasperskyLab/kos-ce-extra` repository, which demonstrates all three approaches.
 
 ## Trademarks
